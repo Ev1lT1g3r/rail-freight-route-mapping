@@ -1,4 +1,4 @@
-# UTC Rail Freight Route Mapping
+# Rail Freight Route Mapping
 
 A web application for finding optimal freight rail routes across North America. This interactive map-based tool allows users to select origin and destination terminals, configure route preferences, and visualize the top 3 best routes based on distance, operator preferences, and route characteristics.
 
