@@ -139,7 +139,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   const handleSaveDraft = () => {
     const submission = {
       id: submissionId || createSubmissionId(),
-      name: submissionName || `${origin} to ${destination}`,
+      name: submissionName || `${origin} → ${destination}`,
       origin,
       destination,
       preferences,
@@ -555,7 +555,6 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
           </div>
         </div>
       </div>
-    </div>
   );
 }
 
