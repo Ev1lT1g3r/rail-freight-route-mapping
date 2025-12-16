@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Planned
+- Backend API integration
+- Authentication system
+- Real-time collaboration
+- Advanced analytics dashboard
+- Export capabilities (PDF, Excel)
+- Mobile app version
+
+## [1.1.0] - 2024-12-16
+
+### Added
+- **Documentation Suite**
+  - Comprehensive README.md with all features
+  - ARCHITECTURE.md with system design
+  - API.md with component and utility documentation
+  - CONTRIBUTING.md with contribution guidelines
+  - DEPLOYMENT.md with deployment instructions
+  - CHANGELOG.md with version history
+
+- **Test Coverage**
+  - FreightSpecification component tests
+  - Freight calculations utility tests
+  - Car types data validation tests
+  - 90+ tests total, all passing
+
+### Fixed
+- Label associations for accessibility
+- Test failures and coverage gaps
+- Documentation accuracy and completeness
+
+## [1.0.0] - 2024-12-16
+
 ## [1.0.0] - 2024-12-16
 
 ### Added

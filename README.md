@@ -220,13 +220,24 @@ The application includes data for major Class I freight railroads:
 
 The project includes comprehensive test coverage:
 - **Component Tests**: All major components have test files
+  - SubmissionsList, SubmissionForm, SubmissionDetail
+  - FreightSpecification, FreightPlacementVisualization
+  - RouteConfig, RouteResults
+  - ErrorBoundary
 - **Utility Tests**: Route finding, freight calculations, storage
 - **Data Tests**: Network data and car type validation
-- **90+ Tests**: All passing
+- **90+ Tests**: All passing with high coverage
 
 Run tests with:
 ```bash
+# Run all tests
 npm test
+
+# Run with UI
+npm run test:ui
+
+# Run with coverage report
+npm run test:coverage
 ```
 
 ## Data Persistence
@@ -254,6 +265,19 @@ MIT
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## Documentation
+
+Additional documentation available:
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture and design
+- [API.md](./API.md) - Component and utility API documentation
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
+- [CHANGELOG.md](./CHANGELOG.md) - Version history
+- [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment guide
+
 ## Support
 
 For issues or questions, please open an issue on the GitHub repository.
+
+## Repository
+
+GitHub: https://github.com/Ev1lT1g3r/rail-freight-route-mapping
