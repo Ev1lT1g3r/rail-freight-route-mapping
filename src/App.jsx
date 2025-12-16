@@ -1,181 +1,75 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import './App.css';
-import MapComponent from './components/MapComponent';
-import RouteConfig from './components/RouteConfig';
-import RouteResults from './components/RouteResults';
-import ErrorBoundary from './components/ErrorBoundary';
-import { stations } from './data/railNetwork';
-import { findRoutes } from './utils/routeFinder';
+import SubmissionsList from './components/SubmissionsList';
+import SubmissionForm from './components/SubmissionForm';
+import SubmissionDetail from './components/SubmissionDetail';
+
+// View states
+const VIEWS = {
+  LIST: 'list',
+  CREATE: 'create',
+  EDIT: 'edit',
+  VIEW: 'view'
+};
 
 function App() {
-  console.log('App rendering with full features...');
-  const [origin, setOrigin] = useState(null);
-  const [destination, setDestination] = useState(null);
-  const [preferences, setPreferences] = useState({
-    weightDistance: 1.0,
-    weightSingleOperator: 0.5,
-    weightCurves: 0.3,
-    maxTransfers: 5
-  });
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState(null);
+  const [currentView, setCurrentView] = useState(VIEWS.LIST);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
+  const [currentUser] = useState('Current User'); // In a real app, this would come from auth
+  const [isApprover] = useState(true); // In a real app, this would come from user permissions
 
-  const routes = useMemo(() => {
-    if (!origin || !destination) return [];
-    return findRoutes(origin, destination, preferences);
-  }, [origin, destination, preferences]);
-
-  const selectedRoute = selectedRouteIndex !== null ? routes[selectedRouteIndex] : null;
-
-  const handleOriginSelect = (code) => {
-    setOrigin(code);
-    if (code === destination) {
-      setDestination(null);
-    }
-    setSelectedRouteIndex(null);
+  const handleCreateNew = () => {
+    setSelectedSubmissionId(null);
+    setCurrentView(VIEWS.CREATE);
   };
 
-  const handleDestinationSelect = (code) => {
-    setDestination(code);
-    setSelectedRouteIndex(null);
+  const handleViewSubmission = (id) => {
+    setSelectedSubmissionId(id);
+    setCurrentView(VIEWS.VIEW);
   };
 
-  const handleFindRoutes = () => {
-    if (origin && destination) {
-      setSelectedRouteIndex(0);
-    }
+  const handleEditSubmission = (id) => {
+    setSelectedSubmissionId(id);
+    setCurrentView(VIEWS.EDIT);
   };
 
-  const stationOptions = Object.entries(stations).map(([code, station]) => (
-    <option key={code} value={code}>
-      {station.name}, {station.state} ({station.operator})
-    </option>
-  ));
+  const handleBackToList = () => {
+    setCurrentView(VIEWS.LIST);
+    setSelectedSubmissionId(null);
+  };
+
+  const handleSaveSubmission = (submission) => {
+    // Submission saved, return to list
+    setCurrentView(VIEWS.LIST);
+    setSelectedSubmissionId(null);
+  };
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>North American Freight Rail Network Route Finder</h1>
-        <p className="subtitle">Select origin and destination terminals to find the best freight rail routes</p>
-      </header>
-      
-      {!stations && (
-        <div style={{ padding: '20px', textAlign: 'center', color: 'red' }}>
-          Error: Stations data not loaded
-        </div>
+      {currentView === VIEWS.LIST && (
+        <SubmissionsList
+          onViewSubmission={handleViewSubmission}
+          onCreateNew={handleCreateNew}
+        />
       )}
 
-      <div className="main-container">
-        <div className="controls-panel">
-          <div className="station-selectors">
-            <div className="selector-group">
-              <label htmlFor="origin-select">
-                <strong>Origin Terminal:</strong>
-              </label>
-              <select
-                id="origin-select"
-                value={origin || ''}
-                onChange={(e) => handleOriginSelect(e.target.value || null)}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  fontSize: '16px',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd'
-                }}
-              >
-                <option value="">Select origin...</option>
-                {stationOptions}
-              </select>
-              {origin && (
-                <div style={{ marginTop: '5px', fontSize: '14px', color: '#666' }}>
-                  Selected: {stations[origin].name}
-                </div>
-              )}
-            </div>
-
-            <div className="selector-group">
-              <label htmlFor="destination-select">
-                <strong>Destination Terminal:</strong>
-              </label>
-              <select
-                id="destination-select"
-                value={destination || ''}
-                onChange={(e) => handleDestinationSelect(e.target.value || null)}
-                disabled={!origin}
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  fontSize: '16px',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd',
-                  opacity: origin ? 1 : 0.6
-                }}
-              >
-                <option value="">Select destination...</option>
-                {stationOptions.filter(opt => opt.props.value !== origin)}
-              </select>
-              {destination && (
-                <div style={{ marginTop: '5px', fontSize: '14px', color: '#666' }}>
-                  Selected: {stations[destination].name}
-                </div>
-              )}
-            </div>
-
-            {origin && destination && (
-              <button 
-                onClick={handleFindRoutes}
-                className="find-routes-btn"
-                style={{
-                  padding: '12px 24px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#646cff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  marginTop: '10px'
-                }}
-              >
-                Find Routes
-              </button>
-            )}
-          </div>
-
-          <RouteConfig 
-            preferences={preferences} 
-            onPreferencesChange={setPreferences} 
-          />
-        </div>
-
-        <div className="map-panel">
-          <ErrorBoundary>
-            <MapComponent
-              stations={stations}
-              origin={origin}
-              destination={destination}
-              onOriginSelect={handleOriginSelect}
-              onDestinationSelect={handleDestinationSelect}
-              selectedRoute={selectedRoute}
-            />
-          </ErrorBoundary>
-        </div>
-      </div>
-
-      {routes.length > 0 && (
-        <div className="results-panel">
-          <RouteResults
-            routes={routes}
-            onRouteSelect={setSelectedRouteIndex}
-            selectedRouteIndex={selectedRouteIndex}
-          />
-        </div>
+      {(currentView === VIEWS.CREATE || currentView === VIEWS.EDIT) && (
+        <SubmissionForm
+          submissionId={currentView === VIEWS.EDIT ? selectedSubmissionId : null}
+          onSave={handleSaveSubmission}
+          onCancel={handleBackToList}
+          currentUser={currentUser}
+        />
       )}
 
-      {origin && destination && routes.length === 0 && (
-        <div className="no-routes">
-          <p>No routes found. Try adjusting your preferences or selecting different terminals.</p>
-        </div>
+      {currentView === VIEWS.VIEW && (
+        <SubmissionDetail
+          submissionId={selectedSubmissionId}
+          onBack={handleBackToList}
+          onEdit={() => handleEditSubmission(selectedSubmissionId)}
+          currentUser={currentUser}
+          isApprover={isApprover}
+        />
       )}
     </div>
   );
