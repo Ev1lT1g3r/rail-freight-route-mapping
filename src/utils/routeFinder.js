@@ -8,7 +8,20 @@ export function findRoutes(origin, destination, preferences) {
     weightSingleOperator = 0.5,
     weightCurves = 0.3,
     maxTransfers = 5
-  } = preferences;
+  } = preferences || {};
+
+  // Validate inputs
+  if (!origin || !destination) {
+    throw new Error('Origin and destination are required');
+  }
+
+  if (!stations[origin]) {
+    throw new Error(`Origin station "${origin}" not found`);
+  }
+
+  if (!stations[destination]) {
+    throw new Error(`Destination station "${destination}" not found`);
+  }
 
   if (origin === destination) {
     return [];
@@ -98,6 +111,13 @@ function buildRouteDetails(routeData) {
   for (let i = 0; i < path.length - 1; i++) {
     const from = path[i];
     const to = path[i + 1];
+    
+    // Validate station codes exist
+    if (!stations[from] || !stations[to]) {
+      console.warn(`Invalid station code in path: ${from} or ${to}`);
+      continue;
+    }
+    
     const conn = getConnection(from, to);
     
     if (conn) {
@@ -107,12 +127,14 @@ function buildRouteDetails(routeData) {
         distance: conn.distance,
         operator: conn.operator,
         curveScore: conn.curveScore,
-        states: conn.states
+        states: conn.states || []
       });
       
       totalDistance += conn.distance;
       operators.add(conn.operator);
-      conn.states.forEach(state => allStates.add(state));
+      if (conn.states) {
+        conn.states.forEach(state => allStates.add(state));
+      }
       
       // Check for transfer (operator change)
       if (i > 0) {
@@ -125,11 +147,27 @@ function buildRouteDetails(routeData) {
           });
         }
       }
+    } else {
+      console.warn(`No connection found between ${from} and ${to}`);
     }
   }
 
+  // Validate we have at least one segment
+  if (segments.length === 0) {
+    throw new Error('No valid route segments found');
+  }
+
+  // Map path codes to station objects, filtering out any invalid ones
+  const pathStations = path
+    .map(code => stations[code])
+    .filter(station => station !== undefined);
+
+  if (pathStations.length === 0) {
+    throw new Error('No valid stations in route path');
+  }
+
   return {
-    path: path.map(code => stations[code]),
+    path: pathStations,
     segments,
     totalDistance: Math.round(totalDistance),
     operators: Array.from(operators),

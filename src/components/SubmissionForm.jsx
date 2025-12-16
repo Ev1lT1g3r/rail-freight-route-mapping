@@ -120,16 +120,37 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
     // Simulate async operation
     setTimeout(() => {
       try {
+        if (!origin || !destination) {
+          showError('Please select both origin and destination terminals');
+          setIsLoading(false);
+          return;
+        }
+
+        // Validate stations exist
+        if (!stations[origin]) {
+          showError(`Origin terminal "${origin}" is not valid. Please select a terminal from the list.`);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!stations[destination]) {
+          showError(`Destination terminal "${destination}" is not valid. Please select a terminal from the list.`);
+          setIsLoading(false);
+          return;
+        }
+
         const foundRoutes = findRoutes(origin, destination, preferences);
         setRoutes(foundRoutes);
         if (foundRoutes.length > 0) {
           setSelectedRouteIndex(0);
           success(`Found ${foundRoutes.length} route${foundRoutes.length > 1 ? 's' : ''}`);
         } else {
-          warning('No routes found between these terminals');
+          warning('No routes found between these terminals. Try different terminals or adjust route preferences.');
         }
       } catch (err) {
-        showError('Error finding routes. Please try again.');
+        console.error('Route finding error:', err);
+        const errorMessage = err.message || 'Error finding routes. Please try again.';
+        showError(errorMessage);
       } finally {
         setIsLoading(false);
       }

@@ -46,8 +46,20 @@ function TerminalSearch({ value, onChange, placeholder = 'Search terminals...', 
   }, []);
 
   const handleInputChange = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
+    const inputValue = e.target.value;
+    
+    // If there's a selected station and user is typing something different, clear selection
+    if (selectedStation) {
+      const expectedFormat = `${selectedStation.name} (${value})`;
+      // If input doesn't match the expected format, user is editing
+      if (inputValue !== expectedFormat) {
+        onChange(''); // Clear the selection
+      }
+    }
+    
+    // Extract search term (remove code in parentheses if present)
+    const cleanSearchTerm = inputValue.replace(/\s*\([^)]+\)\s*$/, '').trim();
+    setSearchTerm(cleanSearchTerm);
     setIsOpen(true);
     setHighlightedIndex(-1);
   };
@@ -96,9 +108,11 @@ function TerminalSearch({ value, onChange, placeholder = 'Search terminals...', 
           id={id}
           type="text"
           className="terminal-search-input"
-          value={selectedStation ? `${selectedStation.name} (${value})` : searchTerm}
+          value={selectedStation && !searchTerm ? `${selectedStation.name} (${value})` : searchTerm}
           onChange={handleInputChange}
-          onFocus={() => setIsOpen(true)}
+          onFocus={() => {
+            setIsOpen(true);
+          }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
