@@ -1,17 +1,35 @@
-import { useState, useMemo } from 'react';
-import { getCarTypesForOperator } from '../data/carTypes';
-import { calculateCenterOfGravity } from '../utils/freightCalculations';
+import { useState, useMemo, useEffect } from 'react';
+import { getCarTypesForOperator, carTypes } from '../data/carTypes';
+import { calculateCenterOfGravity, getBestCarTypeForFreight } from '../utils/freightCalculations';
 
 function FreightPlacementVisualization({ freight, operators, selectedRoute }) {
   const [selectedOperator, setSelectedOperator] = useState(operators?.[0] || 'BNSF');
   const [selectedCarType, setSelectedCarType] = useState(null);
   const [placement, setPlacement] = useState({ x: 0, y: 0 });
+  const [autoSelectedCar, setAutoSelectedCar] = useState(null);
 
-  const carTypes = useMemo(() => {
+  const availableCarTypes = useMemo(() => {
     return getCarTypesForOperator(selectedOperator);
   }, [selectedOperator]);
 
-  const currentCar = selectedCarType || carTypes[0];
+  // Auto-select best car type when freight dimensions are provided
+  useEffect(() => {
+    if (freight && freight.length > 0 && freight.width > 0 && freight.height > 0 && freight.weight > 0 && operators && operators.length > 0) {
+      const bestCar = getBestCarTypeForFreight(freight, operators, carTypes);
+      if (bestCar) {
+        setAutoSelectedCar(bestCar);
+        setSelectedOperator(bestCar.operator);
+        // Find the car in the available types
+        const operatorCars = getCarTypesForOperator(bestCar.operator);
+        const matchingCar = operatorCars.find(c => c.id === bestCar.car.id);
+        if (matchingCar) {
+          setSelectedCarType(matchingCar);
+        }
+      }
+    }
+  }, [freight, operators]);
+
+  const currentCar = selectedCarType || availableCarTypes[0];
 
   const cgResult = useMemo(() => {
     if (!freight || !currentCar) return null;
@@ -47,7 +65,20 @@ function FreightPlacementVisualization({ freight, operators, selectedRoute }) {
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px' }}>
-      <h3 style={{ marginTop: 0, color: '#0F172A' }}>Freight Placement Visualization</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <h3 style={{ marginTop: 0, color: '#0F172A' }}>Freight Placement Visualization</h3>
+        {autoSelectedCar && (
+          <div style={{
+            padding: '8px 12px',
+            backgroundColor: '#d4edda',
+            borderRadius: '4px',
+            fontSize: '12px',
+            color: '#155724'
+          }}>
+            ✓ Auto-selected: {autoSelectedCar.car.name} ({autoSelectedCar.operator})
+          </div>
+        )}
+      </div>
 
       {/* Operator and Car Type Selection */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
@@ -80,9 +111,9 @@ function FreightPlacementVisualization({ freight, operators, selectedRoute }) {
             Car Type:
           </label>
           <select
-            value={selectedCarType?.id || carTypes[0]?.id}
+            value={selectedCarType?.id || availableCarTypes[0]?.id}
             onChange={(e) => {
-              const car = carTypes.find(c => c.id === e.target.value);
+              const car = availableCarTypes.find(c => c.id === e.target.value);
               setSelectedCarType(car);
             }}
             style={{
@@ -93,8 +124,11 @@ function FreightPlacementVisualization({ freight, operators, selectedRoute }) {
               fontSize: '14px'
             }}
           >
-            {carTypes.map(car => (
-              <option key={car.id} value={car.id}>{car.name}</option>
+            {availableCarTypes.map(car => (
+              <option key={car.id} value={car.id}>
+                {car.name}
+                {autoSelectedCar && autoSelectedCar.car.id === car.id ? ' (Recommended)' : ''}
+              </option>
             ))}
           </select>
         </div>

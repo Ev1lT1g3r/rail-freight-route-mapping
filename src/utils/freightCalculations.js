@@ -155,11 +155,112 @@ export function calculateOptimalPlacement(freight, car) {
 }
 
 /**
- * Get recommended car types for freight
+ * Get recommended car types for freight based on dimensions and weight
  */
-export function getRecommendedCarTypes(freight, operator) {
-  // This would analyze freight specs and recommend suitable car types
-  // For now, return all available car types for the operator
-  return [];
+export function getRecommendedCarTypes(freight, operators, carTypesData) {
+  if (!freight || !freight.length || !freight.width || !freight.height || !freight.weight) {
+    return [];
+  }
+
+  const recommendations = [];
+  
+  // Check each operator in the route
+  operators.forEach(operator => {
+    const operatorCars = carTypesData[operator] || [];
+    
+    operatorCars.forEach(car => {
+      let score = 0;
+      const fits = [];
+      const issues = [];
+      
+      // Check if freight fits dimensions
+      const fitsLength = freight.length <= car.length;
+      const fitsWidth = freight.width <= car.width;
+      const fitsHeight = freight.height <= (car.height - car.deckHeight);
+      const fitsWeight = freight.weight <= car.maxWeight;
+      
+      if (fitsLength) {
+        score += 10;
+        fits.push('length');
+      } else {
+        issues.push(`Length exceeds by ${(freight.length - car.length).toFixed(1)}ft`);
+      }
+      
+      if (fitsWidth) {
+        score += 10;
+        fits.push('width');
+      } else {
+        issues.push(`Width exceeds by ${(freight.width - car.width).toFixed(1)}ft`);
+      }
+      
+      if (fitsHeight) {
+        score += 10;
+        fits.push('height');
+      } else {
+        issues.push(`Height exceeds by ${(freight.height - (car.height - car.deckHeight)).toFixed(1)}ft`);
+      }
+      
+      if (fitsWeight) {
+        score += 10;
+        fits.push('weight');
+      } else {
+        issues.push(`Weight exceeds by ${(freight.weight - car.maxWeight).toLocaleString()}lbs`);
+      }
+      
+      // Bonus for good fit (not too much wasted space)
+      const lengthUtilization = freight.length / car.length;
+      const widthUtilization = freight.width / car.width;
+      const weightUtilization = freight.weight / car.maxWeight;
+      
+      if (lengthUtilization > 0.7 && lengthUtilization < 0.95) score += 5;
+      if (widthUtilization > 0.7 && widthUtilization < 0.95) score += 5;
+      if (weightUtilization > 0.7 && weightUtilization < 0.95) score += 5;
+      
+      // Prefer certain car types based on freight characteristics
+      if (freight.height > 10 && car.name === 'Flatcar') score += 15; // Tall freight on flatcar
+      if (freight.weight > 200000 && car.name === 'Flatcar') score += 10; // Heavy freight on flatcar
+      if (freight.height < 8 && car.name === 'Boxcar') score += 10; // Standard freight in boxcar
+      
+      const isPerfectFit = fitsLength && fitsWidth && fitsHeight && fitsWeight;
+      
+      recommendations.push({
+        operator,
+        car,
+        score,
+        isPerfectFit,
+        fits,
+        issues,
+        lengthUtilization,
+        widthUtilization,
+        weightUtilization
+      });
+    });
+  });
+  
+  // Sort by score (highest first), then by perfect fit
+  recommendations.sort((a, b) => {
+    if (a.isPerfectFit !== b.isPerfectFit) {
+      return b.isPerfectFit - a.isPerfectFit;
+    }
+    return b.score - a.score;
+  });
+  
+  return recommendations;
+}
+
+/**
+ * Get the best car type for freight automatically
+ */
+export function getBestCarTypeForFreight(freight, operators, carTypesData) {
+  const recommendations = getRecommendedCarTypes(freight, operators, carTypesData);
+  if (recommendations.length === 0) return null;
+  
+  // Return the best match (first in sorted list)
+  const best = recommendations[0];
+  return {
+    operator: best.operator,
+    car: best.car,
+    recommendation: best
+  };
 }
 
