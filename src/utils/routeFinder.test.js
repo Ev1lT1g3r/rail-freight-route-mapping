@@ -198,9 +198,9 @@ describe('Route Finder', () => {
 
   describe('Edge Cases', () => {
     it('should handle non-existent stations gracefully', () => {
-      // This should not crash, but may return empty array
-      const routes = findRoutes('INVALID', 'CHI', defaultPreferences);
-      expect(Array.isArray(routes)).toBe(true);
+      // Should throw an error for invalid station codes
+      expect(() => findRoutes('INVALID', 'CHI', defaultPreferences)).toThrow('Origin station "INVALID" not found');
+      expect(() => findRoutes('CHI', 'INVALID', defaultPreferences)).toThrow('Destination station "INVALID" not found');
     });
 
     it('should handle very restrictive preferences', () => {
@@ -211,8 +211,9 @@ describe('Route Finder', () => {
         maxTransfers: 0
       };
       
-      const routes = findRoutes('NYC', 'PHL', veryRestrictive);
-      // Should still work, might return fewer routes
+      // Use valid station codes
+      const routes = findRoutes('CHI', 'KC', veryRestrictive);
+      // Should still work, might return fewer routes or empty array
       expect(Array.isArray(routes)).toBe(true);
     });
   });
