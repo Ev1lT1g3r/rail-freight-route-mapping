@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { getCarTypesForOperator, carTypes } from '../data/carTypes';
-import { calculateCenterOfGravity, getBestCarTypeForFreight } from '../utils/freightCalculations';
+import { calculateCenterOfGravity, getBestCarTypeForFreight, getRecommendedCarTypes } from '../utils/freightCalculations';
 
 function FreightPlacementVisualization({ freight, operators, selectedRoute }) {
   const [selectedOperator, setSelectedOperator] = useState(operators?.[0] || 'BNSF');
   const [selectedCarType, setSelectedCarType] = useState(null);
   const [placement, setPlacement] = useState({ x: 0, y: 0 });
   const [autoSelectedCar, setAutoSelectedCar] = useState(null);
+  const [allRecommendations, setAllRecommendations] = useState([]);
 
   const availableCarTypes = useMemo(() => {
     return getCarTypesForOperator(selectedOperator);
@@ -15,6 +16,9 @@ function FreightPlacementVisualization({ freight, operators, selectedRoute }) {
   // Auto-select best car type when freight dimensions are provided
   useEffect(() => {
     if (freight && freight.length > 0 && freight.width > 0 && freight.height > 0 && freight.weight > 0 && operators && operators.length > 0) {
+      const recommendations = getRecommendedCarTypes(freight, operators, carTypes);
+      setAllRecommendations(recommendations);
+      
       const bestCar = getBestCarTypeForFreight(freight, operators, carTypes);
       if (bestCar) {
         setAutoSelectedCar(bestCar);
@@ -26,6 +30,9 @@ function FreightPlacementVisualization({ freight, operators, selectedRoute }) {
           setSelectedCarType(matchingCar);
         }
       }
+    } else {
+      setAllRecommendations([]);
+      setAutoSelectedCar(null);
     }
   }, [freight, operators]);
 
@@ -70,15 +77,78 @@ function FreightPlacementVisualization({ freight, operators, selectedRoute }) {
         {autoSelectedCar && (
           <div style={{
             padding: '8px 12px',
-            backgroundColor: '#d4edda',
+            backgroundColor: autoSelectedCar.recommendation.isPerfectFit ? '#d4edda' : '#fff3cd',
             borderRadius: '4px',
             fontSize: '12px',
-            color: '#155724'
+            color: autoSelectedCar.recommendation.isPerfectFit ? '#155724' : '#856404',
+            fontWeight: '500'
           }}>
-            ✓ Auto-selected: {autoSelectedCar.car.name} ({autoSelectedCar.operator})
+            {autoSelectedCar.recommendation.isPerfectFit ? '✓' : '⚠'} 
+            {' '}Auto-selected: {autoSelectedCar.car.name} ({autoSelectedCar.operator})
+            {autoSelectedCar.recommendation.isPerfectFit ? ' - Perfect Fit' : ' - Best Available'}
           </div>
         )}
       </div>
+
+      {/* Recommendations Summary */}
+      {allRecommendations.length > 0 && (
+        <div style={{
+          padding: '15px',
+          backgroundColor: '#e3f2fd',
+          borderRadius: '8px',
+          marginBottom: '20px',
+          fontSize: '14px'
+        }}>
+          <h4 style={{ marginTop: 0, marginBottom: '10px', color: '#0F172A' }}>Car Type Recommendations</h4>
+          <div style={{ display: 'grid', gap: '10px' }}>
+            {allRecommendations.slice(0, 5).map((rec, idx) => (
+              <div
+                key={`${rec.operator}-${rec.car.id}`}
+                style={{
+                  padding: '10px',
+                  backgroundColor: rec.isPerfectFit ? '#d4edda' : '#fff',
+                  borderRadius: '4px',
+                  border: idx === 0 ? '2px solid #3B82F6' : '1px solid #ddd',
+                  cursor: 'pointer'
+                }}
+                onClick={() => {
+                  setSelectedOperator(rec.operator);
+                  const operatorCars = getCarTypesForOperator(rec.operator);
+                  const matchingCar = operatorCars.find(c => c.id === rec.car.id);
+                  if (matchingCar) {
+                    setSelectedCarType(matchingCar);
+                  }
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong>{rec.car.name}</strong> ({rec.operator})
+                    {idx === 0 && <span style={{ color: '#3B82F6', marginLeft: '8px' }}>★ Recommended</span>}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666' }}>
+                    Score: {rec.score} {rec.isPerfectFit && '✓ Perfect Fit'}
+                  </div>
+                </div>
+                {rec.fits.length > 0 && (
+                  <div style={{ fontSize: '12px', color: '#155724', marginTop: '5px' }}>
+                    Fits: {rec.fits.join(', ')}
+                  </div>
+                )}
+                {rec.issues.length > 0 && (
+                  <div style={{ fontSize: '12px', color: '#dc3545', marginTop: '5px' }}>
+                    Issues: {rec.issues.join('; ')}
+                  </div>
+                )}
+                <div style={{ fontSize: '11px', color: '#666', marginTop: '5px' }}>
+                  Utilization: Length {Math.round(rec.lengthUtilization * 100)}%, 
+                  Width {Math.round(rec.widthUtilization * 100)}%, 
+                  Weight {Math.round(rec.weightUtilization * 100)}%
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Operator and Car Type Selection */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
