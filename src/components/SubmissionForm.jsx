@@ -357,6 +357,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
               freight={freight}
               operators={selectedRoute.operators || []}
               selectedRoute={selectedRoute}
+              onFreightChange={setFreight}
             />
           )}
         </div>

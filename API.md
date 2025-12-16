@@ -78,14 +78,22 @@
   freight: Freight;
   operators: string[];
   selectedRoute: Route;
+  onFreightChange?: (freight: Freight) => void;
 }
 ```
 
 **Features:**
+- **Split-Layout Interface**:
+  - Left Panel: Compliance probability analysis
+  - Center Panel: Real-time visualization (top and side views)
+  - Right Panel: Interactive freight geometry controls
 - Visual placement on car types
 - Center of gravity calculations
 - Auto-selection of best car type
-- Interactive placement controls
+- Interactive placement controls (forward/backward, left/right)
+- Real-time freight dimension adjustment via sliders
+- Compliance probability display with factor breakdown
+- Car type recommendations panel
 
 ## Utility Functions
 
@@ -164,6 +172,35 @@ Object with:
 - `operator`: Best operator
 - `car`: Best car type
 - `recommendation`: Full recommendation object
+
+### complianceCalculator.js
+
+#### `calculateComplianceProbability(freight, car, placement, route, operator)`
+Calculates compliance probability for freight shipment approval.
+
+**Parameters:**
+- `freight` (object): Freight specifications
+- `car` (object): Car specifications
+- `placement` (object): Placement position (x, y offsets)
+- `route` (object): Route information
+- `operator` (string): Operator name
+
+**Returns:**
+Object with:
+- `probability` (number): Overall compliance probability (0-100)
+- `category` (string): Category classification ('High', 'Medium', 'Low', 'Very Low')
+- `color` (string): Color code for UI display
+- `factors` (array): Array of factor objects with:
+  - `name` (string): Factor name
+  - `score` (number): Factor score (0-100)
+  - `weight` (number): Weight in overall calculation
+  - `details` (array): Detailed information
+- `warnings` (array): Array of warning messages
+- `criticalIssues` (array): Array of critical issue messages
+- `recommendations` (array): Array of recommendation objects with:
+  - `priority` (string): Priority level
+  - `action` (string): Recommended action
+  - `items` (array): Specific items to address
 
 ### submissionStorage.js
 

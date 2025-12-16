@@ -2,6 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+// Operator colors and branding
+const OPERATOR_COLORS = {
+  'BNSF': { color: '#FFD700', name: 'BNSF Railway', logo: '🚂' },
+  'UP': { color: '#FF6B35', name: 'Union Pacific', logo: '🚂' },
+  'CSX': { color: '#4ECDC4', name: 'CSX Transportation', logo: '🚂' },
+  'NS': { color: '#45B7D1', name: 'Norfolk Southern', logo: '🚂' },
+  'CN': { color: '#96CEB4', name: 'Canadian National', logo: '🚂' },
+  'CP': { color: '#FFEAA7', name: 'Canadian Pacific', logo: '🚂' },
+  'Multiple': { color: '#A0A0A0', name: 'Multiple Operators', logo: '🚂' },
+  'Default': { color: '#FF0000', name: 'Unknown', logo: '🚂' }
+};
+
 // Fix for default marker icons
 if (typeof window !== 'undefined' && L && L.Icon && L.Icon.Default) {
   try {
@@ -29,6 +41,8 @@ function MapComponent({
   const markersRef = useRef([]);
   const routeMarkersRef = useRef([]);
   const routePolylinesRef = useRef([]);
+  const operatorInfoPanelsRef = useRef([]);
+  const operatorLegendRef = useRef(null);
   const polylineRef = useRef(null);
   const tileLayerRef = useRef(null);
   const satelliteLayerRef = useRef(null);
@@ -210,6 +224,18 @@ function MapComponent({
     });
     routePolylinesRef.current = [];
 
+    // Remove operator info panels
+    operatorInfoPanelsRef.current.forEach(panel => {
+      mapInstanceRef.current.removeLayer(panel);
+    });
+    operatorInfoPanelsRef.current = [];
+
+    // Remove operator legend
+    if (operatorLegendRef.current) {
+      mapInstanceRef.current.removeControl(operatorLegendRef.current);
+      operatorLegendRef.current = null;
+    }
+
     // Remove existing polyline
     if (polylineRef.current) {
       mapInstanceRef.current.removeLayer(polylineRef.current);
@@ -228,6 +254,30 @@ function MapComponent({
       // Create polyline through all stations in the route path (follows actual route)
       const positions = selectedRoute.path.map(station => [station.lat, station.lng]);
       
+      // Calculate operator statistics
+      const operatorStats = {};
+      if (selectedRoute.segments) {
+        selectedRoute.segments.forEach(segment => {
+          if (!operatorStats[segment.operator]) {
+            operatorStats[segment.operator] = {
+              distance: 0,
+              segments: 0,
+              stations: new Set()
+            };
+          }
+          operatorStats[segment.operator].segments++;
+          // Estimate segment distance
+          const fromStation = selectedRoute.path.find(s => s.code === segment.from.code);
+          const toStation = selectedRoute.path.find(s => s.code === segment.to.code);
+          if (fromStation && toStation) {
+            const distance = mapInstanceRef.current.distance([fromStation.lat, fromStation.lng], [toStation.lat, toStation.lng]) * 0.000621371; // Convert to miles
+            operatorStats[segment.operator].distance += distance;
+            operatorStats[segment.operator].stations.add(segment.from.code);
+            operatorStats[segment.operator].stations.add(segment.to.code);
+          }
+        });
+      }
+
       // Draw route line with operator-specific colors for each segment
       if (selectedRoute.segments && selectedRoute.segments.length > 0) {
         // Draw each segment with operator-specific styling
@@ -241,26 +291,31 @@ function MapComponent({
               [segmentEnd.lat, segmentEnd.lng]
             ];
             
-            // Color based on operator
-            const operatorColors = {
-              'BNSF': '#FFD700', // Gold
-              'UP': '#FF6B35',   // Orange-red
-              'CSX': '#4ECDC4',  // Teal
-              'NS': '#45B7D1',   // Blue
-              'CN': '#96CEB4',   // Green
-              'CP': '#FFEAA7'    // Yellow
-            };
+            const operatorInfo = OPERATOR_COLORS[segment.operator] || OPERATOR_COLORS.Default;
+            const segmentColor = operatorInfo.color;
             
-            const segmentColor = operatorColors[segment.operator] || '#FF0000';
-            
+            // Enhanced polyline with gradient effect
             const segmentPolyline = L.polyline(segmentPositions, {
               color: segmentColor,
-              weight: 8,
-              opacity: 0.95,
-              smoothFactor: 0
+              weight: 10,
+              opacity: 0.9,
+              smoothFactor: 0,
+              lineCap: 'round',
+              lineJoin: 'round'
             }).addTo(mapInstanceRef.current);
             
-            // Add operator label at midpoint
+            // Add shadow/glow effect with a slightly offset polyline
+            const shadowPolyline = L.polyline(segmentPositions, {
+              color: segmentColor,
+              weight: 14,
+              opacity: 0.3,
+              smoothFactor: 0,
+              lineCap: 'round',
+              lineJoin: 'round'
+            }).addTo(mapInstanceRef.current);
+            routePolylinesRef.current.push(shadowPolyline);
+            
+            // Add operator label at midpoint with enhanced styling
             const midLat = (segmentStart.lat + segmentEnd.lat) / 2;
             const midLng = (segmentStart.lng + segmentEnd.lng) / 2;
             
@@ -268,25 +323,80 @@ function MapComponent({
               icon: L.divIcon({
                 className: 'operator-label',
                 html: `<div style="
-                  background-color: ${segmentColor};
+                  background: linear-gradient(135deg, ${segmentColor} 0%, ${segmentColor}dd 100%);
                   color: white;
-                  padding: 4px 8px;
-                  border-radius: 4px;
-                  font-size: 11px;
+                  padding: 6px 12px;
+                  border-radius: 6px;
+                  font-size: 12px;
                   font-weight: bold;
                   white-space: nowrap;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
                   border: 2px solid white;
-                ">${segment.operator}</div>`,
-                iconSize: [60, 20],
-                iconAnchor: [30, 10]
+                  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                ">${operatorInfo.logo} ${segment.operator}</div>`,
+                iconSize: [80, 28],
+                iconAnchor: [40, 14]
               })
             }).addTo(mapInstanceRef.current);
+            
+            // Add info popup on hover
+            label.bindTooltip(`
+              <div style="font-size: 12px; line-height: 1.4;">
+                <strong>${operatorInfo.name}</strong><br/>
+                Segment: ${segmentStart.name} → ${segmentEnd.name}<br/>
+                Distance: ~${operatorStats[segment.operator]?.distance.toFixed(0) || 'N/A'} miles
+              </div>
+            `, { permanent: false, direction: 'top' });
             
             routePolylinesRef.current.push(segmentPolyline);
             routeMarkersRef.current.push(label);
           }
         });
+
+        // Add operator legend panel
+        const legendHtml = `
+          <div style="
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 12px;
+            min-width: 200px;
+          ">
+            <div style="font-weight: bold; margin-bottom: 10px; font-size: 14px; border-bottom: 2px solid #ddd; padding-bottom: 6px;">
+              Route Operators
+            </div>
+            ${Object.entries(operatorStats).map(([op, stats]) => {
+              const opInfo = OPERATOR_COLORS[op] || OPERATOR_COLORS.Default;
+              return `
+                <div style="margin-bottom: 8px; padding: 6px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid ${opInfo.color};">
+                  <div style="display: flex; align-items: center; margin-bottom: 4px;">
+                    <span style="font-size: 16px; margin-right: 6px;">${opInfo.logo}</span>
+                    <strong style="color: ${opInfo.color};">${op}</strong>
+                  </div>
+                  <div style="font-size: 11px; color: #666; margin-left: 22px;">
+                    ${stats.segments} segment${stats.segments !== 1 ? 's' : ''} • 
+                    ~${stats.distance.toFixed(0)} miles<br/>
+                    ${stats.stations.size} station${stats.stations.size !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 11px; color: #666;">
+              Total: ${selectedRoute.totalDistance.toFixed(0)} miles<br/>
+              ${selectedRoute.operatorCount} operator${selectedRoute.operatorCount !== 1 ? 's' : ''}
+            </div>
+          </div>
+        `;
+
+        operatorLegendRef.current = L.control({ position: 'topright' });
+        operatorLegendRef.current.onAdd = function() {
+          const div = L.DomUtil.create('div', 'operator-legend');
+          div.innerHTML = legendHtml;
+          L.DomEvent.disableClickPropagation(div);
+          return div;
+        };
+        operatorLegendRef.current.addTo(mapInstanceRef.current);
       } else {
         // Fallback: single polyline if segments not available
         polylineRef.current = L.polyline(positions, {

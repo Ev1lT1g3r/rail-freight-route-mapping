@@ -12,6 +12,52 @@ All notable changes to this project will be documented in this file.
 - Export capabilities (PDF, Excel)
 - Mobile app version
 
+## [1.2.0] - 2024-12-16
+
+### Added
+- **Interactive Freight Planning Interface**
+  - Split-layout design with three panels (Compliance, Visualization, Controls)
+  - Real-time freight geometry controls with sliders
+  - Interactive dimension adjustment (length, width, height, weight)
+  - Live updates to visualization as dimensions change
+
+- **Compliance Probability Calculator**
+  - Multi-factor compliance scoring system
+  - Real-time probability calculation (0-100%)
+  - Category classification (High/Medium/Low/Very Low)
+  - Factor breakdown with individual scores:
+    - Dimension Compliance (40% weight)
+    - Weight Compliance (25% weight)
+    - Center of Gravity (20% weight)
+    - Operator Rules (10% weight)
+    - Route Compatibility (5% weight)
+  - Critical issues identification
+  - Warnings and recommendations
+  - Actionable improvement suggestions
+
+- **Enhanced Route Map Visualization**
+  - Operator-specific route segment styling with gradients
+  - Shadow/glow effects for better visibility
+  - Enhanced operator labels with logos
+  - Interactive tooltips with segment details
+  - Operator statistics panel showing:
+    - Distance per operator
+    - Number of segments
+    - Station count
+    - Total route statistics
+  - Improved visual distinction between operators
+  - Better contrast on satellite view
+
+### Changed
+- Redesigned FreightPlacementVisualization component with split-layout
+- Enhanced MapComponent with richer operator-specific visualizations
+- Improved user experience with real-time feedback
+- Better integration between freight planning and compliance analysis
+
+### Fixed
+- Circular dependency issues in compliance calculator
+- Import/export consistency across modules
+
 ## [1.1.0] - 2024-12-16
 
 ### Added

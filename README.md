@@ -12,7 +12,15 @@ This application provides a complete solution for freight rail route planning an
 - **Interactive Map**: Visualize freight rail terminals across North America using Leaflet maps
 - **Satellite View**: Automatic satellite/imagery view when routes are selected for detailed track visualization
 - **Route Finding**: Calculate optimal routes using Dijkstra's algorithm with configurable preferences
-- **Operator-Specific Visualization**: Color-coded route segments by operator (BNSF, UP, CSX, NS, CN, CP)
+- **Enhanced Operator-Specific Visualization**: 
+  - Color-coded route segments by operator (BNSF, UP, CSX, NS, CN, CP)
+  - Gradient styling with shadow effects for better visibility
+  - Operator labels with logos on each route segment
+  - Interactive tooltips with segment details
+- **Operator Statistics Panel**: 
+  - Real-time operator statistics (distance, segments, stations)
+  - Route summary with total distance and operator count
+  - Per-operator breakdown displayed on map
 - **Zoom Optimization**: Automatic closer zoom for route visualization
 
 ### 📋 Submission Workflow System
@@ -26,7 +34,12 @@ This application provides a complete solution for freight rail route planning an
 - **Edit Capability**: Edit draft and rejected submissions
 
 ### 📦 Freight Specification & Visualization
+- **Interactive Split-Layout Interface**:
+  - **Left Panel**: Compliance probability analysis with factor breakdown
+  - **Center Panel**: Real-time freight placement visualization
+  - **Right Panel**: Interactive freight geometry controls with sliders
 - **Freight Details**: Enter dimensions (length, width, height), weight, and description
+- **Interactive Geometry Controls**: Real-time sliders for adjusting freight dimensions
 - **Diagram Upload**: Upload freight diagrams/images
 - **Auto-Calculations**: Automatic volume and density calculations
 - **Car Type Auto-Selection**: Automatically recommends best car type based on freight dimensions and route operators
@@ -34,10 +47,16 @@ This application provides a complete solution for freight rail route planning an
   - Top view (deck) showing freight placement
   - Side view (profile) showing vertical placement
   - Interactive placement controls (forward/backward, left/right offset)
+  - Real-time center of gravity visualization
 - **Center of Gravity Analysis**:
   - Longitudinal (X-axis), Lateral (Y-axis), and Vertical (Z-axis) calculations
   - Real-time validation and warnings
   - Combined car + freight center of gravity
+- **Compliance Probability Calculator**:
+  - Multi-factor compliance scoring (Dimensions, Weight, CG, Operator Rules, Route)
+  - Real-time probability percentage with color-coded categories
+  - Critical issues and warnings identification
+  - Actionable recommendations for improvement
 
 ### 🚂 Operator-Specific Car Types
 - **BNSF**: Boxcar, Flatcar, Hopper Car, Tank Car
@@ -128,6 +147,7 @@ src/
 ├── utils/
 │   ├── routeFinder.js               # Route finding algorithm (Dijkstra)
 │   ├── freightCalculations.js       # Center of gravity and placement calculations
+│   ├── complianceCalculator.js      # Compliance probability calculator
 │   ├── submissionStorage.js         # LocalStorage utilities for submissions
 │   └── *.test.js                    # Utility tests
 └── App.jsx                          # Main application component with routing
@@ -168,11 +188,17 @@ src/
 
 ### Freight Placement Visualization
 
+- **Interactive Split-Layout**: Three-panel interface for comprehensive freight planning
+  - Left: Compliance probability analysis
+  - Center: Real-time visualization
+  - Right: Interactive geometry controls
 - **Auto-Selection**: System automatically selects best car type when freight dimensions are entered
 - **Recommendations**: View top 5 car type recommendations with scores
+- **Interactive Geometry Controls**: Real-time sliders for adjusting freight dimensions (length, width, height, weight)
 - **Placement Controls**: Adjust forward/backward and left/right placement
 - **Real-Time Validation**: See immediate feedback on placement validity
 - **Center of Gravity**: View calculated CG with warnings for stability issues
+- **Compliance Probability**: Real-time calculation showing approval probability with factor breakdown
 
 ## Route Finding Algorithm
 
@@ -205,6 +231,22 @@ The system automatically recommends car types based on:
 - **Space Utilization**: Optimal use of car space (70-95% ideal)
 - **Freight Characteristics**: Tall/heavy freight preferences
 - **Operator Availability**: Only considers operators in selected route
+
+## Compliance Probability Calculator
+
+The compliance probability calculator evaluates shipment approval likelihood based on:
+- **Dimension Compliance (40% weight)**: Checks if freight fits within car dimensions
+- **Weight Compliance (25% weight)**: Validates weight against car capacity
+- **Center of Gravity (20% weight)**: Analyzes CG offsets for stability
+- **Operator Rules (10% weight)**: Validates against operator-specific requirements
+- **Route Compatibility (5% weight)**: Checks route and operator alignment
+
+Results include:
+- Overall probability percentage (0-100%)
+- Category classification (High/Medium/Low/Very Low)
+- Factor-by-factor breakdown with scores
+- Critical issues and warnings
+- Actionable recommendations for improvement
 
 ## Freight Rail Network
 
