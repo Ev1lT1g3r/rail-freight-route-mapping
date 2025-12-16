@@ -447,13 +447,31 @@ function MapComponent({
         };
         operatorLegendRef.current.addTo(mapInstanceRef.current);
       } else {
-        // Fallback: single polyline if segments not available
-        polylineRef.current = L.polyline(positions, {
-          color: '#FF0000',
-          weight: 8,
-          opacity: 0.95,
-          smoothFactor: 0.5
-        }).addTo(mapInstanceRef.current);
+        // Fallback: single polyline if segments not available - always show something
+        console.log('No segments available, drawing fallback polyline with', positions.length, 'points');
+        try {
+          polylineRef.current = L.polyline(positions, {
+            color: '#3B82F6',
+            weight: 10,
+            opacity: 0.9,
+            smoothFactor: 1.0,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(mapInstanceRef.current);
+          
+          // Add shadow for fallback too
+          const shadowPolyline = L.polyline(positions, {
+            color: '#3B82F6',
+            weight: 14,
+            opacity: 0.3,
+            smoothFactor: 1.0,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(mapInstanceRef.current);
+          routePolylinesRef.current.push(shadowPolyline);
+        } catch (error) {
+          console.error('Error drawing fallback polyline:', error);
+        }
       }
 
       // Add waypoint markers at each intermediate station in the route
