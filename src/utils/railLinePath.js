@@ -168,19 +168,60 @@ function catmullRomSpline(p0, p1, p2, p3, t) {
  * @returns {Array} Array of [lat, lng] coordinates for the rail line
  */
 export function generateSegmentRailPath(segment) {
-  const from = { lat: segment.from.lat, lng: segment.from.lng };
-  const to = { lat: segment.to.lat, lng: segment.to.lng };
-  const curveScore = segment.curveScore || 5;
-  const states = segment.states || [];
-  
-  // Generate waypoints
-  let waypoints = generateRailLinePath(from, to, curveScore, states);
-  
-  // Smooth the path if we have enough points
-  if (waypoints.length > 3) {
-    waypoints = smoothRailPath(waypoints);
+  try {
+    // Validate input
+    if (!segment || !segment.from || !segment.to) {
+      console.warn('Invalid segment data:', segment);
+      return [];
+    }
+    
+    const from = { lat: segment.from.lat, lng: segment.from.lng };
+    const to = { lat: segment.to.lat, lng: segment.to.lng };
+    
+    // Validate coordinates
+    if (isNaN(from.lat) || isNaN(from.lng) || isNaN(to.lat) || isNaN(to.lng)) {
+      console.warn('Invalid coordinates:', { from, to });
+      return [];
+    }
+    
+    const curveScore = segment.curveScore || 5;
+    const states = segment.states || [];
+    
+    // Generate waypoints
+    let waypoints = generateRailLinePath(from, to, curveScore, states);
+    
+    // Validate waypoints
+    if (!waypoints || waypoints.length < 2) {
+      // Fallback to simple two-point path
+      return [[from.lat, from.lng], [to.lat, to.lng]];
+    }
+    
+    // Smooth the path if we have enough points
+    if (waypoints.length > 3) {
+      try {
+        waypoints = smoothRailPath(waypoints);
+      } catch (error) {
+        console.warn('Error smoothing path, using original:', error);
+      }
+    }
+    
+    // Final validation - ensure all points are valid
+    const validWaypoints = waypoints.filter(point => 
+      point && 
+      Array.isArray(point) && 
+      point.length >= 2 && 
+      !isNaN(point[0]) && 
+      !isNaN(point[1])
+    );
+    
+    return validWaypoints.length >= 2 ? validWaypoints : [[from.lat, from.lng], [to.lat, to.lng]];
+  } catch (error) {
+    console.error('Error in generateSegmentRailPath:', error, segment);
+    // Return fallback path
+    if (segment && segment.from && segment.to) {
+      return [[segment.from.lat, segment.from.lng], [segment.to.lat, segment.to.lng]];
+    }
+    return [];
   }
-  
-  return waypoints;
 }
 

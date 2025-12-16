@@ -245,6 +245,8 @@ function MapComponent({
 
     // Add new polyline if route is selected - draw through all stations in path
     if (selectedRoute && selectedRoute.path && selectedRoute.path.length > 1) {
+      console.log('Drawing route:', selectedRoute);
+      
       // Switch to satellite view when route is shown
       if (satelliteLayerRef.current && tileLayerRef.current) {
         mapInstanceRef.current.removeLayer(tileLayerRef.current);
@@ -281,84 +283,122 @@ function MapComponent({
 
       // Draw route line with operator-specific colors for each segment
       if (selectedRoute.segments && selectedRoute.segments.length > 0) {
+        console.log('Drawing segments:', selectedRoute.segments.length);
         // Draw each segment with operator-specific styling along actual rail lines
         selectedRoute.segments.forEach((segment, segIndex) => {
-          const segmentStart = selectedRoute.path[segIndex];
-          const segmentEnd = selectedRoute.path[segIndex + 1];
+          // Get segment start and end from the segment object or path
+          const segmentStart = segment.from || selectedRoute.path[segIndex];
+          const segmentEnd = segment.to || selectedRoute.path[segIndex + 1];
           
-          if (segmentStart && segmentEnd) {
-            // Generate realistic rail line path with intermediate waypoints
-            const segmentData = {
-              from: { lat: segmentStart.lat, lng: segmentStart.lng },
-              to: { lat: segmentEnd.lat, lng: segmentEnd.lng },
-              curveScore: segment.curveScore || 5,
-              states: segment.states || []
-            };
+          console.log(`Segment ${segIndex}:`, { segment, segmentStart, segmentEnd });
+          
+          if (segmentStart && segmentEnd && segmentStart.lat && segmentStart.lng && segmentEnd.lat && segmentEnd.lng) {
+            let railLinePath;
             
-            // Generate rail line path with intermediate waypoints
-            const railLinePath = generateSegmentRailPath(segmentData);
+            try {
+              // Generate realistic rail line path with intermediate waypoints
+              const segmentData = {
+                from: { lat: segmentStart.lat, lng: segmentStart.lng },
+                to: { lat: segmentEnd.lat, lng: segmentEnd.lng },
+                curveScore: segment.curveScore || 5,
+                states: segment.states || []
+              };
+              
+              // Generate rail line path with intermediate waypoints
+              railLinePath = generateSegmentRailPath(segmentData);
+              
+              // Validate path points
+              if (!railLinePath || railLinePath.length < 2) {
+                // Fallback to simple two-point path
+                railLinePath = [
+                  [segmentStart.lat, segmentStart.lng],
+                  [segmentEnd.lat, segmentEnd.lng]
+                ];
+              }
+            } catch (error) {
+              console.warn('Error generating rail line path, using straight line:', error);
+              // Fallback to straight line if path generation fails
+              railLinePath = [
+                [segmentStart.lat, segmentStart.lng],
+                [segmentEnd.lat, segmentEnd.lng]
+              ];
+            }
             
             const operatorInfo = OPERATOR_COLORS[segment.operator] || OPERATOR_COLORS.Default;
             const segmentColor = operatorInfo.color;
             
-            // Enhanced polyline following rail lines with smooth curves
-            const segmentPolyline = L.polyline(railLinePath, {
-              color: segmentColor,
-              weight: 10,
-              opacity: 0.9,
-              smoothFactor: 1.0, // Smooth the curves
-              lineCap: 'round',
-              lineJoin: 'round'
-            }).addTo(mapInstanceRef.current);
-            
-            // Add shadow/glow effect with a slightly offset polyline
-            const shadowPolyline = L.polyline(railLinePath, {
-              color: segmentColor,
-              weight: 14,
-              opacity: 0.3,
-              smoothFactor: 1.0,
-              lineCap: 'round',
-              lineJoin: 'round'
-            }).addTo(mapInstanceRef.current);
-            routePolylinesRef.current.push(shadowPolyline);
+            try {
+              // Enhanced polyline following rail lines with smooth curves
+              const segmentPolyline = L.polyline(railLinePath, {
+                color: segmentColor,
+                weight: 10,
+                opacity: 0.9,
+                smoothFactor: 1.0, // Smooth the curves
+                lineCap: 'round',
+                lineJoin: 'round'
+              }).addTo(mapInstanceRef.current);
+              
+              // Add shadow/glow effect with a slightly offset polyline
+              const shadowPolyline = L.polyline(railLinePath, {
+                color: segmentColor,
+                weight: 14,
+                opacity: 0.3,
+                smoothFactor: 1.0,
+                lineCap: 'round',
+                lineJoin: 'round'
+              }).addTo(mapInstanceRef.current);
+              routePolylinesRef.current.push(shadowPolyline);
+              routePolylinesRef.current.push(segmentPolyline);
+            } catch (error) {
+              console.error('Error creating polyline:', error, railLinePath);
+            }
             
             // Add operator label at midpoint of the rail line path
-            const midPointIndex = Math.floor(railLinePath.length / 2);
-            const midPoint = railLinePath[midPointIndex] || railLinePath[Math.floor(railLinePath.length / 2)];
-            const midLat = midPoint[0];
-            const midLng = midPoint[1];
-            
-            const label = L.marker([midLat, midLng], {
-              icon: L.divIcon({
-                className: 'operator-label',
-                html: `<div style="
-                  background: linear-gradient(135deg, ${segmentColor} 0%, ${segmentColor}dd 100%);
-                  color: white;
-                  padding: 6px 12px;
-                  border-radius: 6px;
-                  font-size: 12px;
-                  font-weight: bold;
-                  white-space: nowrap;
-                  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
-                  border: 2px solid white;
-                  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-                ">${operatorInfo.logo} ${segment.operator}</div>`,
-                iconSize: [80, 28],
-                iconAnchor: [40, 14]
-              })
-            }).addTo(mapInstanceRef.current);
-            
-            // Add info popup on hover
-            label.bindTooltip(`
-              <div style="font-size: 12px; line-height: 1.4;">
-                <strong>${operatorInfo.name}</strong><br/>
-                Segment: ${segmentStart.name} → ${segmentEnd.name}<br/>
-                Distance: ~${operatorStats[segment.operator]?.distance.toFixed(0) || 'N/A'} miles
-              </div>
-            `, { permanent: false, direction: 'top' });
-            
-            routePolylinesRef.current.push(segmentPolyline);
-            routeMarkersRef.current.push(label);
+            try {
+              const midPointIndex = Math.floor(railLinePath.length / 2);
+              const midPoint = railLinePath[midPointIndex] || railLinePath[Math.floor(railLinePath.length / 2)];
+              const midLat = midPoint[0];
+              const midLng = midPoint[1];
+              
+              if (midLat && midLng && !isNaN(midLat) && !isNaN(midLng)) {
+                const label = L.marker([midLat, midLng], {
+                  icon: L.divIcon({
+                    className: 'operator-label',
+                    html: `<div style="
+                      background: linear-gradient(135deg, ${segmentColor} 0%, ${segmentColor}dd 100%);
+                      color: white;
+                      padding: 6px 12px;
+                      border-radius: 6px;
+                      font-size: 12px;
+                      font-weight: bold;
+                      white-space: nowrap;
+                      box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+                      border: 2px solid white;
+                      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                    ">${operatorInfo.logo} ${segment.operator}</div>`,
+                    iconSize: [80, 28],
+                    iconAnchor: [40, 14]
+                  })
+                }).addTo(mapInstanceRef.current);
+                
+                // Add info popup on hover
+                const startName = segmentStart.name || segmentStart.code || 'Unknown';
+                const endName = segmentEnd.name || segmentEnd.code || 'Unknown';
+                label.bindTooltip(`
+                  <div style="font-size: 12px; line-height: 1.4;">
+                    <strong>${operatorInfo.name}</strong><br/>
+                    Segment: ${startName} → ${endName}<br/>
+                    Distance: ~${operatorStats[segment.operator]?.distance.toFixed(0) || segment.distance || 'N/A'} miles
+                  </div>
+                `, { permanent: false, direction: 'top' });
+                
+                routeMarkersRef.current.push(label);
+              }
+            } catch (error) {
+              console.error('Error creating operator label:', error);
+            }
+          } else {
+            console.warn('Invalid segment data:', { segment, segIndex, segmentStart, segmentEnd });
           }
         });
 
