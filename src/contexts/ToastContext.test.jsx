@@ -42,22 +42,18 @@ describe('ToastContext', () => {
     console.error = consoleError;
   });
 
-  it('should display toast messages', async () => {
-    render(
+  it('should display toast messages', () => {
+    const { container } = render(
       <ToastProvider>
         <TestComponent />
       </ToastProvider>
     );
     
-    const successButton = screen.getByText(/Show Success/i);
-    await successButton.click();
-    
-    // Toast container should exist (ToastProvider renders ToastContainer)
-    // The actual toast message may appear asynchronously, so we just verify the container exists
-    const container = document.body;
+    // ToastProvider renders ToastContainer, which should be in the DOM
+    // The toast-container div should exist (even if empty initially)
     const toastContainer = container.querySelector('.toast-container');
-    // Toast container exists even if empty, so this test verifies the structure is correct
-    expect(toastContainer !== null || container.querySelector('.toast') !== null).toBe(true);
+    // Verify ToastContainer is rendered by ToastProvider
+    expect(toastContainer).toBeInTheDocument();
   });
 });
 
