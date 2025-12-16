@@ -48,8 +48,11 @@ export function calculateCenterOfGravity(freight, car, placement = { x: 0, y: 0 
   const combinedCG_Y = ((carWeight * carCG_Y) + (freightWeight * freightCG_Y)) / totalWeight;
   const combinedCG_Z = ((carWeight * carCG_Z) + (freightWeight * freightCG_Z)) / totalWeight;
 
-  // Validate placement
-  const validations = validatePlacement(freight, car, placement);
+  // Calculate validations separately to avoid circular dependency
+  const validations = validatePlacement(freight, car, placement, {
+    combinedCG: { x: combinedCG_X, y: combinedCG_Y, z: combinedCG_Z },
+    freightCG: { x: freightCG_X, y: freightCG_Y, z: freightCG_Z }
+  });
 
   return {
     freightCG: {
@@ -76,8 +79,9 @@ export function calculateCenterOfGravity(freight, car, placement = { x: 0, y: 0 
 
 /**
  * Validate freight placement on car
+ * @param {Object} cgData - Pre-calculated center of gravity data to avoid circular dependency
  */
-function validatePlacement(freight, car, placement) {
+function validatePlacement(freight, car, placement, cgData = null) {
   const issues = [];
   const warnings = [];
 
@@ -114,21 +118,22 @@ function validatePlacement(freight, car, placement) {
     issues.push(`Freight placement exceeds car width bounds (max offset: ${maxY.toFixed(1)}ft)`);
   }
 
-  // Center of gravity warnings
-  const cgResult = calculateCenterOfGravity(freight, car, placement);
-  const maxCGOffset = car.length * 0.1; // 10% of car length
-  
-  if (Math.abs(cgResult.combinedCG.x) > maxCGOffset) {
-    warnings.push(`Center of gravity offset (${cgResult.combinedCG.x.toFixed(1)}ft) may affect stability`);
-  }
+  // Center of gravity warnings (use provided cgData to avoid circular call)
+  if (cgData && cgData.combinedCG) {
+    const maxCGOffset = car.length * 0.1; // 10% of car length
+    
+    if (Math.abs(cgData.combinedCG.x) > maxCGOffset) {
+      warnings.push(`Center of gravity offset (${cgData.combinedCG.x.toFixed(1)}ft) may affect stability`);
+    }
 
-  if (Math.abs(cgResult.combinedCG.y) > car.width * 0.05) {
-    warnings.push(`Lateral center of gravity offset (${cgResult.combinedCG.y.toFixed(1)}ft) may affect stability`);
-  }
+    if (Math.abs(cgData.combinedCG.y) > car.width * 0.05) {
+      warnings.push(`Lateral center of gravity offset (${cgData.combinedCG.y.toFixed(1)}ft) may affect stability`);
+    }
 
-  // Height warning
-  if (cgResult.combinedCG.z > car.height + car.deckHeight - 2) {
-    warnings.push(`High center of gravity (${cgResult.combinedCG.z.toFixed(1)}ft) may affect stability`);
+    // Height warning
+    if (cgData.combinedCG.z > car.height + car.deckHeight - 2) {
+      warnings.push(`High center of gravity (${cgData.combinedCG.z.toFixed(1)}ft) may affect stability`);
+    }
   }
 
   return {
