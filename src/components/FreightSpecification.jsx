@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function FreightSpecification({ freight, onFreightChange }) {
+function FreightSpecification({ freight, onFreightChange, validationErrors = {} }) {
   const [localFreight, setLocalFreight] = useState(freight || {
     description: '',
     length: 0,
@@ -74,10 +74,15 @@ function FreightSpecification({ freight, onFreightChange }) {
               width: '100%',
               padding: '8px',
               borderRadius: '4px',
-              border: '1px solid #ddd',
+              border: validationErrors.length ? '2px solid #EF4444' : '1px solid #ddd',
               fontSize: '14px'
             }}
           />
+          {validationErrors.length && (
+            <div style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px' }}>
+              {validationErrors.length}
+            </div>
+          )}
         </div>
 
         <div>
@@ -95,10 +100,15 @@ function FreightSpecification({ freight, onFreightChange }) {
               width: '100%',
               padding: '8px',
               borderRadius: '4px',
-              border: '1px solid #ddd',
+              border: validationErrors.width ? '2px solid #EF4444' : '1px solid #ddd',
               fontSize: '14px'
             }}
           />
+          {validationErrors.width && (
+            <div style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px' }}>
+              {validationErrors.width}
+            </div>
+          )}
         </div>
 
         <div>
@@ -116,10 +126,15 @@ function FreightSpecification({ freight, onFreightChange }) {
               width: '100%',
               padding: '8px',
               borderRadius: '4px',
-              border: '1px solid #ddd',
+              border: validationErrors.height ? '2px solid #EF4444' : '1px solid #ddd',
               fontSize: '14px'
             }}
           />
+          {validationErrors.height && (
+            <div style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px' }}>
+              {validationErrors.height}
+            </div>
+          )}
         </div>
 
         <div>
@@ -137,10 +152,15 @@ function FreightSpecification({ freight, onFreightChange }) {
               width: '100%',
               padding: '8px',
               borderRadius: '4px',
-              border: '1px solid #ddd',
+              border: validationErrors.weight ? '2px solid #EF4444' : '1px solid #ddd',
               fontSize: '14px'
             }}
           />
+          {validationErrors.weight && (
+            <div style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px' }}>
+              {validationErrors.weight}
+            </div>
+          )}
         </div>
       </div>
 

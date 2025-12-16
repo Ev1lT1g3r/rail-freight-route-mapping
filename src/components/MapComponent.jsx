@@ -245,7 +245,6 @@ function MapComponent({
 
     // Add new polyline if route is selected - draw through all stations in path
     if (selectedRoute && selectedRoute.path && selectedRoute.path.length > 1) {
-      console.log('Drawing route:', selectedRoute);
       
       // Switch to satellite view when route is shown
       if (satelliteLayerRef.current && tileLayerRef.current) {
@@ -283,16 +282,13 @@ function MapComponent({
         });
       }
 
-      // Draw route line with operator-specific colors for each segment
-      if (selectedRoute.segments && selectedRoute.segments.length > 0) {
-        console.log('Drawing segments:', selectedRoute.segments.length);
+            // Draw route line with operator-specific colors for each segment
+            if (selectedRoute.segments && selectedRoute.segments.length > 0) {
         // Draw each segment with operator-specific styling along actual rail lines
         selectedRoute.segments.forEach((segment, segIndex) => {
           // Get segment start and end from the segment object or path
-          const segmentStart = segment.from || selectedRoute.path[segIndex];
-          const segmentEnd = segment.to || selectedRoute.path[segIndex + 1];
-          
-          console.log(`Segment ${segIndex}:`, { segment, segmentStart, segmentEnd });
+                const segmentStart = segment.from || selectedRoute.path[segIndex];
+                const segmentEnd = segment.to || selectedRoute.path[segIndex + 1];
           
           if (segmentStart && segmentEnd && segmentStart.lat && segmentStart.lng && segmentEnd.lat && segmentEnd.lng) {
             let railLinePath;
@@ -451,7 +447,6 @@ function MapComponent({
         operatorLegendRef.current.addTo(mapInstanceRef.current);
       } else {
         // Fallback: single polyline if segments not available - always show something
-        console.log('No segments available, drawing fallback polyline with', positions.length, 'points');
         try {
           polylineRef.current = L.polyline(positions, {
             color: '#3B82F6',

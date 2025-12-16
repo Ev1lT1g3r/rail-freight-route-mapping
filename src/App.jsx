@@ -4,6 +4,8 @@ import HomePage from './components/HomePage';
 import SubmissionsList from './components/SubmissionsList';
 import SubmissionForm from './components/SubmissionForm';
 import SubmissionDetail from './components/SubmissionDetail';
+import ToastContainer from './components/ToastContainer';
+import { useToast } from './hooks/useToast';
 import { WORKFLOW_STATUS } from './utils/submissionStorage';
 
 // View states
@@ -20,8 +22,7 @@ function App() {
   const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null); // In a real app, this would come from auth
   const [isApprover, setIsApprover] = useState(false); // In a real app, this would come from user permissions
-
-  console.log('App rendering - Current view:', currentView);
+  const { toasts, removeToast } = useToast();
 
   const handleCreateNew = () => {
     setSelectedSubmissionId(null);
@@ -69,6 +70,7 @@ function App() {
 
   return (
     <div className="App">
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       {currentView === VIEWS.HOME && (
         <HomePage
           onNavigateToWorkflow={handleNavigateToWorkflow}

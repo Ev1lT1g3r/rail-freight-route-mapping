@@ -7,7 +7,6 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
   const [sortBy, setSortBy] = useState('date');
 
   useEffect(() => {
-    console.log('SubmissionsList mounted');
     loadSubmissions();
     // Refresh every 5 seconds to catch updates
     const interval = setInterval(loadSubmissions, 5000);

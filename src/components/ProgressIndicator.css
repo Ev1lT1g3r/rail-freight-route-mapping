@@ -1,0 +1,122 @@
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 30px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.progress-step-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.progress-step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  border: 3px solid;
+}
+
+.progress-step.pending .progress-step-circle {
+  background-color: #E2E8F0;
+  border-color: #CBD5E0;
+  color: #64748B;
+}
+
+.progress-step.active .progress-step-circle {
+  background-color: #3B82F6;
+  border-color: #2563EB;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  transform: scale(1.1);
+}
+
+.progress-step.completed .progress-step-circle {
+  background-color: #10B981;
+  border-color: #059669;
+  color: white;
+}
+
+.progress-checkmark {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.progress-number {
+  font-size: 16px;
+}
+
+.progress-step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748B;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.progress-step.active .progress-step-label {
+  color: #3B82F6;
+  font-weight: 700;
+}
+
+.progress-step.completed .progress-step-label {
+  color: #10B981;
+}
+
+.progress-connector {
+  flex: 1;
+  height: 3px;
+  background-color: #E2E8F0;
+  margin: 0 10px;
+  margin-top: -30px;
+  transition: background-color 0.3s ease;
+}
+
+.progress-connector.completed {
+  background-color: #10B981;
+}
+
+@media (max-width: 768px) {
+  .progress-indicator {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .progress-step-container {
+    width: 100%;
+    flex-direction: row;
+  }
+
+  .progress-connector {
+    width: 3px;
+    height: 30px;
+    margin: 0;
+    margin-left: 18px;
+  }
+
+  .progress-step {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+}
+
