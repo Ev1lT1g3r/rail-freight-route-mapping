@@ -31,22 +31,27 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 ### 3. API Layer Abstraction
 **Current State:** Direct LocalStorage calls throughout components
-**Recommendation:** Create API service layer
+**Recommendation:** Create API service layer using Palantir Foundry OSDK
 ```javascript
 // src/services/submissionService.js
+import { FoundryClient } from '@palantir/foundry-sdk';
+
+// Using Palantir Foundry OSDK (Object SDK)
 export const submissionService = {
-  getAll: () => api.get('/submissions'),
-  getById: (id) => api.get(`/submissions/${id}`),
-  create: (data) => api.post('/submissions', data),
-  update: (id, data) => api.put(`/submissions/${id}`, data),
-  delete: (id) => api.delete(`/submissions/${id}`)
+  getAll: () => foundryClient.objects.query('submissions'),
+  getById: (id) => foundryClient.objects.get('submissions', id),
+  create: (data) => foundryClient.objects.create('submissions', data),
+  update: (id, data) => foundryClient.objects.update('submissions', id, data),
+  delete: (id) => foundryClient.objects.delete('submissions', id)
 };
 ```
 - **Benefits:**
-  - Easy migration from LocalStorage to backend
+  - Easy migration from LocalStorage to Foundry
   - Consistent error handling
-  - Request/response interceptors
-  - Caching strategies
+  - Built-in authentication and authorization
+  - Automatic data versioning and lineage
+  - Integration with Foundry's data platform
+  - Type-safe object access via OSDK
 
 ### 4. Type Safety
 **Current State:** No TypeScript
@@ -129,65 +134,91 @@ const ROLES = {
 
 ## 🗄️ Backend & Data Persistence
 
-### 1. Backend API
+### 1. Palantir Foundry Integration
 **Current State:** LocalStorage only
-**Recommendation:** Build RESTful or GraphQL API
-- **Tech Stack Options:**
-  - Node.js + Express + PostgreSQL
-  - Python + FastAPI + PostgreSQL
-  - .NET Core + SQL Server
-- **Features:**
-  - CRUD operations for submissions
-  - User management
-  - File upload handling
-  - Real-time updates (WebSockets)
-  - Background job processing
+**Recommendation:** Integrate with Palantir Foundry using OSDK (Object SDK)
+- **Architecture:**
+  - Use Foundry as the data platform and backend
+  - Access data through Foundry's Object SDK (OSDK)
+  - Leverage Foundry's built-in authentication and authorization
+  - Utilize Foundry's data versioning and lineage capabilities
+- **Implementation:**
+```javascript
+// Using Foundry OSDK for data access
+import { FoundryClient } from '@palantir/foundry-sdk';
 
-### 2. Database Design
-**Recommendation:** Proper relational database schema
-```sql
--- Example schema
-CREATE TABLE submissions (
-  id UUID PRIMARY KEY,
-  name VARCHAR(255),
-  origin_code VARCHAR(10),
-  destination_code VARCHAR(10),
-  status VARCHAR(50),
-  created_by UUID REFERENCES users(id),
-  created_at TIMESTAMP,
-  updated_at TIMESTAMP
-);
+const foundryClient = new FoundryClient({
+  apiKey: process.env.VITE_FOUNDRY_API_KEY,
+  baseUrl: process.env.VITE_FOUNDRY_BASE_URL
+});
 
-CREATE TABLE submission_routes (
-  submission_id UUID REFERENCES submissions(id),
-  route_data JSONB,
-  selected_index INTEGER
-);
-
-CREATE TABLE freight_specs (
-  submission_id UUID REFERENCES submissions(id),
-  length DECIMAL,
-  width DECIMAL,
-  height DECIMAL,
-  weight DECIMAL,
-  diagram_url TEXT
-);
+// Object-based data access
+const submissions = await foundryClient.objects.query('submissions', {
+  filters: { status: 'Submitted' },
+  orderBy: { created_at: 'desc' }
+});
 ```
+- **Features:**
+  - CRUD operations via OSDK
+  - Built-in user management and authentication
+  - File storage through Foundry's file system
+  - Real-time updates via Foundry's event system
+  - Background job processing with Foundry workflows
+  - Data governance and lineage tracking
+  - Type-safe object schemas
 
-### 3. File Storage
+### 2. Foundry Object Schema Design
+**Recommendation:** Design Foundry object types for the application
+```typescript
+// Foundry Object Type Definitions
+// submissions object type
+{
+  id: string (primary key),
+  name: string,
+  origin_code: string,
+  destination_code: string,
+  status: enum('Draft', 'Submitted', 'Pending Approval', 'Approved', 'Rejected'),
+  route_data: object (JSON),
+  selected_route_index: number,
+  freight_specs: object (JSON),
+  notes: string,
+  created_by: string (user reference),
+  created_at: timestamp,
+  submitted_date: timestamp,
+  approved_date: timestamp,
+  rejected_date: timestamp,
+  approved_by: string (user reference),
+  rejected_by: string (user reference),
+  rejection_reason: string,
+  updated_at: timestamp,
+  updated_by: string (user reference)
+}
+```
+- **Benefits:**
+  - Type-safe data access
+  - Automatic schema validation
+  - Built-in data versioning
+  - Audit trail and lineage
+  - Relationship management
+  - Query optimization
+
+### 3. File Storage in Foundry
 **Current State:** Base64 in LocalStorage
-**Recommendation:** Cloud storage solution
-- AWS S3, Azure Blob Storage, or Google Cloud Storage
-- CDN for fast delivery
-- Image optimization/compression
-- Virus scanning for uploads
+**Recommendation:** Use Foundry's file system
+- Store freight diagrams in Foundry file system
+- Leverage Foundry's file versioning
+- Use Foundry's file access controls
+- Automatic file metadata and indexing
+- Integration with Foundry's search capabilities
+- File transformation and processing pipelines
 
-### 4. Caching Strategy
-**Recommendation:** Implement caching layers
-- Redis for session storage
-- CDN for static assets
+### 4. Caching Strategy with Foundry
+**Recommendation:** Leverage Foundry's built-in caching
+- Foundry's query result caching
 - Browser caching headers
-- API response caching
+- CDN for static assets (if needed)
+- Foundry's data snapshot capabilities
+- Incremental data loading
 
 ## 🎨 User Experience
 
@@ -334,9 +365,11 @@ CREATE TABLE freight_specs (
 **Recommendation:** Environment-based configuration
 ```javascript
 // .env files
-VITE_API_URL=https://api.example.com
+VITE_FOUNDRY_BASE_URL=https://your-foundry-instance.palantirfoundry.com
+VITE_FOUNDRY_API_KEY=xxx
 VITE_MAP_API_KEY=xxx
-VITE_AUTH_DOMAIN=xxx
+VITE_FOUNDRY_OBJECT_TYPE_SUBMISSIONS=submissions
+VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 ```
 
 ### 2. CI/CD Pipeline Enhancement
@@ -478,13 +511,13 @@ VITE_AUTH_DOMAIN=xxx
 ### 1. Horizontal Scaling
 - Stateless application design
 - Load balancing
-- Database replication
-- Caching layers
+- Foundry data replication (handled by platform)
+- Foundry caching layers
 - CDN for static assets
 
 ### 2. Data Management
-- Database indexing strategy
-- Query optimization
+- Foundry object indexing (automatic)
+- Foundry query optimization
 - Data archiving
 - Backup and recovery
 - Disaster recovery plan
@@ -951,11 +984,12 @@ VITE_AUTH_DOMAIN=xxx
   - Slack/Teams notifications
 
 - **API & Webhooks**
-  - REST API for integrations
-  - Webhook support
-  - API documentation
-  - API key management
-  - Integration marketplace
+  - Foundry OSDK for integrations
+  - Foundry webhook support
+  - Foundry API documentation
+  - Foundry API key management
+  - Foundry integration marketplace
+  - Foundry object type APIs
 
 ### 9. Data Management
 
@@ -1006,9 +1040,10 @@ VITE_AUTH_DOMAIN=xxx
 
 ### High Priority (Next Sprint)
 1. Implement React Router for navigation
-2. Create API service layer abstraction
-3. Add proper authentication system
-4. Add environment configuration
+2. Create Foundry OSDK service layer abstraction
+3. Integrate Palantir Foundry authentication
+4. Add environment configuration for Foundry
+5. Design Foundry object types and schemas
 5. **UX: Add breadcrumb navigation**
 6. **UX: Enhance route comparison capabilities**
 7. **UX: Improve map controls and terminal search on map**
@@ -1021,9 +1056,10 @@ VITE_AUTH_DOMAIN=xxx
 14. **Functional: Enhance approval workflow with comments**
 
 ### Medium Priority (Next Quarter)
-1. Backend API development
-2. Database implementation
-3. TypeScript migration
+1. Complete Foundry OSDK integration
+2. Foundry object type implementation
+3. Foundry workflow development
+4. TypeScript migration
 4. Enhanced testing (E2E)
 5. Performance optimization
 6. Mobile responsiveness improvements
@@ -1059,15 +1095,18 @@ VITE_AUTH_DOMAIN=xxx
 - ✅ UX improvements (Toast, Progress, Validation, TerminalSearch, Presets)
 - ✅ Loading states throughout
 - 🔄 In Progress: Set up React Router
-- 🔄 In Progress: Create API service layer
-- 🔄 In Progress: Implement environment configuration
+- 🔄 In Progress: Create Foundry OSDK service layer
+- 🔄 In Progress: Implement environment configuration for Foundry
+- 🔄 In Progress: Design Foundry object types
 
-### Phase 2: Backend Integration (Weeks 5-8)
-- Design database schema
-- Build REST API
-- Implement authentication
-- File upload handling
-- Migration from LocalStorage
+### Phase 2: Foundry Integration (Weeks 5-8)
+- Set up Palantir Foundry connection
+- Design Foundry object types and schemas
+- Implement OSDK integration
+- Configure Foundry authentication
+- File upload handling via Foundry file system
+- Migration from LocalStorage to Foundry
+- Set up Foundry workflows for background processing
 
 ### Phase 3: Enhancement (Weeks 9-12)
 - TypeScript migration
