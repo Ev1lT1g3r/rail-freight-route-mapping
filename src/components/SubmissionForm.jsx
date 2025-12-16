@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import MapComponent from './MapComponent';
 import RouteConfig from './RouteConfig';
 import RouteResults from './RouteResults';
+import FreightSpecification from './FreightSpecification';
+import FreightPlacementVisualization from './FreightPlacementVisualization';
 import ErrorBoundary from './ErrorBoundary';
 import { stations } from '../data/railNetwork';
 import { findRoutes } from '../utils/routeFinder';
@@ -22,6 +24,8 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(existingSubmission?.selectedRouteIndex ?? null);
   const [notes, setNotes] = useState(existingSubmission?.notes || '');
   const [submissionName, setSubmissionName] = useState(existingSubmission?.name || '');
+  const [freight, setFreight] = useState(existingSubmission?.freight || null);
+  const [currentStep, setCurrentStep] = useState('route'); // 'route', 'freight', 'review'
 
   const selectedRoute = selectedRouteIndex !== null ? routes[selectedRouteIndex] : null;
 
@@ -218,95 +222,256 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
         </div>
       </div>
 
-      <RouteConfig preferences={preferences} onPreferencesChange={setPreferences} />
+      {currentStep === 'route' && (
+        <>
+          <RouteConfig preferences={preferences} onPreferencesChange={setPreferences} />
 
-      <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+            <button
+              onClick={handleFindRoutes}
+              disabled={!origin || !destination}
+              className="sigma-btn-primary"
+              style={{
+                padding: '12px 30px',
+                fontSize: '18px',
+                fontWeight: 'bold'
+              }}
+            >
+              Find Routes
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* Step Navigation */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '10px', 
+        marginBottom: '20px',
+        padding: '10px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '8px'
+      }}>
         <button
-          onClick={handleFindRoutes}
-          disabled={!origin || !destination}
-          className="sigma-btn-primary"
+          onClick={() => setCurrentStep('route')}
           style={{
-            padding: '12px 30px',
-            fontSize: '18px',
-            fontWeight: 'bold'
+            padding: '8px 16px',
+            backgroundColor: currentStep === 'route' ? '#3B82F6' : '#fff',
+            color: currentStep === 'route' ? '#fff' : '#333',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: currentStep === 'route' ? 'bold' : 'normal'
           }}
         >
-          Find Routes
+          1. Route Selection
+        </button>
+        <button
+          onClick={() => {
+            if (selectedRouteIndex !== null) setCurrentStep('freight');
+          }}
+          disabled={selectedRouteIndex === null}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: currentStep === 'freight' ? '#3B82F6' : '#fff',
+            color: (selectedRouteIndex === null || currentStep === 'freight') ? (selectedRouteIndex === null ? '#999' : '#fff') : '#333',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            cursor: selectedRouteIndex === null ? 'not-allowed' : 'pointer',
+            fontWeight: currentStep === 'freight' ? 'bold' : 'normal',
+            opacity: selectedRouteIndex === null ? 0.5 : 1
+          }}
+        >
+          2. Freight Specification
+        </button>
+        <button
+          onClick={() => {
+            if (selectedRouteIndex !== null) setCurrentStep('review');
+          }}
+          disabled={selectedRouteIndex === null}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: currentStep === 'review' ? '#3B82F6' : '#fff',
+            color: (selectedRouteIndex === null || currentStep === 'review') ? (selectedRouteIndex === null ? '#999' : '#fff') : '#333',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            cursor: selectedRouteIndex === null ? 'not-allowed' : 'pointer',
+            fontWeight: currentStep === 'review' ? 'bold' : 'normal',
+            opacity: selectedRouteIndex === null ? 0.5 : 1
+          }}
+        >
+          3. Review & Submit
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-        <div className="map-panel">
-          <ErrorBoundary>
-            <MapComponent
-              stations={stations}
-              origin={origin}
-              destination={destination}
-              onOriginSelect={handleOriginSelect}
-              onDestinationSelect={handleDestinationSelect}
+      {/* Route Selection Step */}
+      {currentStep === 'route' && routes.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+          <div className="map-panel">
+            <ErrorBoundary>
+              <MapComponent
+                stations={stations}
+                origin={origin}
+                destination={destination}
+                onOriginSelect={handleOriginSelect}
+                onDestinationSelect={handleDestinationSelect}
+                selectedRoute={selectedRoute}
+              />
+            </ErrorBoundary>
+          </div>
+
+          <div>
+            <RouteResults
+              routes={routes}
+              onRouteSelect={(idx) => {
+                setSelectedRouteIndex(idx);
+                setCurrentStep('freight');
+              }}
+              selectedRouteIndex={selectedRouteIndex}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Freight Specification Step */}
+      {currentStep === 'freight' && selectedRoute && (
+        <div>
+          <FreightSpecification 
+            freight={freight}
+            onFreightChange={setFreight}
+          />
+          
+          {freight && freight.length > 0 && freight.width > 0 && freight.height > 0 && (
+            <FreightPlacementVisualization
+              freight={freight}
+              operators={selectedRoute.operators || []}
               selectedRoute={selectedRoute}
             />
-          </ErrorBoundary>
+          )}
         </div>
+      )}
 
+      {/* Review Step */}
+      {currentStep === 'review' && (
         <div>
-          <RouteResults
-            routes={routes}
-            onRouteSelect={setSelectedRouteIndex}
-            selectedRouteIndex={selectedRouteIndex}
-          />
+          <h3 style={{ color: '#0F172A' }}>Review Submission</h3>
+          
+          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+            <h4>Route Summary</h4>
+            <p><strong>Origin:</strong> {origin} - {stations[origin]?.name}</p>
+            <p><strong>Destination:</strong> {destination} - {stations[destination]?.name}</p>
+            {selectedRoute && (
+              <>
+                <p><strong>Distance:</strong> {selectedRoute.totalDistance} miles</p>
+                <p><strong>Operators:</strong> {selectedRoute.operators.join(', ')}</p>
+              </>
+            )}
+          </div>
+
+          {freight && (
+            <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+              <h4>Freight Summary</h4>
+              <p><strong>Description:</strong> {freight.description || 'N/A'}</p>
+              <p><strong>Dimensions:</strong> {freight.length}ft × {freight.width}ft × {freight.height}ft</p>
+              <p><strong>Weight:</strong> {freight.weight.toLocaleString()} lbs</p>
+            </div>
+          )}
+
+          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Notes (optional):
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Add any additional notes or comments about this route submission..."
+              rows={4}
+              style={{
+                width: '100%',
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                fontSize: '14px',
+                fontFamily: 'inherit'
+              }}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Notes (optional):
-        </label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Add any additional notes or comments about this route submission..."
-          rows={4}
-          style={{
-            width: '100%',
-            padding: '8px',
-            borderRadius: '4px',
-            border: '1px solid #ddd',
-            fontSize: '14px',
-            fontFamily: 'inherit'
-          }}
-        />
-      </div>
-
-      <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', paddingTop: '20px', borderTop: '2px solid #eee' }}>
-        <button
-          onClick={handleSaveDraft}
-          className="sigma-btn-secondary"
-          style={{
-            padding: '12px 24px',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }}
-        >
-          Save as Draft
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={!origin || !destination || routes.length === 0 || selectedRouteIndex === null}
-          style={{
-            padding: '12px 24px',
-            backgroundColor: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? '#E2E8F0' : '#10B981',
-            color: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? '#64748B' : 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          Submit for Approval
-        </button>
+      <div style={{ display: 'flex', gap: '15px', justifyContent: 'space-between', paddingTop: '20px', borderTop: '2px solid #eee' }}>
+        <div>
+          {currentStep !== 'route' && (
+            <button
+              onClick={() => {
+                if (currentStep === 'freight') setCurrentStep('route');
+                if (currentStep === 'review') setCurrentStep('freight');
+              }}
+              className="sigma-btn-secondary"
+              style={{
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }}
+            >
+              ← Previous
+            </button>
+          )}
+        </div>
+        
+        <div style={{ display: 'flex', gap: '15px' }}>
+          {currentStep !== 'review' && (
+            <button
+              onClick={() => {
+                if (currentStep === 'route' && selectedRouteIndex !== null) setCurrentStep('freight');
+                if (currentStep === 'freight') setCurrentStep('review');
+              }}
+              disabled={currentStep === 'route' && selectedRouteIndex === null}
+              className="sigma-btn-primary"
+              style={{
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                opacity: (currentStep === 'route' && selectedRouteIndex === null) ? 0.5 : 1,
+                cursor: (currentStep === 'route' && selectedRouteIndex === null) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Next →
+            </button>
+          )}
+          
+          <button
+            onClick={handleSaveDraft}
+            className="sigma-btn-secondary"
+            style={{
+              padding: '12px 24px',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }}
+          >
+            Save as Draft
+          </button>
+          
+          {currentStep === 'review' && (
+            <button
+              onClick={handleSubmit}
+              disabled={!origin || !destination || routes.length === 0 || selectedRouteIndex === null}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? '#E2E8F0' : '#10B981',
+                color: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? '#64748B' : 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Submit for Approval
+            </button>
+          )}
+        </div>
       </div>
       </div>
     </div>
