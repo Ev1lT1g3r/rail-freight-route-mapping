@@ -1,4 +1,20 @@
+import { useState, useEffect } from 'react';
+import { ROUTE_PRESETS, findMatchingPreset } from '../utils/routePresets';
+
 function RouteConfig({ preferences, onPreferencesChange }) {
+  const [selectedPreset, setSelectedPreset] = useState(findMatchingPreset(preferences));
+
+  useEffect(() => {
+    setSelectedPreset(findMatchingPreset(preferences));
+  }, [preferences]);
+
+  const handlePresetChange = (presetKey) => {
+    setSelectedPreset(presetKey);
+    if (presetKey !== 'CUSTOM' && ROUTE_PRESETS[presetKey]) {
+      onPreferencesChange(ROUTE_PRESETS[presetKey].preferences);
+    }
+  };
+
   return (
     <div style={{ 
       padding: '20px', 
@@ -7,6 +23,45 @@ function RouteConfig({ preferences, onPreferencesChange }) {
       marginBottom: '20px'
     }}>
       <h3 style={{ marginTop: 0 }}>Route Preferences</h3>
+      
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+          Quick Presets:
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px' }}>
+          {Object.entries(ROUTE_PRESETS).map(([key, preset]) => (
+            <button
+              key={key}
+              onClick={() => handlePresetChange(key)}
+              style={{
+                padding: '10px 15px',
+                backgroundColor: selectedPreset === key ? '#3B82F6' : '#fff',
+                color: selectedPreset === key ? '#fff' : '#333',
+                border: `2px solid ${selectedPreset === key ? '#3B82F6' : '#ddd'}`,
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: selectedPreset === key ? 'bold' : 'normal',
+                transition: 'all 0.2s ease',
+                textAlign: 'left'
+              }}
+              title={preset.description}
+            >
+              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>{preset.name}</div>
+              <div style={{ fontSize: '11px', opacity: 0.8 }}>{preset.description}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      <div style={{ 
+        padding: '15px', 
+        backgroundColor: '#fff', 
+        borderRadius: '6px',
+        border: '1px solid #ddd',
+        marginBottom: '20px'
+      }}>
+        <h4 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>Custom Preferences</h4>
       
       <div style={{ marginBottom: '15px' }}>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
@@ -82,6 +137,7 @@ function RouteConfig({ preferences, onPreferencesChange }) {
           style={{ width: '100%' }}
         />
         <small>Maximum number of interline transfers allowed</small>
+      </div>
       </div>
     </div>
   );
