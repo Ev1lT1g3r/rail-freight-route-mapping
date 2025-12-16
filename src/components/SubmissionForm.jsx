@@ -308,6 +308,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
           Submit for Approval
         </button>
       </div>
+      </div>
     </div>
   );
 }

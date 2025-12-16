@@ -279,6 +279,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew }) {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
