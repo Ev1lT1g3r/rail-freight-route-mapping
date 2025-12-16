@@ -12,10 +12,9 @@ describe('ProgressIndicator Component', () => {
   };
 
   it('should render all steps', () => {
-    render(<ProgressIndicator steps={mockSteps} currentStep="step1" />);
+    const { container } = render(<ProgressIndicator steps={mockSteps} currentStep="step1" />);
     
     // Check for step names in the component
-    const container = screen.getByRole('list') || document.body;
     expect(container.textContent).toMatch(/Step 1/i);
     expect(container.textContent).toMatch(/Step 2/i);
     expect(container.textContent).toMatch(/Step 3/i);
