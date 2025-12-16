@@ -29,8 +29,8 @@ describe('SubmissionsList Component', () => {
   it('should render empty state when no submissions', () => {
     render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
     
-    expect(screen.getByText(/No submissions found/i)).toBeInTheDocument();
-    expect(screen.getByText(/Click "New Submission"/i)).toBeInTheDocument();
+    expect(screen.getByText(/No Submissions Yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Create Your First Submission/i)).toBeInTheDocument();
   });
 
   it('should render submissions list', () => {
