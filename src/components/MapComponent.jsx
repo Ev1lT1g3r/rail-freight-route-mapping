@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { generateSegmentRailPath } from '../utils/railLinePath';
 
 // Operator colors and branding
 const OPERATOR_COLORS = {
@@ -280,44 +281,52 @@ function MapComponent({
 
       // Draw route line with operator-specific colors for each segment
       if (selectedRoute.segments && selectedRoute.segments.length > 0) {
-        // Draw each segment with operator-specific styling
+        // Draw each segment with operator-specific styling along actual rail lines
         selectedRoute.segments.forEach((segment, segIndex) => {
           const segmentStart = selectedRoute.path[segIndex];
           const segmentEnd = selectedRoute.path[segIndex + 1];
           
           if (segmentStart && segmentEnd) {
-            const segmentPositions = [
-              [segmentStart.lat, segmentStart.lng],
-              [segmentEnd.lat, segmentEnd.lng]
-            ];
+            // Generate realistic rail line path with intermediate waypoints
+            const segmentData = {
+              from: { lat: segmentStart.lat, lng: segmentStart.lng },
+              to: { lat: segmentEnd.lat, lng: segmentEnd.lng },
+              curveScore: segment.curveScore || 5,
+              states: segment.states || []
+            };
+            
+            // Generate rail line path with intermediate waypoints
+            const railLinePath = generateSegmentRailPath(segmentData);
             
             const operatorInfo = OPERATOR_COLORS[segment.operator] || OPERATOR_COLORS.Default;
             const segmentColor = operatorInfo.color;
             
-            // Enhanced polyline with gradient effect
-            const segmentPolyline = L.polyline(segmentPositions, {
+            // Enhanced polyline following rail lines with smooth curves
+            const segmentPolyline = L.polyline(railLinePath, {
               color: segmentColor,
               weight: 10,
               opacity: 0.9,
-              smoothFactor: 0,
+              smoothFactor: 1.0, // Smooth the curves
               lineCap: 'round',
               lineJoin: 'round'
             }).addTo(mapInstanceRef.current);
             
             // Add shadow/glow effect with a slightly offset polyline
-            const shadowPolyline = L.polyline(segmentPositions, {
+            const shadowPolyline = L.polyline(railLinePath, {
               color: segmentColor,
               weight: 14,
               opacity: 0.3,
-              smoothFactor: 0,
+              smoothFactor: 1.0,
               lineCap: 'round',
               lineJoin: 'round'
             }).addTo(mapInstanceRef.current);
             routePolylinesRef.current.push(shadowPolyline);
             
-            // Add operator label at midpoint with enhanced styling
-            const midLat = (segmentStart.lat + segmentEnd.lat) / 2;
-            const midLng = (segmentStart.lng + segmentEnd.lng) / 2;
+            // Add operator label at midpoint of the rail line path
+            const midPointIndex = Math.floor(railLinePath.length / 2);
+            const midPoint = railLinePath[midPointIndex] || railLinePath[Math.floor(railLinePath.length / 2)];
+            const midLat = midPoint[0];
+            const midLng = midPoint[1];
             
             const label = L.marker([midLat, midLng], {
               icon: L.divIcon({
