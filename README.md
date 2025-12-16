@@ -315,6 +315,7 @@ Additional documentation available:
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution guidelines
 - [CHANGELOG.md](./CHANGELOG.md) - Version history
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Deployment guide
+- [IMPROVEMENTS.md](./IMPROVEMENTS.md) - Comprehensive improvement recommendations and roadmap
 
 ## Support
 
