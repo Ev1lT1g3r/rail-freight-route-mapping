@@ -25,7 +25,17 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   const [notes, setNotes] = useState(existingSubmission?.notes || '');
   const [submissionName, setSubmissionName] = useState(existingSubmission?.name || '');
   const [freight, setFreight] = useState(existingSubmission?.freight || null);
-  const [currentStep, setCurrentStep] = useState('route'); // 'route', 'freight', 'review'
+  // Determine initial step based on existing submission state
+  const getInitialStep = () => {
+    if (existingSubmission) {
+      // If editing and route is already selected, go to freight step
+      if (existingSubmission.selectedRouteIndex !== null && existingSubmission.selectedRouteIndex !== undefined) {
+        return existingSubmission.freight ? 'review' : 'freight';
+      }
+    }
+    return 'route';
+  };
+  const [currentStep, setCurrentStep] = useState(getInitialStep()); // 'route', 'freight', 'review'
 
   const selectedRoute = selectedRouteIndex !== null ? routes[selectedRouteIndex] : null;
 

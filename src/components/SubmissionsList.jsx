@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission } from '../utils/submissionStorage';
 
-function SubmissionsList({ onViewSubmission, onCreateNew }) {
+function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission }) {
   const [submissions, setSubmissions] = useState([]);
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('date');
@@ -204,21 +204,45 @@ function SubmissionsList({ onViewSubmission, onCreateNew }) {
                   )}
                 </div>
 
-                <button
-                  onClick={(e) => handleDelete(submission.id, e)}
-                  style={{
-                    padding: '5px 10px',
-                    backgroundColor: '#EF4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    fontWeight: '500'
-                  }}
-                >
-                  Delete
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  {(submission.status === WORKFLOW_STATUS.DRAFT || submission.status === WORKFLOW_STATUS.REJECTED) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onEditSubmission) {
+                          onEditSubmission(submission.id);
+                        }
+                      }}
+                      style={{
+                        padding: '5px 10px',
+                        backgroundColor: '#3B82F6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => handleDelete(submission.id, e)}
+                    style={{
+                      padding: '5px 10px',
+                      backgroundColor: '#EF4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
 
               <div style={{

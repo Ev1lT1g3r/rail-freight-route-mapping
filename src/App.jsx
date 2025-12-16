@@ -40,8 +40,16 @@ function App() {
     setSelectedSubmissionId(null);
   };
 
-  const handleSaveSubmission = (submission) => {
-    // Submission saved, return to list
+  const handleSaveSubmission = (submission, shouldNavigateAway = true) => {
+    // If it's a draft save and user wants to continue editing, don't navigate away
+    if (!shouldNavigateAway && submission.status === WORKFLOW_STATUS.DRAFT) {
+      // Stay on the form, just update the submission ID if it's new
+      if (!selectedSubmissionId && submission.id) {
+        setSelectedSubmissionId(submission.id);
+      }
+      return;
+    }
+    // Otherwise, return to list (for submitted items or explicit navigation)
     setCurrentView(VIEWS.LIST);
     setSelectedSubmissionId(null);
   };
@@ -55,6 +63,7 @@ function App() {
         <SubmissionsList
           onViewSubmission={handleViewSubmission}
           onCreateNew={handleCreateNew}
+          onEditSubmission={handleEditSubmission}
         />
       )}
 
