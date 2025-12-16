@@ -103,13 +103,13 @@
 Finds top 3 routes between terminals.
 
 **Parameters:**
-- `origin` (string): Origin terminal code
-- `destination` (string): Destination terminal code
-- `preferences` (object): Route preferences
-  - `weightDistance` (number): Distance weight (0-2)
-  - `weightSingleOperator` (number): Single operator preference (0-2)
-  - `weightCurves` (number): Straight route preference (0-2)
-  - `maxTransfers` (number): Maximum transfers (1-10)
+- `origin` (string): Origin terminal code (required, must exist in stations)
+- `destination` (string): Destination terminal code (required, must exist in stations)
+- `preferences` (object): Route preferences (optional, defaults provided)
+  - `weightDistance` (number): Distance weight (0-2, default: 1.0)
+  - `weightSingleOperator` (number): Single operator preference (0-2, default: 0.5)
+  - `weightCurves` (number): Straight route preference (0-2, default: 0.3)
+  - `maxTransfers` (number): Maximum transfers (1-10, default: 5)
 
 **Returns:**
 Array of route objects with:
@@ -120,6 +120,38 @@ Array of route objects with:
 - `transferPoints`: Array of transfer details
 - `states`: Array of state/province codes
 - `segments`: Array of route segments
+
+**Throws:**
+- `Error`: If origin or destination is missing or invalid
+- `Error`: If origin or destination station code doesn't exist
+
+### routePresets.js
+
+#### `ROUTE_PRESETS`
+Object containing route preference presets:
+- `FASTEST`: Prioritize shortest distance and fewest transfers
+- `SIMPLEST`: Prefer single operator with minimal transfers
+- `STRAIGHTEST`: Minimize curves and turns for stability
+- `BALANCED`: Balance all factors equally
+- `CUSTOM`: Manual preference adjustment
+
+#### `findMatchingPreset(preferences)`
+Finds the preset that most closely matches given preferences.
+
+**Parameters:**
+- `preferences` (object): Route preferences object
+
+**Returns:**
+String key of matching preset, or 'CUSTOM' if no match found
+
+#### `getPresetByName(name)`
+Gets a preset by name.
+
+**Parameters:**
+- `name` (string): Preset name (FASTEST, SIMPLEST, etc.)
+
+**Returns:**
+Preset object or BALANCED if not found
 
 ### freightCalculations.js
 
@@ -201,6 +233,41 @@ Object with:
   - `priority` (string): Priority level
   - `action` (string): Recommended action
   - `items` (array): Specific items to address
+
+### ToastContext
+
+#### `ToastProvider`
+React context provider for global toast notifications.
+
+**Usage:**
+```jsx
+<ToastProvider>
+  <App />
+</ToastProvider>
+```
+
+#### `useToast()`
+Hook to access toast functions within ToastProvider.
+
+**Returns:**
+Object with:
+- `success(message, duration?)`: Show success toast
+- `error(message, duration?)`: Show error toast
+- `warning(message, duration?)`: Show warning toast
+- `info(message, duration?)`: Show info toast
+- `showToast(message, type, duration)`: Show custom toast
+- `removeToast(id)`: Remove toast by ID
+
+**Example:**
+```jsx
+function MyComponent() {
+  const { success, error } = useToast();
+  
+  const handleSave = () => {
+    success('Saved successfully!');
+  };
+}
+```
 
 ### submissionStorage.js
 

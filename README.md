@@ -12,6 +12,13 @@ This application provides a complete solution for freight rail route planning an
 - **Interactive Map**: Visualize freight rail terminals across North America using Leaflet maps
 - **Satellite View**: Automatic satellite/imagery view when routes are selected for detailed track visualization
 - **Route Finding**: Calculate optimal routes using Dijkstra's algorithm with configurable preferences
+- **Route Preference Presets**: Quick selection of common route preferences:
+  - Fastest Route: Prioritize shortest distance and fewest transfers
+  - Simplest Route: Prefer single operator with minimal transfers
+  - Straightest Route: Minimize curves and turns for stability
+  - Balanced: Balance all factors equally
+  - Custom: Manually adjust all preferences
+- **Terminal Search**: Intelligent autocomplete search for origin and destination terminals
 - **Enhanced Operator-Specific Visualization**: 
   - Color-coded route segments by operator (BNSF, UP, CSX, NS, CN, CP)
   - Gradient styling with shadow effects for better visibility
@@ -22,16 +29,20 @@ This application provides a complete solution for freight rail route planning an
   - Route summary with total distance and operator count
   - Per-operator breakdown displayed on map
 - **Zoom Optimization**: Automatic closer zoom for route visualization
+- **Error Handling**: Comprehensive validation and clear error messages for route finding
 
 ### 📋 Submission Workflow System
 - **Multi-Step Submission Process**: 
   - Step 1: Route Selection
   - Step 2: Freight Specification
   - Step 3: Review & Submit
+- **Progress Indicator**: Visual progress indicator showing current step and completion percentage
 - **Draft Management**: Save drafts and resume editing later
 - **Status Tracking**: Draft, Submitted, Pending Approval, Approved, Rejected
 - **Comprehensive Metadata**: Track submission dates, users, approval history, and notes
 - **Edit Capability**: Edit draft and rejected submissions
+- **Inline Validation**: Real-time form validation with clear error messages
+- **Toast Notifications**: User-friendly toast notifications for success, error, warning, and info messages
 
 ### 📦 Freight Specification & Visualization
 - **Interactive Split-Layout Interface**:
@@ -131,26 +142,37 @@ npm run test:coverage
 src/
 ├── components/
 │   ├── MapComponent.jsx              # Interactive map with Leaflet (satellite view support)
-│   ├── RouteConfig.jsx               # Route preference controls
+│   ├── RouteConfig.jsx               # Route preference controls with presets
 │   ├── RouteResults.jsx              # Route display and details
 │   ├── SubmissionsList.jsx           # Main landing page with all submissions
-│   ├── SubmissionForm.jsx             # Multi-step submission form
+│   ├── SubmissionForm.jsx            # Multi-step submission form
 │   ├── SubmissionDetail.jsx          # Submission detail view with approval actions
 │   ├── FreightSpecification.jsx      # Freight input form
 │   ├── FreightPlacementVisualization.jsx  # Freight placement visualization
-│   ├── ErrorBoundary.jsx            # Error handling
-│   └── *.test.jsx                   # Component tests
+│   ├── TerminalSearch.jsx            # Terminal autocomplete search component
+│   ├── ProgressIndicator.jsx         # Multi-step progress indicator
+│   ├── Toast.jsx                     # Toast notification component
+│   ├── ToastContainer.jsx             # Toast container component
+│   ├── HomePage.jsx                  # Home page with login
+│   ├── ErrorBoundary.jsx             # Error handling
+│   └── *.test.jsx                    # Component tests
+├── contexts/
+│   └── ToastContext.jsx               # Global toast notification context
+├── hooks/
+│   └── useToast.js                    # Toast hook (legacy, use ToastContext instead)
 ├── data/
-│   ├── railNetwork.js               # Freight rail network data
-│   ├── carTypes.js                  # Car type specifications by operator
-│   └── *.test.js                    # Data tests
+│   ├── railNetwork.js                # Freight rail network data
+│   ├── carTypes.js                   # Car type specifications by operator
+│   └── *.test.js                     # Data tests
 ├── utils/
-│   ├── routeFinder.js               # Route finding algorithm (Dijkstra)
-│   ├── freightCalculations.js       # Center of gravity and placement calculations
-│   ├── complianceCalculator.js      # Compliance probability calculator
-│   ├── submissionStorage.js         # LocalStorage utilities for submissions
-│   └── *.test.js                    # Utility tests
-└── App.jsx                          # Main application component with routing
+│   ├── routeFinder.js                 # Route finding algorithm (Dijkstra)
+│   ├── routePresets.js                # Route preference presets
+│   ├── freightCalculations.js        # Center of gravity and placement calculations
+│   ├── complianceCalculator.js        # Compliance probability calculator
+│   ├── submissionStorage.js          # LocalStorage utilities for submissions
+│   ├── railLinePath.js               # Realistic rail line path generation
+│   └── *.test.js                      # Utility tests
+└── App.jsx                            # Main application component with routing
 ```
 
 ## Usage Guide
@@ -265,10 +287,12 @@ The project includes comprehensive test coverage:
   - SubmissionsList, SubmissionForm, SubmissionDetail
   - FreightSpecification, FreightPlacementVisualization
   - RouteConfig, RouteResults
+  - TerminalSearch, ProgressIndicator
   - ErrorBoundary
-- **Utility Tests**: Route finding, freight calculations, storage
+- **Context Tests**: ToastContext and ToastContainer
+- **Utility Tests**: Route finding, freight calculations, storage, route presets
 - **Data Tests**: Network data and car type validation
-- **90+ Tests**: All passing with high coverage
+- **100+ Tests**: All passing with high coverage
 
 Run tests with:
 ```bash

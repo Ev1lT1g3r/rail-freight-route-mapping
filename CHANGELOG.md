@@ -12,6 +12,75 @@ All notable changes to this project will be documented in this file.
 - Export capabilities (PDF, Excel)
 - Mobile app version
 
+## [1.3.0] - 2024-12-16
+
+### Added
+- **Route Preference Presets**
+  - Fastest Route preset (prioritize distance and transfers)
+  - Simplest Route preset (prefer single operator)
+  - Straightest Route preset (minimize curves)
+  - Balanced preset (equal weight to all factors)
+  - Custom preset for manual adjustment
+  - Automatic preset matching based on current preferences
+
+- **TerminalSearch Component**
+  - Intelligent autocomplete search for terminals
+  - Keyboard navigation (Arrow keys, Enter, Escape)
+  - Filter by code, name, state, or operator
+  - Clear selection button
+  - Accessible with proper labels and ARIA attributes
+
+- **Progress Indicator**
+  - Visual progress indicator for multi-step forms
+  - Step highlighting and completion status
+  - Clickable steps for navigation
+  - Percentage-based progress display
+
+- **Toast Notification System**
+  - Global toast context for application-wide notifications
+  - Success, error, warning, and info toast types
+  - Auto-dismiss with configurable duration
+  - Multiple toast support
+  - Positioned at top-right of screen
+
+- **Enhanced Error Handling**
+  - Comprehensive validation for route finding
+  - Clear error messages for invalid inputs
+  - Station code validation before route calculation
+  - Better error handling in route building
+
+- **Inline Form Validation**
+  - Real-time validation feedback
+  - Clear error messages for each field
+  - Visual error indicators (red borders)
+  - Prevents submission with invalid data
+
+- **Loading States**
+  - Loading indicators during route finding
+  - Disabled buttons during async operations
+  - Better user feedback for long operations
+
+### Changed
+- Updated RouteConfig to include preset selection
+- Enhanced SubmissionForm with TerminalSearch instead of dropdowns
+- Improved error messages throughout application
+- Better validation flow in multi-step form
+
+### Fixed
+- Route finding errors with invalid station codes
+- TerminalSearch value handling and clearing
+- Test failures related to TerminalSearch component
+- Error handling in routeFinder for missing stations
+- BuildRouteDetails validation for invalid paths
+
+### Testing
+- Added TerminalSearch component tests
+- Added ProgressIndicator component tests
+- Added ToastContext tests
+- Updated RouteConfig tests for presets
+- Updated routeFinder tests for error handling
+- All 100+ tests passing
+
 ## [1.2.0] - 2024-12-16
 
 ### Added
