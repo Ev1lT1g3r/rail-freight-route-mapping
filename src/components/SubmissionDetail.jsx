@@ -312,6 +312,7 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
           </div>
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
