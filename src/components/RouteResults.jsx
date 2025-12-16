@@ -2,13 +2,28 @@ function RouteResults({ routes, onRouteSelect, selectedRouteIndex }) {
   if (routes.length === 0) {
     return (
       <div style={{ 
-        padding: '20px', 
+        padding: '50px 30px', 
         textAlign: 'center', 
-        color: '#666',
-        backgroundColor: '#f5f5f5',
-        borderRadius: '8px'
+        color: '#6c757d',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '12px',
+        border: '2px dashed #dee2e6'
       }}>
-        <p>No routes found. Please select origin and destination terminals.</p>
+        <div style={{ fontSize: '56px', marginBottom: '16px', opacity: 0.5 }}>🗺️</div>
+        <h3 style={{ 
+          fontSize: '20px', 
+          marginBottom: '10px', 
+          color: '#495057',
+          fontWeight: '600'
+        }}>
+          No Routes Found
+        </h3>
+        <p style={{ fontSize: '14px', marginBottom: '8px', maxWidth: '400px', margin: '0 auto 8px' }}>
+          No routes were found between the selected terminals with the current preferences.
+        </p>
+        <p style={{ fontSize: '13px', color: '#868e96' }}>
+          Try adjusting your route preferences or selecting different terminals.
+        </p>
       </div>
     );
   }

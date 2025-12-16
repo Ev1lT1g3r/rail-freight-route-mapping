@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission } from '../utils/submissionStorage';
+import StatusBadge from './StatusBadge';
 
 function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBackToHome }) {
   const [submissions, setSubmissions] = useState([]);
@@ -32,6 +33,23 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
         return '#64748B'; // Sigma gray
       default:
         return '#64748B';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case WORKFLOW_STATUS.APPROVED:
+        return '✓';
+      case WORKFLOW_STATUS.REJECTED:
+        return '✗';
+      case WORKFLOW_STATUS.PENDING_APPROVAL:
+        return '⏳';
+      case WORKFLOW_STATUS.SUBMITTED:
+        return '📤';
+      case WORKFLOW_STATUS.DRAFT:
+        return '📝';
+      default:
+        return '•';
     }
   };
 
@@ -167,14 +185,57 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
 
       {sortedSubmissions.length === 0 ? (
         <div style={{
-          padding: '40px',
+          padding: '60px 40px',
           textAlign: 'center',
-          backgroundColor: '#f5f5f5',
-          borderRadius: '8px',
-          color: '#666'
+          backgroundColor: '#f8f9fa',
+          borderRadius: '12px',
+          border: '2px dashed #dee2e6',
+          color: '#6c757d'
         }}>
-          <p style={{ fontSize: '18px', marginBottom: '10px' }}>No submissions found</p>
-          <p>Click "New Submission" to create your first route submission.</p>
+          <div style={{ fontSize: '64px', marginBottom: '20px', opacity: 0.5 }}>📋</div>
+          <h3 style={{ 
+            fontSize: '24px', 
+            marginBottom: '12px', 
+            color: '#495057',
+            fontWeight: '600'
+          }}>
+            {filterStatus === 'all' ? 'No Submissions Yet' : `No ${filterStatus} Submissions`}
+          </h3>
+          <p style={{ fontSize: '16px', marginBottom: '24px', maxWidth: '500px', margin: '0 auto 24px' }}>
+            {filterStatus === 'all' 
+              ? 'Get started by creating your first freight rail route submission. Plan routes, specify freight details, and track approvals all in one place.'
+              : `No submissions found with status "${filterStatus}". Try selecting a different status filter or create a new submission.`
+            }
+          </p>
+          {filterStatus === 'all' && (
+            <button
+              onClick={onCreateNew}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#3B82F6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#2563EB';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 12px rgba(59, 130, 246, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#3B82F6';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.3)';
+              }}
+            >
+              + Create Your First Submission
+            </button>
+          )}
         </div>
       ) : (
         <div style={{ display: 'grid', gap: '15px' }}>
@@ -206,18 +267,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
                     <h3 style={{ margin: 0, color: '#333' }}>
                       {submission.origin} → {submission.destination}
                     </h3>
-                    <span
-                      style={{
-                        padding: '4px 12px',
-                        borderRadius: '20px',
-                        backgroundColor: getStatusColor(submission.status) + '20',
-                        color: getStatusColor(submission.status),
-                        fontWeight: 'bold',
-                        fontSize: '12px'
-                      }}
-                    >
-                      {submission.status}
-                    </span>
+                    <StatusBadge status={submission.status} size="small" />
                   </div>
                   
                   {submission.selectedRoute && (

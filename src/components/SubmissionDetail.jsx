@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getSubmissionById, saveSubmission, WORKFLOW_STATUS } from '../utils/submissionStorage';
 import MapComponent from './MapComponent';
 import RouteResults from './RouteResults';
+import StatusBadge from './StatusBadge';
 import { stations } from '../data/railNetwork';
 
 function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', isApprover = false }) {
@@ -133,20 +134,8 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
           </div>
           <div>
             <strong>Status:</strong> 
-            <span style={{
-              marginLeft: '10px',
-              padding: '4px 12px',
-              borderRadius: '20px',
-              backgroundColor: submission.status === WORKFLOW_STATUS.APPROVED ? '#28a74520' :
-                              submission.status === WORKFLOW_STATUS.REJECTED ? '#dc354520' :
-                              submission.status === WORKFLOW_STATUS.PENDING_APPROVAL ? '#ffc10720' : '#6c757d20',
-              color: submission.status === WORKFLOW_STATUS.APPROVED ? '#28a745' :
-                     submission.status === WORKFLOW_STATUS.REJECTED ? '#dc3545' :
-                     submission.status === WORKFLOW_STATUS.PENDING_APPROVAL ? '#ffc107' : '#6c757d',
-              fontWeight: 'bold',
-              fontSize: '12px'
-            }}>
-              {submission.status}
+            <span style={{ marginLeft: '10px' }}>
+              <StatusBadge status={submission.status} size="medium" />
             </span>
           </div>
           <div>
