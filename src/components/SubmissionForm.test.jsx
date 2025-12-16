@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SubmissionForm from './SubmissionForm';
+import { ToastProvider } from '../contexts/ToastContext';
 import { stations } from '../data/railNetwork';
 import * as submissionStorage from '../utils/submissionStorage';
 
@@ -31,7 +32,11 @@ describe('SubmissionForm Component', () => {
   });
 
   it('should render submission form', () => {
-    render(<SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />);
+    render(
+      <ToastProvider>
+        <SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />
+      </ToastProvider>
+    );
     
     expect(screen.getByText(/New Route Submission/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Origin Terminal/i)).toBeInTheDocument();
@@ -40,7 +45,11 @@ describe('SubmissionForm Component', () => {
 
   it('should call onCancel when back button is clicked', async () => {
     const user = userEvent.setup();
-    render(<SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />);
+    render(
+      <ToastProvider>
+        <SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />
+      </ToastProvider>
+    );
     
     const backButton = screen.getByText(/Back to List/i);
     await user.click(backButton);
@@ -50,7 +59,11 @@ describe('SubmissionForm Component', () => {
 
   it('should allow selecting origin and destination', async () => {
     const user = userEvent.setup();
-    render(<SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />);
+    render(
+      <ToastProvider>
+        <SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />
+      </ToastProvider>
+    );
     
     const originSelect = screen.getByLabelText(/Origin Terminal/i);
     await user.selectOptions(originSelect, 'CHI');
@@ -64,7 +77,11 @@ describe('SubmissionForm Component', () => {
   });
 
   it('should show step navigation', () => {
-    render(<SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />);
+    render(
+      <ToastProvider>
+        <SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />
+      </ToastProvider>
+    );
     
     expect(screen.getByText(/Route Selection/i)).toBeInTheDocument();
     expect(screen.getByText(/Freight Specification/i)).toBeInTheDocument();
@@ -75,7 +92,11 @@ describe('SubmissionForm Component', () => {
     const user = userEvent.setup();
     submissionStorage.saveSubmission.mockReturnValue(true);
     
-    render(<SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />);
+    render(
+      <ToastProvider>
+        <SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />
+      </ToastProvider>
+    );
     
     const originSelect = screen.getByLabelText(/Origin Terminal/i);
     await user.selectOptions(originSelect, 'CHI');
