@@ -5,7 +5,7 @@ import SubmissionsList from './components/SubmissionsList';
 import SubmissionForm from './components/SubmissionForm';
 import SubmissionDetail from './components/SubmissionDetail';
 import ToastContainer from './components/ToastContainer';
-import { useToast } from './hooks/useToast';
+import { ToastProvider, useToast } from './contexts/ToastContext';
 import { WORKFLOW_STATUS } from './utils/submissionStorage';
 
 // View states
@@ -17,7 +17,7 @@ const VIEWS = {
   VIEW: 'view'
 };
 
-function App() {
+function AppContent() {
   const [currentView, setCurrentView] = useState(VIEWS.HOME);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null); // In a real app, this would come from auth
@@ -106,6 +106,14 @@ function App() {
         />
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 }
 

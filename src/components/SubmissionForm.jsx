@@ -1,4 +1,4 @@
-import { useState, useMemo, useContext, createContext } from 'react';
+import { useState } from 'react';
 import MapComponent from './MapComponent';
 import RouteConfig from './RouteConfig';
 import RouteResults from './RouteResults';
@@ -10,10 +10,7 @@ import TerminalSearch from './TerminalSearch';
 import { stations } from '../data/railNetwork';
 import { findRoutes } from '../utils/routeFinder';
 import { saveSubmission, createSubmissionId, WORKFLOW_STATUS, getSubmissionById } from '../utils/submissionStorage';
-import { useToast } from '../hooks/useToast';
-
-// Toast context for child components
-const ToastContext = createContext(null);
+import { useToast } from '../contexts/ToastContext';
 
 function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current User' }) {
   const existingSubmission = submissionId ? getSubmissionById(submissionId) : null;
@@ -142,7 +139,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   const handleSaveDraft = () => {
     const submission = {
       id: submissionId || createSubmissionId(),
-      name: submissionName || `${origin} → ${destination}`,
+      name: submissionName || `${origin} to ${destination}`,
       origin,
       destination,
       preferences,
@@ -220,8 +217,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   };
 
   return (
-    <ToastContext.Provider value={{ success, error: showError, warning, info }}>
-      <div>
+    <div>
         <div className="sigma-header" style={{ padding: '24px 32px', marginBottom: '24px' }}>
           <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
             <h1 style={{ margin: 0, color: 'white', fontSize: '2rem', fontWeight: 700 }}>
@@ -559,7 +555,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
           </div>
         </div>
       </div>
-    </ToastContext.Provider>
+    </div>
   );
 }
 
