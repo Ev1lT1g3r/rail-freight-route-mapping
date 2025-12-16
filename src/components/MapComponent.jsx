@@ -28,8 +28,13 @@ function MapComponent({
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
   const routeMarkersRef = useRef([]);
+  const routePolylinesRef = useRef([]);
   const polylineRef = useRef(null);
+  const tileLayerRef = useRef(null);
+  const satelliteLayerRef = useRef(null);
+  const layerControlRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [mapView, setMapView] = useState('map'); // 'map' or 'satellite'
 
   useEffect(() => {
     setIsMounted(true);
@@ -46,13 +51,31 @@ function MapComponent({
       mapInstanceRef.current = L.map(mapRef.current, {
         center: [39.8283, -98.5795],
         zoom: 4,
-        scrollWheelZoom: true
+        scrollWheelZoom: true,
+        zoomControl: true
       });
 
-      // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(mapInstanceRef.current);
+      // Add standard map tile layer
+      tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      });
+
+      // Add satellite/imagery tile layer (Esri World Imagery)
+      satelliteLayerRef.current = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &copy; <a href="https://www.esri.com/">Esri</a>',
+        maxZoom: 19
+      });
+
+      // Add default map layer
+      tileLayerRef.current.addTo(mapInstanceRef.current);
+
+      // Add layer control
+      const baseMaps = {
+        'Map View': tileLayerRef.current,
+        'Satellite View': satelliteLayerRef.current
+      };
+      layerControlRef.current = L.control.layers(baseMaps).addTo(mapInstanceRef.current);
     }
 
     const map = mapInstanceRef.current;
@@ -176,11 +199,16 @@ function MapComponent({
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    // Remove existing route markers
+    // Remove existing route markers and polylines
     routeMarkersRef.current.forEach(marker => {
       mapInstanceRef.current.removeLayer(marker);
     });
     routeMarkersRef.current = [];
+
+    routePolylinesRef.current.forEach(polyline => {
+      mapInstanceRef.current.removeLayer(polyline);
+    });
+    routePolylinesRef.current = [];
 
     // Remove existing polyline
     if (polylineRef.current) {
@@ -190,16 +218,84 @@ function MapComponent({
 
     // Add new polyline if route is selected - draw through all stations in path
     if (selectedRoute && selectedRoute.path && selectedRoute.path.length > 1) {
+      // Switch to satellite view when route is shown
+      if (satelliteLayerRef.current && tileLayerRef.current) {
+        mapInstanceRef.current.removeLayer(tileLayerRef.current);
+        satelliteLayerRef.current.addTo(mapInstanceRef.current);
+        setMapView('satellite');
+      }
+
       // Create polyline through all stations in the route path (follows actual route)
       const positions = selectedRoute.path.map(station => [station.lat, station.lng]);
       
-      // Draw route line through all waypoints
-      polylineRef.current = L.polyline(positions, {
-        color: '#ff0000',
-        weight: 6,
-        opacity: 0.9,
-        smoothFactor: 0.5
-      }).addTo(mapInstanceRef.current);
+      // Draw route line with operator-specific colors for each segment
+      if (selectedRoute.segments && selectedRoute.segments.length > 0) {
+        // Draw each segment with operator-specific styling
+        selectedRoute.segments.forEach((segment, segIndex) => {
+          const segmentStart = selectedRoute.path[segIndex];
+          const segmentEnd = selectedRoute.path[segIndex + 1];
+          
+          if (segmentStart && segmentEnd) {
+            const segmentPositions = [
+              [segmentStart.lat, segmentStart.lng],
+              [segmentEnd.lat, segmentEnd.lng]
+            ];
+            
+            // Color based on operator
+            const operatorColors = {
+              'BNSF': '#FFD700', // Gold
+              'UP': '#FF6B35',   // Orange-red
+              'CSX': '#4ECDC4',  // Teal
+              'NS': '#45B7D1',   // Blue
+              'CN': '#96CEB4',   // Green
+              'CP': '#FFEAA7'    // Yellow
+            };
+            
+            const segmentColor = operatorColors[segment.operator] || '#FF0000';
+            
+            const segmentPolyline = L.polyline(segmentPositions, {
+              color: segmentColor,
+              weight: 8,
+              opacity: 0.95,
+              smoothFactor: 0
+            }).addTo(mapInstanceRef.current);
+            
+            // Add operator label at midpoint
+            const midLat = (segmentStart.lat + segmentEnd.lat) / 2;
+            const midLng = (segmentStart.lng + segmentEnd.lng) / 2;
+            
+            const label = L.marker([midLat, midLng], {
+              icon: L.divIcon({
+                className: 'operator-label',
+                html: `<div style="
+                  background-color: ${segmentColor};
+                  color: white;
+                  padding: 4px 8px;
+                  border-radius: 4px;
+                  font-size: 11px;
+                  font-weight: bold;
+                  white-space: nowrap;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                  border: 2px solid white;
+                ">${segment.operator}</div>`,
+                iconSize: [60, 20],
+                iconAnchor: [30, 10]
+              })
+            }).addTo(mapInstanceRef.current);
+            
+            routePolylinesRef.current.push(segmentPolyline);
+            routeMarkersRef.current.push(label);
+          }
+        });
+      } else {
+        // Fallback: single polyline if segments not available
+        polylineRef.current = L.polyline(positions, {
+          color: '#FF0000',
+          weight: 8,
+          opacity: 0.95,
+          smoothFactor: 0.5
+        }).addTo(mapInstanceRef.current);
+      }
 
       // Add waypoint markers at each intermediate station in the route
       selectedRoute.path.forEach((station, index) => {
@@ -209,15 +305,15 @@ function MapComponent({
             icon: L.divIcon({
               className: 'route-intermediate-marker',
               html: `<div style="
-                width: 14px;
-                height: 14px;
+                width: 16px;
+                height: 16px;
                 background-color: #ff8800;
-                border: 2px solid white;
+                border: 3px solid white;
                 border-radius: 50%;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+                box-shadow: 0 2px 6px rgba(0,0,0,0.5);
               "></div>`,
-              iconSize: [14, 14],
-              iconAnchor: [7, 7]
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
             })
           }).addTo(mapInstanceRef.current);
           
@@ -233,16 +329,36 @@ function MapComponent({
         }
       });
 
-      // Fit bounds to route
+      // Fit bounds to route with tighter padding for closer view
       if (positions.length > 0) {
         try {
-          mapInstanceRef.current.fitBounds(positions, { padding: [80, 80] });
+          // Calculate tighter bounds for closer zoom
+          const bounds = L.latLngBounds(positions);
+          mapInstanceRef.current.fitBounds(bounds, { 
+            padding: [20, 20], // Reduced padding for closer view
+            maxZoom: 12 // Limit max zoom for better track visibility
+          });
+          
+          // If route is short, zoom in even closer
+          const boundsSize = bounds.getNorthEast().distanceTo(bounds.getSouthWest());
+          if (boundsSize < 500000) { // Less than ~500km
+            setTimeout(() => {
+              mapInstanceRef.current.setZoom(Math.min(mapInstanceRef.current.getZoom() + 2, 14));
+            }, 500);
+          }
         } catch (e) {
           console.warn('Error fitting route bounds:', e);
         }
       }
+    } else {
+      // No route selected - switch back to map view
+      if (satelliteLayerRef.current && tileLayerRef.current && mapView === 'satellite') {
+        mapInstanceRef.current.removeLayer(satelliteLayerRef.current);
+        tileLayerRef.current.addTo(mapInstanceRef.current);
+        setMapView('map');
+      }
     }
-  }, [selectedRoute]);
+  }, [selectedRoute, mapView]);
 
   // Cleanup on unmount
   useEffect(() => {
