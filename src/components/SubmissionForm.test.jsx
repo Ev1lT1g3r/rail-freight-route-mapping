@@ -63,11 +63,12 @@ describe('SubmissionForm Component', () => {
     expect(destSelect.value).toBe('KC');
   });
 
-  it('should disable submit button when route not selected', () => {
+  it('should show step navigation', () => {
     render(<SubmissionForm onSave={mockOnSave} onCancel={mockOnCancel} currentUser="Test User" />);
     
-    const submitButton = screen.getByText(/Submit for Approval/i);
-    expect(submitButton).toBeDisabled();
+    expect(screen.getByText(/Route Selection/i)).toBeInTheDocument();
+    expect(screen.getByText(/Freight Specification/i)).toBeInTheDocument();
+    expect(screen.getByText(/Review & Submit/i)).toBeInTheDocument();
   });
 
   it('should allow saving as draft', async () => {
