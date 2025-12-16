@@ -53,13 +53,18 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   };
 
   // Validation functions
-  const validateRouteStep = () => {
+  const validateRouteStep = (forFindingRoutes = false) => {
     const errors = {};
     if (!origin) errors.origin = 'Please select an origin terminal';
     if (!destination) errors.destination = 'Please select a destination terminal';
     if (origin === destination) errors.destination = 'Origin and destination must be different';
-    if (routes.length === 0 && origin && destination) errors.routes = 'Please find routes first';
-    if (selectedRouteIndex === null && routes.length > 0) errors.routeSelection = 'Please select a route';
+    
+    // Only check for routes/selection if NOT finding routes (i.e., when proceeding to next step)
+    if (!forFindingRoutes) {
+      if (routes.length === 0 && origin && destination) errors.routes = 'Please find routes first';
+      if (selectedRouteIndex === null && routes.length > 0) errors.routeSelection = 'Please select a route';
+    }
+    
     return errors;
   };
 
@@ -107,10 +112,18 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   };
 
   const handleFindRoutes = () => {
-    const errors = validateRouteStep();
+    // Only validate origin and destination when finding routes (not routes/selection)
+    const errors = validateRouteStep(true);
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
-      showError('Please fix the errors before finding routes');
+      // Show more specific error message
+      if (errors.origin) {
+        showError('Please select an origin terminal');
+      } else if (errors.destination) {
+        showError('Please select a destination terminal');
+      } else {
+        showError('Please fix the errors before finding routes');
+      }
       return;
     }
 
