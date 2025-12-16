@@ -257,7 +257,7 @@ function MapComponent({
       // Create polyline through all stations in the route path (follows actual route)
       const positions = selectedRoute.path.map(station => [station.lat, station.lng]);
       
-      // Calculate operator statistics
+      // Calculate operator statistics using actual segment distances
       const operatorStats = {};
       if (selectedRoute.segments) {
         selectedRoute.segments.forEach(segment => {
@@ -269,13 +269,15 @@ function MapComponent({
             };
           }
           operatorStats[segment.operator].segments++;
-          // Estimate segment distance
-          const fromStation = selectedRoute.path.find(s => s.code === segment.from.code);
-          const toStation = selectedRoute.path.find(s => s.code === segment.to.code);
-          if (fromStation && toStation) {
-            const distance = mapInstanceRef.current.distance([fromStation.lat, fromStation.lng], [toStation.lat, toStation.lng]) * 0.000621371; // Convert to miles
-            operatorStats[segment.operator].distance += distance;
+          // Use actual segment distance from route data (already in miles)
+          const segmentDistance = segment.distance || 0;
+          operatorStats[segment.operator].distance += segmentDistance;
+          
+          // Track stations for this operator
+          if (segment.from && segment.from.code) {
             operatorStats[segment.operator].stations.add(segment.from.code);
+          }
+          if (segment.to && segment.to.code) {
             operatorStats[segment.operator].stations.add(segment.to.code);
           }
         });
@@ -381,14 +383,15 @@ function MapComponent({
                   })
                 }).addTo(mapInstanceRef.current);
                 
-                // Add info popup on hover
+                // Add info popup on hover with correct segment distance
                 const startName = segmentStart.name || segmentStart.code || 'Unknown';
                 const endName = segmentEnd.name || segmentEnd.code || 'Unknown';
+                const segmentDistance = segment.distance || 0; // Use actual segment distance
                 label.bindTooltip(`
                   <div style="font-size: 12px; line-height: 1.4;">
                     <strong>${operatorInfo.name}</strong><br/>
                     Segment: ${startName} → ${endName}<br/>
-                    Distance: ~${operatorStats[segment.operator]?.distance.toFixed(0) || segment.distance || 'N/A'} miles
+                    Distance: ${segmentDistance.toFixed(0)} miles
                   </div>
                 `, { permanent: false, direction: 'top' });
                 
@@ -425,7 +428,7 @@ function MapComponent({
                   </div>
                   <div style="font-size: 11px; color: #666; margin-left: 22px;">
                     ${stats.segments} segment${stats.segments !== 1 ? 's' : ''} • 
-                    ~${stats.distance.toFixed(0)} miles<br/>
+                    ${stats.distance.toFixed(0)} miles<br/>
                     ${stats.stations.size} station${stats.stations.size !== 1 ? 's' : ''}
                   </div>
                 </div>
