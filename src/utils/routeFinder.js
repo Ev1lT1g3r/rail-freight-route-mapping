@@ -51,9 +51,18 @@ export function findRoutes(origin, destination, preferences) {
 
     if (currentStation === destination) {
       // Found a route
-      const route = buildRouteDetails(current);
-      routes.push(route);
-      if (routes.length >= 3) break; // Get top 3
+      try {
+        const route = buildRouteDetails(current);
+        if (route && route.segments && route.segments.length > 0) {
+          routes.push(route);
+          if (routes.length >= 3) break; // Get top 3
+        } else {
+          console.warn('Route found but has no valid segments, skipping');
+        }
+      } catch (err) {
+        console.warn('Error building route details:', err);
+        // Skip this route and continue
+      }
       continue;
     }
 
@@ -72,8 +81,8 @@ export function findRoutes(origin, destination, preferences) {
       const nextOperator = conn.operator;
       const nextDistance = current.distance + conn.distance;
       const nextOperators = new Set([...current.operators, nextOperator]);
-      const nextCurves = current.totalCurves + conn.curveScore;
-      const nextStates = new Set([...current.states, ...conn.states]);
+      const nextCurves = current.totalCurves + (conn.curveScore || 0);
+      const nextStates = new Set([...current.states, ...(conn.states || [])]);
 
       // Calculate cost based on preferences
       let cost = nextDistance * weightDistance;
@@ -154,7 +163,8 @@ function buildRouteDetails(routeData) {
 
   // Validate we have at least one segment
   if (segments.length === 0) {
-    throw new Error('No valid route segments found');
+    // Return null instead of throwing - let caller handle it
+    return null;
   }
 
   // Map path codes to station objects, filtering out any invalid ones
@@ -163,7 +173,8 @@ function buildRouteDetails(routeData) {
     .filter(station => station !== undefined);
 
   if (pathStations.length === 0) {
-    throw new Error('No valid stations in route path');
+    // Return null instead of throwing - let caller handle it
+    return null;
   }
 
   return {

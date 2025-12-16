@@ -149,6 +149,14 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
         }
       } catch (err) {
         console.error('Route finding error:', err);
+        console.error('Error details:', {
+          origin,
+          destination,
+          originValid: !!stations[origin],
+          destinationValid: !!stations[destination],
+          preferences,
+          errorStack: err.stack
+        });
         const errorMessage = err.message || 'Error finding routes. Please try again.';
         showError(errorMessage);
       } finally {
