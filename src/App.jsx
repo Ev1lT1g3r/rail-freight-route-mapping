@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import './App.css';
+import HomePage from './components/HomePage';
 import SubmissionsList from './components/SubmissionsList';
 import SubmissionForm from './components/SubmissionForm';
 import SubmissionDetail from './components/SubmissionDetail';
+import { WORKFLOW_STATUS } from './utils/submissionStorage';
 
 // View states
 const VIEWS = {
+  HOME: 'home',
   LIST: 'list',
   CREATE: 'create',
   EDIT: 'edit',
@@ -13,10 +16,10 @@ const VIEWS = {
 };
 
 function App() {
-  const [currentView, setCurrentView] = useState(VIEWS.LIST);
+  const [currentView, setCurrentView] = useState(VIEWS.HOME);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState(null);
-  const [currentUser] = useState('Current User'); // In a real app, this would come from auth
-  const [isApprover] = useState(true); // In a real app, this would come from user permissions
+  const [currentUser, setCurrentUser] = useState(null); // In a real app, this would come from auth
+  const [isApprover, setIsApprover] = useState(false); // In a real app, this would come from user permissions
 
   console.log('App rendering - Current view:', currentView);
 
@@ -49,21 +52,36 @@ function App() {
       }
       return;
     }
-    // Otherwise, return to list (for submitted items or explicit navigation)
+    // Submission saved, return to list
     setCurrentView(VIEWS.LIST);
     setSelectedSubmissionId(null);
   };
 
-  // Debug: Log current view
-  console.log('App render - currentView:', currentView, 'VIEWS.LIST:', VIEWS.LIST);
+  const handleNavigateToWorkflow = () => {
+    setCurrentView(VIEWS.LIST);
+  };
+
+  const handleLogin = (email) => {
+    setCurrentUser(email || 'User');
+    setIsApprover(true); // For demo purposes, logged-in users are approvers
+    setCurrentView(VIEWS.LIST);
+  };
 
   return (
     <div className="App">
+      {currentView === VIEWS.HOME && (
+        <HomePage
+          onNavigateToWorkflow={handleNavigateToWorkflow}
+          onLogin={handleLogin}
+        />
+      )}
+
       {currentView === VIEWS.LIST && (
         <SubmissionsList
           onViewSubmission={handleViewSubmission}
           onCreateNew={handleCreateNew}
           onEditSubmission={handleEditSubmission}
+          onBackToHome={() => setCurrentView(VIEWS.HOME)}
         />
       )}
 
@@ -72,7 +90,7 @@ function App() {
           submissionId={currentView === VIEWS.EDIT ? selectedSubmissionId : null}
           onSave={handleSaveSubmission}
           onCancel={handleBackToList}
-          currentUser={currentUser}
+          currentUser={currentUser || 'Guest User'}
         />
       )}
 
@@ -81,7 +99,7 @@ function App() {
           submissionId={selectedSubmissionId}
           onBack={handleBackToList}
           onEdit={() => handleEditSubmission(selectedSubmissionId)}
-          currentUser={currentUser}
+          currentUser={currentUser || 'Guest User'}
           isApprover={isApprover}
         />
       )}

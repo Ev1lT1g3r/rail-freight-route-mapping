@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission } from '../utils/submissionStorage';
 
-function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission }) {
+function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBackToHome }) {
   const [submissions, setSubmissions] = useState([]);
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('date');
@@ -76,13 +76,39 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission }) {
   return (
     <div>
       <div className="sigma-header" style={{ padding: '24px 32px', marginBottom: '24px' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <h1 style={{ margin: 0, color: 'white', fontSize: '2rem', fontWeight: 700 }}>
-            <span className="sigma-logo">Σ·IQ</span> Rail Freight Route Submissions
-          </h1>
-          <p className="subtitle" style={{ marginTop: '8px', color: 'rgba(255,255,255,0.9)' }}>
-            Manage and track freight rail route submissions
-          </p>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ margin: 0, color: 'white', fontSize: '2rem', fontWeight: 700 }}>
+              <span className="sigma-logo">Σ·IQ</span> Rail Freight Route Submissions
+            </h1>
+            <p className="subtitle" style={{ marginTop: '8px', color: 'rgba(255,255,255,0.9)' }}>
+              Manage and track freight rail route submissions
+            </p>
+          </div>
+          {onBackToHome && (
+            <button
+              onClick={onBackToHome}
+              style={{
+                padding: '10px 20px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                border: '2px solid white',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+              }}
+            >
+              ← Back to Home
+            </button>
+          )}
         </div>
       </div>
       <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
