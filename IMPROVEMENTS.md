@@ -500,6 +500,485 @@ VITE_AUTH_DOMAIN=xxx
 - Certification program
 - Support resources
 
+## 🎨 User Experience (UX) Recommendations
+
+### 1. Information Architecture & Navigation
+
+#### Current Issues
+- No breadcrumb navigation
+- Step indicators are buttons but not clearly showing progress
+- No way to see where you are in the overall workflow
+- Missing back button in some views
+
+#### Recommendations
+- **Progress Indicator Enhancement**
+  - Visual progress bar showing completion percentage
+  - Step numbers with checkmarks for completed steps
+  - Disabled state styling for incomplete steps
+  - "Step X of Y" indicator
+  - Estimated time remaining per step
+
+- **Breadcrumb Navigation**
+  - Always visible breadcrumb trail
+  - Clickable breadcrumbs to navigate back
+  - Show current location in hierarchy
+  - Mobile-friendly collapsible breadcrumbs
+
+- **Navigation Consistency**
+  - Consistent back/cancel buttons across all views
+  - "Save and Exit" option on every step
+  - Clear indication of unsaved changes
+  - Confirmation dialogs before losing work
+
+### 2. Form Design & Input Experience
+
+#### Current Issues
+- Alert dialogs for validation (disruptive)
+- No inline validation feedback
+- Missing help text and tooltips
+- No autocomplete for terminal selection
+- Route preferences sliders lack context
+
+#### Recommendations
+- **Inline Validation**
+  - Real-time validation as user types
+  - Field-level error messages
+  - Success indicators for valid inputs
+  - Visual feedback (green checkmarks, red X)
+  - Prevent submission until all required fields valid
+
+- **Input Enhancements**
+  - Autocomplete/search for terminal selection
+  - Terminal code lookup by name
+  - Recent selections dropdown
+  - Favorites/bookmarked terminals
+  - Smart defaults based on user history
+  - Unit conversion helpers (metric/imperial toggle)
+
+- **Help & Guidance**
+  - Contextual help tooltips (ℹ️ icons)
+  - "What is this?" expandable sections
+  - Example values in placeholders
+  - Field descriptions below inputs
+  - Video tutorials embedded in forms
+  - Guided tour for first-time users
+
+- **Route Preferences UX**
+  - Visual preview of preference impact
+  - Preset configurations (Fastest, Cheapest, Simplest)
+  - Comparison view showing how preferences affect results
+  - Reset to defaults button
+  - Save preference profiles
+
+### 3. Visual Feedback & Status Communication
+
+#### Current Issues
+- Alert() dialogs are jarring
+- No loading states during route calculation
+- No success animations
+- Status badges could be more informative
+- Missing empty states
+
+#### Recommendations
+- **Toast Notifications**
+  - Replace alert() with non-blocking toast notifications
+  - Success, error, warning, and info variants
+  - Auto-dismiss with manual dismiss option
+  - Stack multiple notifications
+  - Position customization
+
+- **Loading States**
+  - Skeleton screens for route calculation
+  - Progress indicators with percentage
+  - "Calculating routes..." with spinner
+  - Estimated time remaining
+  - Cancel operation option
+
+- **Status Visualization**
+  - Enhanced status badges with icons
+  - Status timeline/history view
+  - Color-coded status indicators
+  - Status change notifications
+  - Status explanation tooltips
+
+- **Empty States**
+  - Friendly empty state illustrations
+  - Actionable empty state messages
+  - Quick action buttons in empty states
+  - Example data or templates
+
+### 4. Map Interaction & Visualization
+
+#### Current Issues
+- Map controls could be more intuitive
+- No way to search for terminals on map
+- Missing zoom controls visibility
+- No legend for map symbols
+- Route selection not obvious enough
+
+#### Recommendations
+- **Map Controls Enhancement**
+  - Terminal search with autocomplete
+  - "Find on Map" button for terminals
+  - Recenter button
+  - Full-screen map mode
+  - Map controls always visible
+  - Keyboard shortcuts (zoom, pan)
+
+- **Visual Clarity**
+  - Terminal clustering for many markers
+  - Clearer origin/destination distinction
+  - Route selection highlighting
+  - Hover states for all interactive elements
+  - Legend panel for map symbols
+  - Layer toggle for different data views
+
+- **Map Features**
+  - Measure distance tool
+  - Draw custom routes
+  - Compare multiple routes side-by-side
+  - Route animation playback
+  - Time-based route visualization
+  - Weather overlay option
+
+### 5. Data Display & Tables
+
+#### Current Issues
+- Submissions list could be more scannable
+- Limited sorting options
+- No pagination for large lists
+- Missing bulk actions
+- No export functionality
+
+#### Recommendations
+- **Enhanced List View**
+  - Card view / Table view toggle
+  - Column customization
+  - Resizable columns
+  - Sticky headers
+  - Row selection (checkbox)
+  - Bulk actions (delete, export, change status)
+
+- **Sorting & Filtering**
+  - Multi-column sorting
+  - Advanced filter panel
+  - Saved filter presets
+  - Quick filters (chips)
+  - Date range picker
+  - Search across all fields
+
+- **Pagination & Performance**
+  - Virtual scrolling for large lists
+  - Infinite scroll option
+  - Pagination with page size selector
+  - "Load more" button
+  - Performance indicators
+
+### 6. Workflow & Process Improvements
+
+#### Current Issues
+- Multi-step form lacks clear progress
+- No way to skip optional steps
+- Missing "Save as Template" functionality
+- No draft recovery mechanism
+- Workflow feels linear and rigid
+
+#### Recommendations
+- **Flexible Workflow**
+  - Non-linear step navigation (jump to any step)
+  - Optional step indicators
+  - "Skip for now" options
+  - Step completion indicators
+  - Save progress at any point
+
+- **Templates & Presets**
+  - Save submission as template
+  - Template library
+  - Quick start from template
+  - Freight dimension presets
+  - Route preference presets
+  - Operator-specific templates
+
+- **Draft Management**
+  - Draft recovery on app load
+  - "Continue where you left off" prompt
+  - Draft expiration warnings
+  - Draft cleanup suggestions
+  - Draft comparison tool
+
+- **Workflow Visualization**
+  - Visual workflow diagram
+  - Current step highlighted
+  - Upcoming steps preview
+  - Completed steps summary
+  - Time estimates per step
+
+### 7. Comparison & Decision Support
+
+#### Current Issues
+- Can only view one route at a time
+- No side-by-side route comparison
+- Missing cost/time estimates
+- No route recommendation explanations
+
+#### Recommendations
+- **Route Comparison Tool**
+  - Side-by-side route comparison
+  - Comparison matrix (distance, operators, transfers, etc.)
+  - Visual comparison on map
+  - Highlight differences
+  - "Best for..." recommendations
+
+- **Decision Support**
+  - Route recommendation explanations
+  - "Why this route?" tooltips
+  - Cost estimates (if available)
+  - Time estimates
+  - Risk indicators
+  - Historical performance data
+
+- **Smart Recommendations**
+  - "Similar to your previous submissions"
+  - "Popular routes for this origin/destination"
+  - "Fastest route" / "Cheapest route" / "Simplest route" badges
+  - AI-powered route suggestions
+
+### 8. Onboarding & First-Time Experience
+
+#### Current Issues
+- No onboarding for new users
+- Features not discoverable
+- No guided tour
+- Missing contextual help
+
+#### Recommendations
+- **User Onboarding**
+  - Interactive product tour
+  - Feature highlights on first use
+  - Progressive disclosure of features
+  - Welcome screen with quick actions
+  - Sample data for exploration
+
+- **Contextual Help**
+  - Tooltips on first interaction
+  - "Learn more" links throughout
+  - Help center integration
+  - Video tutorials
+  - FAQ section
+
+- **Progressive Enhancement**
+  - Start with simple workflow
+  - Unlock advanced features gradually
+  - Feature discovery prompts
+  - Achievement badges for learning
+
+## 🔧 Functional Improvements
+
+### 1. Submission Management
+
+#### Missing Features
+- **Bulk Operations**
+  - Bulk delete submissions
+  - Bulk status changes
+  - Bulk export
+  - Bulk duplicate
+  - Bulk archive
+
+- **Advanced Search**
+  - Full-text search across all fields
+  - Search by operator
+  - Search by date range
+  - Search by compliance score
+  - Saved searches
+
+- **Submission Actions**
+  - Duplicate submission
+  - Clone and modify
+  - Create similar submission
+  - Submission templates
+  - Submission history/versioning
+
+### 2. Route Finding Enhancements
+
+#### Missing Features
+- **Route Options**
+  - Find alternative routes
+  - "Avoid this operator" option
+  - "Must include this operator" option
+  - Route via specific terminals
+  - Avoid specific states/regions
+
+- **Route Information**
+  - Estimated transit time
+  - Cost estimates (if available)
+  - Historical route performance
+  - Weather considerations
+  - Track maintenance schedules
+
+- **Route Saving**
+  - Save favorite routes
+  - Route library
+  - Share routes with team
+  - Route templates
+  - Route comparison history
+
+### 3. Freight Management
+
+#### Missing Features
+- **Freight Library**
+  - Save freight specifications
+  - Freight catalog/templates
+  - Common freight presets
+  - Freight categories
+  - Material database
+
+- **Multiple Freight Items**
+  - Add multiple freight items per submission
+  - Freight item management
+  - Freight item templates
+  - Bulk freight operations
+  - Freight item library
+
+- **Freight Calculations**
+  - Unit conversion (metric/imperial)
+  - Volume calculations for irregular shapes
+  - Weight distribution analysis
+  - Stacking calculations
+  - Load planning optimization
+
+### 4. Compliance & Validation
+
+#### Missing Features
+- **Enhanced Validation**
+  - Pre-submission validation checklist
+  - Validation summary before submit
+  - Fix suggestions for compliance issues
+  - Compliance score history
+  - Compliance trends
+
+- **Regulatory Compliance**
+  - Hazardous materials handling
+  - Special permits required
+  - Regulatory requirement checklist
+  - Compliance documentation
+  - Regulatory updates notifications
+
+### 5. Approval Workflow
+
+#### Missing Features
+- **Multi-Level Approvals**
+  - Multiple approver levels
+  - Parallel approvals
+  - Conditional routing
+  - Approval delegation
+  - Approval history timeline
+
+- **Approval Features**
+  - Approval comments/notes
+  - Request for information (RFI)
+  - Conditional approval
+  - Approval templates
+  - Approval SLAs and deadlines
+
+- **Notifications**
+  - Email notifications for status changes
+  - In-app notification center
+  - Notification preferences
+  - Digest emails
+  - Urgent submission alerts
+
+### 6. Reporting & Analytics
+
+#### Missing Features
+- **Submission Analytics**
+  - Submission volume trends
+  - Approval rate analytics
+  - Average processing time
+  - Operator usage statistics
+  - Route popularity analysis
+
+- **Export Capabilities**
+  - PDF export of submissions
+  - Excel/CSV export
+  - Custom report builder
+  - Scheduled reports
+  - Report templates
+
+- **Dashboards**
+  - Executive dashboard
+  - Operator performance dashboard
+  - Compliance dashboard
+  - Customizable dashboards
+  - Real-time metrics
+
+### 7. Collaboration Features
+
+#### Missing Features
+- **Team Collaboration**
+  - Comments on submissions
+  - @mentions for team members
+  - Shared workspaces
+  - Team activity feed
+  - Assignment of submissions
+
+- **Sharing & Permissions**
+  - Share submissions with team
+  - View-only access
+  - Comment-only access
+  - Permission management
+  - Team member roles
+
+### 8. Integration Capabilities
+
+#### Missing Features
+- **External Integrations**
+  - ERP system integration
+  - TMS integration
+  - Email integration
+  - Calendar integration
+  - Slack/Teams notifications
+
+- **API & Webhooks**
+  - REST API for integrations
+  - Webhook support
+  - API documentation
+  - API key management
+  - Integration marketplace
+
+### 9. Data Management
+
+#### Missing Features
+- **Data Import/Export**
+  - Bulk import submissions
+  - CSV import
+  - Excel import
+  - Data migration tools
+  - Backup and restore
+
+- **Data Quality**
+  - Data validation on import
+  - Duplicate detection
+  - Data cleanup tools
+  - Data quality reports
+  - Data audit trail
+
+### 10. User Preferences & Customization
+
+#### Missing Features
+- **User Settings**
+  - Theme preferences (light/dark)
+  - Default preferences
+  - Notification preferences
+  - Display preferences
+  - Language selection
+
+- **Customization**
+  - Customizable dashboard
+  - Saved views
+  - Column preferences
+  - Filter presets
+  - Shortcut customization
+
 ## Priority Recommendations
 
 ### High Priority (Immediate)
@@ -510,6 +989,14 @@ VITE_AUTH_DOMAIN=xxx
 5. ✅ Add loading states throughout
 6. ✅ Remove console.log statements
 7. ✅ Add environment configuration
+8. ✅ **UX: Replace alert() with toast notifications**
+9. ✅ **UX: Add progress indicator to multi-step form**
+10. ✅ **UX: Implement inline form validation**
+11. ✅ **UX: Add terminal search/autocomplete**
+12. ✅ **Functional: Add bulk operations for submissions**
+13. ✅ **Functional: Implement submission templates**
+14. ✅ **Functional: Add route comparison tool**
+15. ✅ **Functional: Enhance approval workflow with comments**
 
 ### Medium Priority (Next Quarter)
 1. Backend API development
@@ -519,6 +1006,14 @@ VITE_AUTH_DOMAIN=xxx
 5. Performance optimization
 6. Mobile responsiveness improvements
 7. Real rail line data integration
+8. **UX: User onboarding and guided tours**
+9. **UX: Advanced search and filtering**
+10. **UX: Enhanced map controls and features**
+11. **Functional: Multiple freight items per submission**
+12. **Functional: Freight library and templates**
+13. **Functional: Multi-level approval workflow**
+14. **Functional: Analytics dashboard**
+15. **Functional: Export and reporting capabilities**
 
 ### Low Priority (Future)
 1. Native mobile apps
@@ -526,6 +1021,11 @@ VITE_AUTH_DOMAIN=xxx
 3. Machine learning features
 4. Multi-language support
 5. Advanced collaboration features
+6. **UX: Advanced customization and theming**
+7. **UX: Voice commands and accessibility features**
+8. **Functional: AI-powered route recommendations**
+9. **Functional: Real-time collaboration features**
+10. **Functional: Advanced integrations (ERP, TMS)**
 
 ## Implementation Roadmap
 
