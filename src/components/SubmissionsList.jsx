@@ -7,6 +7,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew }) {
   const [sortBy, setSortBy] = useState('date');
 
   useEffect(() => {
+    console.log('SubmissionsList mounted');
     loadSubmissions();
     // Refresh every 5 seconds to catch updates
     const interval = setInterval(loadSubmissions, 5000);
@@ -21,17 +22,17 @@ function SubmissionsList({ onViewSubmission, onCreateNew }) {
   const getStatusColor = (status) => {
     switch (status) {
       case WORKFLOW_STATUS.APPROVED:
-        return '#28a745';
+        return '#10B981'; // Sigma success green
       case WORKFLOW_STATUS.REJECTED:
-        return '#dc3545';
+        return '#EF4444'; // Sigma error red
       case WORKFLOW_STATUS.PENDING_APPROVAL:
-        return '#ffc107';
+        return '#F59E0B'; // Sigma warning amber
       case WORKFLOW_STATUS.SUBMITTED:
-        return '#17a2b8';
+        return '#3B82F6'; // Sigma secondary blue
       case WORKFLOW_STATUS.DRAFT:
-        return '#6c757d';
+        return '#64748B'; // Sigma gray
       default:
-        return '#6c757d';
+        return '#64748B';
     }
   };
 
@@ -73,18 +74,25 @@ function SubmissionsList({ onViewSubmission, onCreateNew }) {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>Rail Freight Route Submissions</h1>
+    <div>
+      <div className="sigma-header" style={{ padding: '24px 32px', marginBottom: '24px' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <h1 style={{ margin: 0, color: 'white', fontSize: '2rem', fontWeight: 700 }}>
+            <span className="sigma-logo">Σ·IQ</span> Rail Freight Route Submissions
+          </h1>
+          <p className="subtitle" style={{ marginTop: '8px', color: 'rgba(255,255,255,0.9)' }}>
+            Manage and track freight rail route submissions
+          </p>
+        </div>
+      </div>
+      <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, color: '#0F172A' }}>All Submissions</h2>
         <button
           onClick={onCreateNew}
+          className="sigma-btn-primary"
           style={{
             padding: '10px 20px',
-            backgroundColor: '#646cff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
             fontSize: '16px',
             fontWeight: 'bold'
           }}
@@ -151,20 +159,20 @@ function SubmissionsList({ onViewSubmission, onCreateNew }) {
               onClick={() => onViewSubmission(submission.id)}
               style={{
                 padding: '20px',
-                border: '2px solid #ddd',
+                border: '2px solid #E2E8F0',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                backgroundColor: '#fff',
+                backgroundColor: '#FFFFFF',
                 transition: 'all 0.2s',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#646cff';
-                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                e.currentTarget.style.borderColor = '#3B82F6';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.15)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#ddd';
-                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                e.currentTarget.style.borderColor = '#E2E8F0';
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
@@ -200,12 +208,13 @@ function SubmissionsList({ onViewSubmission, onCreateNew }) {
                   onClick={(e) => handleDelete(submission.id, e)}
                   style={{
                     padding: '5px 10px',
-                    backgroundColor: '#dc3545',
+                    backgroundColor: '#EF4444',
                     color: 'white',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    fontSize: '12px'
+                    fontSize: '12px',
+                    fontWeight: '500'
                   }}
                 >
                   Delete

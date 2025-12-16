@@ -88,9 +88,20 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
      submission.status === WORKFLOW_STATUS.PENDING_APPROVAL);
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>Submission Details</h1>
+    <div>
+      <div className="sigma-header" style={{ padding: '24px 32px', marginBottom: '24px' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <h1 style={{ margin: 0, color: 'white', fontSize: '2rem', fontWeight: 700 }}>
+            <span className="sigma-logo">Σ·IQ</span> Submission Details
+          </h1>
+          <p className="subtitle" style={{ marginTop: '8px', color: 'rgba(255,255,255,0.9)' }}>
+            View and manage submission details
+          </p>
+        </div>
+      </div>
+      <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, color: '#0F172A' }}>Submission Information</h2>
         <button
           onClick={onBack}
           style={{

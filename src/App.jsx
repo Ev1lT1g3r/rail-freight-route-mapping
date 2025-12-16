@@ -18,6 +18,8 @@ function App() {
   const [currentUser] = useState('Current User'); // In a real app, this would come from auth
   const [isApprover] = useState(true); // In a real app, this would come from user permissions
 
+  console.log('App rendering - Current view:', currentView);
+
   const handleCreateNew = () => {
     setSelectedSubmissionId(null);
     setCurrentView(VIEWS.CREATE);
@@ -43,6 +45,9 @@ function App() {
     setCurrentView(VIEWS.LIST);
     setSelectedSubmissionId(null);
   };
+
+  // Debug: Log current view
+  console.log('App render - currentView:', currentView, 'VIEWS.LIST:', VIEWS.LIST);
 
   return (
     <div className="App">

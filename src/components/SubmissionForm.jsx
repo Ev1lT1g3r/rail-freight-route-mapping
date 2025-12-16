@@ -118,18 +118,25 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>{existingSubmission ? 'Edit Submission' : 'New Route Submission'}</h1>
+    <div>
+      <div className="sigma-header" style={{ padding: '24px 32px', marginBottom: '24px' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          <h1 style={{ margin: 0, color: 'white', fontSize: '2rem', fontWeight: 700 }}>
+            <span className="sigma-logo">Σ·IQ</span> {existingSubmission ? 'Edit Submission' : 'New Route Submission'}
+          </h1>
+          <p className="subtitle" style={{ marginTop: '8px', color: 'rgba(255,255,255,0.9)' }}>
+            {existingSubmission ? 'Update your route submission' : 'Create a new freight rail route submission'}
+          </p>
+        </div>
+      </div>
+      <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, color: '#0F172A' }}>Submission Details</h2>
         <button
           onClick={onCancel}
+          className="sigma-btn-secondary"
           style={{
             padding: '10px 20px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
             fontSize: '16px'
           }}
         >
@@ -217,13 +224,9 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
         <button
           onClick={handleFindRoutes}
           disabled={!origin || !destination}
+          className="sigma-btn-primary"
           style={{
             padding: '12px 30px',
-            backgroundColor: origin && destination ? '#646cff' : '#ccc',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: origin && destination ? 'pointer' : 'not-allowed',
             fontSize: '18px',
             fontWeight: 'bold'
           }}
@@ -278,13 +281,9 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
       <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', paddingTop: '20px', borderTop: '2px solid #eee' }}>
         <button
           onClick={handleSaveDraft}
+          className="sigma-btn-secondary"
           style={{
             padding: '12px 24px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
             fontSize: '16px',
             fontWeight: 'bold'
           }}
@@ -296,13 +295,14 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
           disabled={!origin || !destination || routes.length === 0 || selectedRouteIndex === null}
           style={{
             padding: '12px 24px',
-            backgroundColor: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? '#ccc' : '#28a745',
-            color: 'white',
+            backgroundColor: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? '#E2E8F0' : '#10B981',
+            color: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? '#64748B' : 'white',
             border: 'none',
             borderRadius: '8px',
             cursor: (!origin || !destination || routes.length === 0 || selectedRouteIndex === null) ? 'not-allowed' : 'pointer',
             fontSize: '16px',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            transition: 'all 0.2s ease'
           }}
         >
           Submit for Approval

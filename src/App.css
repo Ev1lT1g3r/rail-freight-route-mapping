@@ -1,26 +1,81 @@
+/* Sigma IQ Branding */
+:root {
+  --sigma-primary: #1E3A8A;
+  --sigma-secondary: #3B82F6;
+  --sigma-accent: #8B5CF6;
+  --sigma-success: #10B981;
+  --sigma-warning: #F59E0B;
+  --sigma-error: #EF4444;
+  --sigma-dark: #0F172A;
+  --sigma-light: #F8FAFC;
+  --sigma-white: #FFFFFF;
+  --sigma-gray: #64748B;
+  --sigma-gray-light: #E2E8F0;
+}
+
 .App {
   min-height: 100vh;
-  background-color: #f5f5f5;
+  background-color: var(--sigma-light);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* Header with Sigma IQ Branding */
+.sigma-header {
+  background: linear-gradient(135deg, var(--sigma-primary) 0%, var(--sigma-secondary) 100%);
+  color: var(--sigma-white);
+  padding: 24px 32px;
+  margin-bottom: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sigma-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--sigma-white);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sigma-logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--sigma-white);
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.5px;
+}
+
+.sigma-header .subtitle {
+  margin-top: 8px;
+  font-size: 1rem;
+  opacity: 0.9;
+  color: var(--sigma-white);
+  font-weight: 400;
 }
 
 /* Legacy styles for route finder components */
 .App-header {
-  text-align: center;
-  padding: 2rem;
-  margin-bottom: 2rem;
+  background: linear-gradient(135deg, var(--sigma-primary) 0%, var(--sigma-secondary) 100%);
+  color: var(--sigma-white);
+  padding: 24px 32px;
+  margin-bottom: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-  font-size: 2.5em;
-  line-height: 1.1;
-  margin-bottom: 0.5rem;
-  color: #646cff;
+.App-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--sigma-white);
 }
 
 .subtitle {
-  color: #666;
-  font-size: 1.1em;
-  margin-top: 0;
+  margin-top: 8px;
+  font-size: 1rem;
+  opacity: 0.9;
+  color: var(--sigma-white);
+  font-weight: 400;
 }
 
 .main-container {
@@ -28,6 +83,7 @@ h1 {
   grid-template-columns: 400px 1fr;
   gap: 20px;
   margin-bottom: 30px;
+  padding: 24px;
 }
 
 @media (max-width: 1024px) {
@@ -44,8 +100,10 @@ h1 {
 
 .station-selectors {
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: var(--sigma-white);
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--sigma-gray-light);
 }
 
 .selector-group {
@@ -55,73 +113,83 @@ h1 {
 .selector-group label {
   display: block;
   margin-bottom: 8px;
-  color: #333;
+  color: var(--sigma-dark);
+  font-weight: 500;
 }
 
 .map-panel {
-  background-color: #f5f5f5;
+  background-color: var(--sigma-white);
   border-radius: 8px;
   padding: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--sigma-gray-light);
 }
 
 .results-panel {
   margin-top: 30px;
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: var(--sigma-white);
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--sigma-gray-light);
 }
 
 .no-routes {
   margin-top: 30px;
   padding: 20px;
   text-align: center;
-  background-color: #fff3cd;
+  background-color: #FEF3C7;
   border-radius: 8px;
-  color: #856404;
+  color: #92400E;
+  border: 1px solid #FCD34D;
 }
 
 .find-routes-btn:hover {
-  background-color: #535bf2 !important;
+  background-color: var(--sigma-secondary) !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .find-routes-btn:active {
   transform: translateY(0);
 }
 
-/* Light mode adjustments */
-@media (prefers-color-scheme: light) {
-  .App {
-    color: #213547;
-  }
-  
-  .station-selectors,
-  .results-panel {
-    background-color: #f9f9f9;
-  }
-  
-  .map-panel {
-    background-color: #f5f5f5;
-  }
+/* Sigma IQ Primary Button */
+.sigma-btn-primary {
+  background-color: var(--sigma-secondary);
+  color: var(--sigma-white);
+  border: none;
+  padding: 12px 24px;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  .App {
-    color: rgba(255, 255, 255, 0.87);
-  }
-  
-  .station-selectors,
-  .results-panel {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-  
-  .map-panel {
-    background-color: rgba(255, 255, 255, 0.03);
-  }
-  
-  .selector-group label {
-    color: rgba(255, 255, 255, 0.87);
-  }
+.sigma-btn-primary:hover {
+  background-color: var(--sigma-primary);
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+}
+
+.sigma-btn-primary:disabled {
+  background-color: var(--sigma-gray-light);
+  color: var(--sigma-gray);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Sigma IQ Secondary Button */
+.sigma-btn-secondary {
+  background-color: var(--sigma-white);
+  color: var(--sigma-primary);
+  border: 2px solid var(--sigma-primary);
+  padding: 12px 24px;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.sigma-btn-secondary:hover {
+  background-color: var(--sigma-primary);
+  color: var(--sigma-white);
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
 }
