@@ -72,6 +72,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
       routes,
       selectedRouteIndex,
       selectedRoute: selectedRoute,
+      freight,
       notes,
       status: WORKFLOW_STATUS.DRAFT,
       createdDate: existingSubmission?.createdDate || new Date().toISOString(),
@@ -81,8 +82,8 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
     };
 
     if (saveSubmission(submission)) {
-      alert('Draft saved successfully!');
-      if (onSave) onSave(submission);
+      alert('Draft saved successfully! You can continue editing or come back later.');
+      if (onSave) onSave(submission, false); // Pass false to indicate not to navigate away
     } else {
       alert('Error saving draft');
     }
