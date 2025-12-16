@@ -39,10 +39,11 @@ function FreightSpecification({ freight, onFreightChange }) {
       <h3 style={{ marginTop: 0, color: '#0F172A' }}>Freight Specifications</h3>
       
       <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <label htmlFor="freight-description" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
           Freight Description:
         </label>
         <input
+          id="freight-description"
           type="text"
           value={localFreight.description}
           onChange={(e) => handleChange('description', e.target.value)}
@@ -59,10 +60,11 @@ function FreightSpecification({ freight, onFreightChange }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', marginBottom: '15px' }}>
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          <label htmlFor="freight-length" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Length (feet):
           </label>
           <input
+            id="freight-length"
             type="number"
             value={localFreight.length || ''}
             onChange={(e) => handleChange('length', parseFloat(e.target.value) || 0)}
@@ -79,10 +81,11 @@ function FreightSpecification({ freight, onFreightChange }) {
         </div>
 
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          <label htmlFor="freight-width" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Width (feet):
           </label>
           <input
+            id="freight-width"
             type="number"
             value={localFreight.width || ''}
             onChange={(e) => handleChange('width', parseFloat(e.target.value) || 0)}
@@ -99,10 +102,11 @@ function FreightSpecification({ freight, onFreightChange }) {
         </div>
 
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          <label htmlFor="freight-height" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Height (feet):
           </label>
           <input
+            id="freight-height"
             type="number"
             value={localFreight.height || ''}
             onChange={(e) => handleChange('height', parseFloat(e.target.value) || 0)}
@@ -119,10 +123,11 @@ function FreightSpecification({ freight, onFreightChange }) {
         </div>
 
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          <label htmlFor="freight-weight" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Weight (pounds):
           </label>
           <input
+            id="freight-weight"
             type="number"
             value={localFreight.weight || ''}
             onChange={(e) => handleChange('weight', parseFloat(e.target.value) || 0)}
@@ -140,10 +145,11 @@ function FreightSpecification({ freight, onFreightChange }) {
       </div>
 
       <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <label htmlFor="freight-diagram" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
           Freight Diagram/Image (optional):
         </label>
         <input
+          id="freight-diagram"
           type="file"
           accept="image/*"
           onChange={handleDiagramUpload}
