@@ -4,6 +4,14 @@ A comprehensive web application for managing freight rail route submissions with
 
 **Version 1.5.0** - Now with bulk operations, enhanced empty states, contextual help, and improved navigation!
 
+## Documentation
+
+- [README.md](./README.md) - Project overview and usage guide
+- [API.md](./API.md) - Component and utility API documentation
+- [CHANGELOG.md](./CHANGELOG.md) - Version history and changes
+- [IMPROVEMENTS.md](./IMPROVEMENTS.md) - Improvement recommendations and roadmap
+- [FEATURE_BACKLOG.md](./FEATURE_BACKLOG.md) - Functional feature backlog (87 features)
+
 ## Overview
 
 This application provides a complete solution for freight rail route planning and submission management. Users can find optimal routes, specify freight details, visualize freight placement on rail cars, and manage submissions through an approval workflow.
