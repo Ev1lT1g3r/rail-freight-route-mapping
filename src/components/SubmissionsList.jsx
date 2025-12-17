@@ -200,6 +200,36 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
                 {isBulkMode ? '✓ Bulk Mode' : 'Bulk Actions'}
               </button>
             )}
+            {sortedSubmissions.length > 0 && (
+              <button
+                onClick={() => {
+                  const submissionsToExport = filterStatus === 'all' 
+                    ? sortedSubmissions 
+                    : sortedSubmissions.filter(s => s.status === filterStatus);
+                  if (submissionsToExport.length === 0) {
+                    showError('No submissions to export');
+                    return;
+                  }
+                  exportSubmissionsToCSV(submissionsToExport);
+                  success(`Exported ${submissionsToExport.length} submission(s) to CSV`);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  backgroundColor: '#10B981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                📥 Export {filterStatus === 'all' ? 'All' : 'Filtered'} ({sortedSubmissions.length})
+              </button>
+            )}
             <button
               onClick={onCreateNew}
               className="sigma-btn-primary"
