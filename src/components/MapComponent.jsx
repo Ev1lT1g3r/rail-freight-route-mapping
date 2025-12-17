@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { generateSegmentRailPath } from '../utils/railLinePath';
@@ -17,6 +17,16 @@ const OPERATOR_COLORS = {
   'Multiple': { color: '#A0A0A0', name: 'Multiple Operators', logo: '🚂', darkColor: '#808080' },
   'Default': { color: '#FF0000', name: 'Unknown', logo: '🚂', darkColor: '#CC0000' }
 };
+
+// Route colors for different routes (when showing all routes)
+const ROUTE_COLORS = [
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#EF4444', // Red
+  '#8B5CF6', // Purple
+  '#EC4899', // Pink
+];
 
 // Fix for default marker icons
 if (typeof window !== 'undefined' && L && L.Icon && L.Icon.Default) {
@@ -38,7 +48,8 @@ function MapComponent({
   destination, 
   onOriginSelect, 
   onDestinationSelect,
-  selectedRoute 
+  routes = [],
+  selectedRouteIndex = null
 }) {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
@@ -47,15 +58,16 @@ function MapComponent({
   const routePolylinesRef = useRef([]);
   const segmentPolylinesRef = useRef([]);
   const transferMarkersRef = useRef([]);
-  const operatorLegendRef = useRef(null);
-  const statsPanelRef = useRef(null);
   const tileLayerRef = useRef(null);
   const satelliteLayerRef = useRef(null);
   const layerControlRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [mapView, setMapView] = useState('satellite');
   const [hoveredSegment, setHoveredSegment] = useState(null);
   const [selectedSegmentIndex, setSelectedSegmentIndex] = useState(null);
+
+  const selectedRoute = selectedRouteIndex !== null && selectedRouteIndex !== undefined 
+    ? routes[selectedRouteIndex] 
+    : null;
 
   useEffect(() => {
     setIsMounted(true);
@@ -89,26 +101,59 @@ function MapComponent({
     });
     routePolylinesRef.current = [];
     segmentPolylinesRef.current = [];
-
-    // Remove controls
-    if (operatorLegendRef.current) {
-      try {
-        map.removeControl(operatorLegendRef.current);
-      } catch (e) {
-        // Ignore removal errors
-      }
-      operatorLegendRef.current = null;
-    }
-
-    if (statsPanelRef.current) {
-      try {
-        map.removeControl(statsPanelRef.current);
-      } catch (e) {
-        // Ignore removal errors
-      }
-      statsPanelRef.current = null;
-    }
   }, []);
+
+  // Calculate statistics for selected route
+  const routeStats = useMemo(() => {
+    if (!selectedRoute) return null;
+
+    const operatorStats = {};
+    const segmentDetails = [];
+    let totalDistance = 0;
+
+    if (selectedRoute.segments && selectedRoute.segments.length > 0) {
+      selectedRoute.segments.forEach((segment, index) => {
+        const segmentDistance = segment.distance || 0;
+        totalDistance += segmentDistance;
+
+        if (!operatorStats[segment.operator]) {
+          operatorStats[segment.operator] = {
+            distance: 0,
+            segments: 0,
+            stations: new Set(),
+            color: OPERATOR_COLORS[segment.operator]?.color || OPERATOR_COLORS.Default.color
+          };
+        }
+        operatorStats[segment.operator].segments++;
+        operatorStats[segment.operator].distance += segmentDistance;
+
+        const segmentStart = segment.from || selectedRoute.path[index];
+        const segmentEnd = segment.to || selectedRoute.path[index + 1];
+
+        if (segmentStart && segmentEnd) {
+          operatorStats[segment.operator].stations.add(segmentStart.code || segmentStart.name);
+          operatorStats[segment.operator].stations.add(segmentEnd.code || segmentEnd.name);
+        }
+
+        segmentDetails.push({
+          index,
+          operator: segment.operator,
+          from: segmentStart,
+          to: segmentEnd,
+          distance: segmentDistance,
+          curveScore: segment.curveScore || 0,
+          states: segment.states || []
+        });
+      });
+    }
+
+    return {
+      totalDistance,
+      segmentDetails,
+      operatorStats,
+      transferPoints: selectedRoute.transferPoints?.length || 0
+    };
+  }, [selectedRoute]);
 
   // Initialize map
   useEffect(() => {
@@ -227,417 +272,142 @@ function MapComponent({
     };
   }, [isMounted, stations, origin, destination, onOriginSelect, onDestinationSelect, cleanupMapElements]);
 
-  // Update map bounds when origin/destination changes
+  // Render all routes
   useEffect(() => {
-    if (!mapInstanceRef.current || (!origin && !destination)) return;
-
-    try {
-      const bounds = [];
-      if (origin && stations[origin]) {
-        bounds.push([stations[origin].lat, stations[origin].lng]);
-      }
-      if (destination && stations[destination]) {
-        bounds.push([stations[destination].lat, stations[destination].lng]);
-      }
-
-      if (bounds.length > 0) {
-        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
-      }
-    } catch (error) {
-      console.error('Error updating map bounds:', error);
-    }
-  }, [origin, destination, stations]);
-
-  // Render route with detailed visualization
-  useEffect(() => {
-    if (!mapInstanceRef.current) return;
+    if (!mapInstanceRef.current || !routes || routes.length === 0) return;
 
     cleanupMapElements();
     setHoveredSegment(null);
     setSelectedSegmentIndex(null);
 
-    if (!selectedRoute || !selectedRoute.path || selectedRoute.path.length < 2) {
-      return;
-    }
-
     try {
       const map = mapInstanceRef.current;
-      const positions = selectedRoute.path.map(station => [station.lat, station.lng]);
+      const allBounds = [];
 
-      // Calculate comprehensive statistics
-      const operatorStats = {};
-      const segmentDetails = [];
-      let totalDistance = 0;
+      // Draw all routes
+      routes.forEach((route, routeIndex) => {
+        if (!route || !route.path || route.path.length < 2) return;
 
-      if (selectedRoute.segments && selectedRoute.segments.length > 0) {
-        selectedRoute.segments.forEach((segment, index) => {
-          const segmentDistance = segment.distance || 0;
-          totalDistance += segmentDistance;
+        const isSelected = routeIndex === selectedRouteIndex;
+        const routeColor = isSelected ? ROUTE_COLORS[0] : ROUTE_COLORS[routeIndex % ROUTE_COLORS.length];
+        const routeOpacity = isSelected ? 0.9 : 0.4;
+        const routeWeight = isSelected ? 8 : 4;
 
-          if (!operatorStats[segment.operator]) {
-            operatorStats[segment.operator] = {
-              distance: 0,
-              segments: 0,
-              stations: new Set(),
-              color: OPERATOR_COLORS[segment.operator]?.color || OPERATOR_COLORS.Default.color
-            };
-          }
-          operatorStats[segment.operator].segments++;
-          operatorStats[segment.operator].distance += segmentDistance;
-
-          const segmentStart = segment.from || selectedRoute.path[index];
-          const segmentEnd = segment.to || selectedRoute.path[index + 1];
-
-          if (segmentStart && segmentEnd) {
-            operatorStats[segment.operator].stations.add(segmentStart.code || segmentStart.name);
-            operatorStats[segment.operator].stations.add(segmentEnd.code || segmentEnd.name);
-          }
-
-          segmentDetails.push({
-            index,
-            operator: segment.operator,
-            from: segmentStart,
-            to: segmentEnd,
-            distance: segmentDistance,
-            curveScore: segment.curveScore || 0,
-            states: segment.states || []
-          });
-        });
-      }
-
-      // Draw each segment with enhanced styling
-      segmentDetails.forEach((segmentDetail, segIndex) => {
-        const { from, to, operator, distance, curveScore, states } = segmentDetail;
-        
-        if (!from || !to || !from.lat || !from.lng || !to.lat || !to.lng) {
-          return;
-        }
-
-        const operatorInfo = OPERATOR_COLORS[operator] || OPERATOR_COLORS.Default;
-        const segmentColor = operatorInfo.color;
-        const darkColor = operatorInfo.darkColor || segmentColor;
-
-        // Generate rail line path
-        let railLinePath;
-        try {
-          const segmentData = {
-            from: { lat: from.lat, lng: from.lng },
-            to: { lat: to.lat, lng: to.lng },
-            curveScore: curveScore,
-            states: states
-          };
-          railLinePath = generateSegmentRailPath(segmentData);
-          
-          if (!railLinePath || railLinePath.length < 2) {
-            railLinePath = [[from.lat, from.lng], [to.lat, to.lng]];
-          }
-        } catch (error) {
-          railLinePath = [[from.lat, from.lng], [to.lat, to.lng]];
-        }
-
-        // Create interactive segment polyline
-        const segmentPolyline = L.polyline(railLinePath, {
-          color: segmentColor,
-          weight: 8,
-          opacity: 0.9,
-          smoothFactor: 1.0,
-          lineCap: 'round',
-          lineJoin: 'round',
-          className: `route-segment segment-${segIndex}`
-        }).addTo(map);
-
-        // Add shadow/glow effect
-        const shadowPolyline = L.polyline(railLinePath, {
-          color: segmentColor,
-          weight: 12,
-          opacity: 0.3,
-          smoothFactor: 1.0,
-          lineCap: 'round',
-          lineJoin: 'round'
-        }).addTo(map);
-
-        routePolylinesRef.current.push(shadowPolyline);
-        segmentPolylinesRef.current.push(segmentPolyline);
-
-        // Add hover effects
-        segmentPolyline.on('mouseover', () => {
-          setHoveredSegment(segIndex);
-          segmentPolyline.setStyle({
-            weight: 12,
-            opacity: 1.0
-          });
-        });
-
-        segmentPolyline.on('mouseout', () => {
-          if (selectedSegmentIndex !== segIndex) {
-            setHoveredSegment(null);
-            segmentPolyline.setStyle({
-              weight: 8,
-              opacity: 0.9
-            });
-          }
-        });
-
-        segmentPolyline.on('click', () => {
-          setSelectedSegmentIndex(segIndex);
-        });
-
-        // Add detailed tooltip
-        const fromName = from.name || from.code || 'Unknown';
-        const toName = to.name || to.code || 'Unknown';
-        const statesStr = states.length > 0 ? states.join(', ') : 'N/A';
-        
-        segmentPolyline.bindTooltip(`
-          <div class="segment-tooltip">
-            <div class="tooltip-header">
-              <span class="operator-logo">${operatorInfo.logo}</span>
-              <strong>${operatorInfo.name}</strong>
-            </div>
-            <div class="tooltip-content">
-              <div class="tooltip-row">
-                <span class="tooltip-label">Route:</span>
-                <span class="tooltip-value">${fromName} → ${toName}</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="tooltip-label">Distance:</span>
-                <span class="tooltip-value">${distance.toFixed(0)} miles</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="tooltip-label">States:</span>
-                <span class="tooltip-value">${statesStr}</span>
-              </div>
-              <div class="tooltip-row">
-                <span class="tooltip-label">Curve Score:</span>
-                <span class="tooltip-value">${curveScore}/10</span>
-              </div>
-            </div>
-          </div>
-        `, {
-          permanent: false,
-          direction: 'top',
-          className: 'segment-tooltip-container',
-          offset: [0, -10]
-        });
-
-        // Add operator label at midpoint
-        try {
-          const midPointIndex = Math.floor(railLinePath.length / 2);
-          const midPoint = railLinePath[midPointIndex] || railLinePath[Math.floor(railLinePath.length / 2)];
-          const [midLat, midLng] = midPoint;
-          
-          if (midLat && midLng && !isNaN(midLat) && !isNaN(midLng)) {
-            const label = L.marker([midLat, midLng], {
-              icon: L.divIcon({
-                className: 'operator-label',
-                html: `<div class="operator-label-badge" style="background: linear-gradient(135deg, ${segmentColor} 0%, ${darkColor} 100%);">
-                  <span class="operator-logo-small">${operatorInfo.logo}</span>
-                  <span class="operator-name-small">${operator}</span>
-                </div>`,
-                iconSize: [100, 30],
-                iconAnchor: [50, 15]
-              })
-            }).addTo(map);
+        // Draw each segment
+        if (route.segments && route.segments.length > 0) {
+          route.segments.forEach((segment, segIndex) => {
+            const segmentStart = segment.from || route.path[segIndex];
+            const segmentEnd = segment.to || route.path[segIndex + 1];
             
-            routeMarkersRef.current.push(label);
-          }
-        } catch (error) {
-          // Ignore label creation errors
-        }
-      });
+            if (!segmentStart || !segmentEnd || !segmentStart.lat || !segmentStart.lng || !segmentEnd.lat || !segmentEnd.lng) {
+              return;
+            }
 
-      // Add transfer point markers
-      if (selectedRoute.transferPoints && selectedRoute.transferPoints.length > 0) {
-        selectedRoute.transferPoints.forEach((transfer, index) => {
-          if (transfer.station && transfer.station.lat && transfer.station.lng) {
-            const transferMarker = L.marker([transfer.station.lat, transfer.station.lng], {
-              icon: L.divIcon({
-                className: 'transfer-marker',
-                html: `<div class="transfer-point">
-                  <div class="transfer-icon">🔄</div>
-                  <div class="transfer-label">Transfer</div>
-                </div>`,
-                iconSize: [60, 60],
-                iconAnchor: [30, 30]
-              })
+            // Generate rail line path
+            let railLinePath;
+            try {
+              const segmentData = {
+                from: { lat: segmentStart.lat, lng: segmentStart.lng },
+                to: { lat: segmentEnd.lat, lng: segmentEnd.lng },
+                curveScore: segment.curveScore || 5,
+                states: segment.states || []
+              };
+              railLinePath = generateSegmentRailPath(segmentData);
+              
+              if (!railLinePath || railLinePath.length < 2) {
+                railLinePath = [[segmentStart.lat, segmentStart.lng], [segmentEnd.lat, segmentEnd.lng]];
+              }
+            } catch (error) {
+              railLinePath = [[segmentStart.lat, segmentStart.lng], [segmentEnd.lat, segmentEnd.lng]];
+            }
+
+            // Create polyline
+            const segmentPolyline = L.polyline(railLinePath, {
+              color: routeColor,
+              weight: routeWeight,
+              opacity: routeOpacity,
+              smoothFactor: 1.0,
+              lineCap: 'round',
+              lineJoin: 'round',
+              className: `route-segment route-${routeIndex} segment-${segIndex}`
             }).addTo(map);
 
-            transferMarker.bindPopup(`
-              <div class="transfer-popup">
-                <strong>Transfer Point</strong><br/>
-                <span>${transfer.station.name}</span><br/>
-                <div class="transfer-operators">
-                  <span class="operator-badge" style="background: ${OPERATOR_COLORS[transfer.fromOperator]?.color || '#ccc'}">
-                    ${transfer.fromOperator}
-                  </span>
-                  <span class="transfer-arrow">→</span>
-                  <span class="operator-badge" style="background: ${OPERATOR_COLORS[transfer.toOperator]?.color || '#ccc'}">
-                    ${transfer.toOperator}
-                  </span>
-                </div>
-              </div>
-            `);
+            // Add shadow for selected route
+            if (isSelected) {
+              const shadowPolyline = L.polyline(railLinePath, {
+                color: routeColor,
+                weight: routeWeight + 4,
+                opacity: 0.3,
+                smoothFactor: 1.0,
+                lineCap: 'round',
+                lineJoin: 'round'
+              }).addTo(map);
+              routePolylinesRef.current.push(shadowPolyline);
+            }
 
-            transferMarkersRef.current.push(transferMarker);
-          }
-        });
-      }
+            routePolylinesRef.current.push(segmentPolyline);
 
-      // Add waypoint markers for intermediate stations
-      selectedRoute.path.forEach((station, index) => {
-        if (index > 0 && index < selectedRoute.path.length - 1) {
-          const waypointMarker = L.marker([station.lat, station.lng], {
-            icon: L.divIcon({
-              className: 'waypoint-marker',
-              html: `<div class="waypoint-dot"></div>`,
-              iconSize: [12, 12],
-              iconAnchor: [6, 6]
-            })
-          }).addTo(map);
-          
-          waypointMarker.bindPopup(`
-            <div class="waypoint-popup">
-              <strong>${station.name}</strong><br/>
-              <span>${station.state}</span><br/>
-              <em>Route waypoint</em>
-            </div>
-          `);
-          
-          routeMarkersRef.current.push(waypointMarker);
+            // Add to bounds
+            railLinePath.forEach(([lat, lng]) => {
+              allBounds.push([lat, lng]);
+            });
+          });
         }
-      });
 
-      // Add comprehensive statistics panel
-      const statsHtml = `
-        <div class="route-stats-panel">
-          <div class="stats-header">
-            <h3>Route Statistics</h3>
-          </div>
-          <div class="stats-content">
-            <div class="stat-group">
-              <div class="stat-item">
-                <span class="stat-label">Total Distance</span>
-                <span class="stat-value">${totalDistance.toFixed(0)} miles</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">Total Segments</span>
-                <span class="stat-value">${segmentDetails.length}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">Operators</span>
-                <span class="stat-value">${Object.keys(operatorStats).length}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">Transfer Points</span>
-                <span class="stat-value">${selectedRoute.transferPoints?.length || 0}</span>
-              </div>
-            </div>
-            <div class="operator-breakdown">
-              <h4>Operator Breakdown</h4>
-              ${Object.entries(operatorStats).map(([op, stats]) => {
-                const opInfo = OPERATOR_COLORS[op] || OPERATOR_COLORS.Default;
-                const percentage = totalDistance > 0 ? ((stats.distance / totalDistance) * 100).toFixed(1) : 0;
-                return `
-                  <div class="operator-stat-row">
-                    <div class="operator-stat-header">
-                      <span class="operator-stat-logo">${opInfo.logo}</span>
-                      <strong>${opInfo.name}</strong>
-                      <span class="operator-stat-percentage">${percentage}%</span>
-                    </div>
-                    <div class="operator-stat-details">
-                      <span>${stats.distance.toFixed(0)} miles</span>
-                      <span>•</span>
-                      <span>${stats.segments} segment${stats.segments !== 1 ? 's' : ''}</span>
-                      <span>•</span>
-                      <span>${stats.stations.size} station${stats.stations.size !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div class="operator-stat-bar">
-                      <div class="operator-stat-bar-fill" style="width: ${percentage}%; background: ${opInfo.color};"></div>
-                    </div>
+        // Add transfer points for selected route only
+        if (isSelected && route.transferPoints && route.transferPoints.length > 0) {
+          route.transferPoints.forEach((transfer) => {
+            if (transfer.station && transfer.station.lat && transfer.station.lng) {
+              const transferMarker = L.marker([transfer.station.lat, transfer.station.lng], {
+                icon: L.divIcon({
+                  className: 'transfer-marker',
+                  html: `<div class="transfer-point">
+                    <div class="transfer-icon">🔄</div>
+                    <div class="transfer-label">Transfer</div>
+                  </div>`,
+                  iconSize: [60, 60],
+                  iconAnchor: [30, 30]
+                })
+              }).addTo(map);
+
+              transferMarker.bindPopup(`
+                <div class="transfer-popup">
+                  <strong>Transfer Point</strong><br/>
+                  <span>${transfer.station.name}</span><br/>
+                  <div class="transfer-operators">
+                    <span class="operator-badge" style="background: ${OPERATOR_COLORS[transfer.fromOperator]?.color || '#ccc'}">
+                      ${transfer.fromOperator}
+                    </span>
+                    <span class="transfer-arrow">→</span>
+                    <span class="operator-badge" style="background: ${OPERATOR_COLORS[transfer.toOperator]?.color || '#ccc'}">
+                      ${transfer.toOperator}
+                    </span>
                   </div>
-                `;
-              }).join('')}
-            </div>
-            ${segmentDetails.length > 0 ? `
-              <div class="segment-list">
-                <h4>Segment Details</h4>
-                <div class="segment-list-content">
-                  ${segmentDetails.map((seg, idx) => {
-                    const segOpInfo = OPERATOR_COLORS[seg.operator] || OPERATOR_COLORS.Default;
-                    return `
-                      <div class="segment-list-item ${selectedSegmentIndex === idx ? 'selected' : ''}" 
-                           data-segment-index="${idx}">
-                        <div class="segment-list-color" style="background: ${segOpInfo.color};"></div>
-                        <div class="segment-list-content">
-                          <div class="segment-list-route">
-                            ${seg.from.name || seg.from.code} → ${seg.to.name || seg.to.code}
-                          </div>
-                          <div class="segment-list-details">
-                            <span>${seg.operator}</span>
-                            <span>•</span>
-                            <span>${seg.distance.toFixed(0)} miles</span>
-                          </div>
-                        </div>
-                      </div>
-                    `;
-                  }).join('')}
                 </div>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-      `;
+              `);
 
-      statsPanelRef.current = L.control({ position: 'topleft' });
-      statsPanelRef.current.onAdd = function() {
-        const div = L.DomUtil.create('div', 'route-stats-container');
-        div.innerHTML = statsHtml;
-        L.DomEvent.disableClickPropagation(div);
-        
-        // Add click handlers for segment list items
-        div.querySelectorAll('.segment-list-item').forEach((item, idx) => {
-          item.addEventListener('click', () => {
-            setSelectedSegmentIndex(idx);
-            // Scroll segment into view on map
-            const segment = segmentDetails[idx];
-            if (segment && segment.from && segment.to) {
-              const bounds = L.latLngBounds([
-                [segment.from.lat, segment.from.lng],
-                [segment.to.lat, segment.to.lng]
-              ]);
-              map.fitBounds(bounds, { padding: [100, 100] });
+              transferMarkersRef.current.push(transferMarker);
             }
           });
-        });
-        
-        return div;
-      };
-      statsPanelRef.current.addTo(map);
+        }
+      });
 
-      // Fit bounds to route
-      if (positions.length > 0) {
+      // Fit bounds to all routes
+      if (allBounds.length > 0) {
         try {
-          const bounds = L.latLngBounds(positions);
+          const bounds = L.latLngBounds(allBounds);
           map.fitBounds(bounds, { 
             padding: [50, 50],
             maxZoom: 10
           });
-          
-          // Zoom in closer for shorter routes
-          const boundsSize = bounds.getNorthEast().distanceTo(bounds.getSouthWest());
-          if (boundsSize < 500000) {
-            setTimeout(() => {
-              const currentZoom = map.getZoom();
-              map.setZoom(Math.min(currentZoom + 1, 12));
-            }, 500);
-          }
         } catch (error) {
           console.error('Error fitting route bounds:', error);
         }
       }
     } catch (error) {
-      console.error('Error rendering route:', error);
+      console.error('Error rendering routes:', error);
     }
-  }, [selectedRoute, cleanupMapElements, hoveredSegment, selectedSegmentIndex]);
+  }, [routes, selectedRouteIndex, cleanupMapElements]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -675,8 +445,104 @@ function MapComponent({
   }
 
   return (
-    <div className="map-container">
-      <div ref={mapRef} className="map-wrapper" />
+    <div className="map-with-stats-container">
+      <div className="map-container">
+        <div ref={mapRef} className="map-wrapper" />
+      </div>
+      {routeStats && (
+        <div className="route-stats-panel-fixed">
+          <div className="stats-header">
+            <h3>Route Statistics</h3>
+            {selectedRouteIndex !== null && (
+              <span className="route-number-badge-small">Route #{selectedRouteIndex + 1}</span>
+            )}
+          </div>
+          <div className="stats-content">
+            <div className="stat-group">
+              <div className="stat-item">
+                <span className="stat-label">Total Distance</span>
+                <span className="stat-value">{routeStats.totalDistance.toFixed(0)} miles</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Total Segments</span>
+                <span className="stat-value">{routeStats.segmentDetails.length}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Operators</span>
+                <span className="stat-value">{Object.keys(routeStats.operatorStats).length}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Transfer Points</span>
+                <span className="stat-value">{routeStats.transferPoints}</span>
+              </div>
+            </div>
+            <div className="operator-breakdown">
+              <h4>Operator Breakdown</h4>
+              {Object.entries(routeStats.operatorStats).map(([op, stats]) => {
+                const opInfo = OPERATOR_COLORS[op] || OPERATOR_COLORS.Default;
+                const percentage = routeStats.totalDistance > 0 ? ((stats.distance / routeStats.totalDistance) * 100).toFixed(1) : 0;
+                return (
+                  <div key={op} className="operator-stat-row">
+                    <div className="operator-stat-header">
+                      <span className="operator-stat-logo">{opInfo.logo}</span>
+                      <strong>{opInfo.name}</strong>
+                      <span className="operator-stat-percentage">{percentage}%</span>
+                    </div>
+                    <div className="operator-stat-details">
+                      <span>{stats.distance.toFixed(0)} miles</span>
+                      <span>•</span>
+                      <span>{stats.segments} segment{stats.segments !== 1 ? 's' : ''}</span>
+                      <span>•</span>
+                      <span>{stats.stations.size} station{stats.stations.size !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="operator-stat-bar">
+                      <div className="operator-stat-bar-fill" style={{ width: `${percentage}%`, background: opInfo.color }}></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {routeStats.segmentDetails.length > 0 && (
+              <div className="segment-list">
+                <h4>Segment Details</h4>
+                <div className="segment-list-content">
+                  {routeStats.segmentDetails.map((seg, idx) => {
+                    const segOpInfo = OPERATOR_COLORS[seg.operator] || OPERATOR_COLORS.Default;
+                    return (
+                      <div 
+                        key={idx}
+                        className={`segment-list-item ${selectedSegmentIndex === idx ? 'selected' : ''}`}
+                        onClick={() => {
+                          setSelectedSegmentIndex(idx);
+                          if (mapInstanceRef.current && seg.from && seg.to) {
+                            const bounds = L.latLngBounds([
+                              [seg.from.lat, seg.from.lng],
+                              [seg.to.lat, seg.to.lng]
+                            ]);
+                            mapInstanceRef.current.fitBounds(bounds, { padding: [100, 100] });
+                          }
+                        }}
+                      >
+                        <div className="segment-list-color" style={{ background: segOpInfo.color }}></div>
+                        <div className="segment-list-content">
+                          <div className="segment-list-route">
+                            {seg.from.name || seg.from.code} → {seg.to.name || seg.to.code}
+                          </div>
+                          <div className="segment-list-details">
+                            <span>{seg.operator}</span>
+                            <span>•</span>
+                            <span>{seg.distance.toFixed(0)} miles</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import MapComponent from './MapComponent';
 import RouteConfig from './RouteConfig';
-import RouteResults from './RouteResults';
+import RouteTable from './RouteTable';
 import FreightSpecification from './FreightSpecification';
 import FreightPlacementVisualization from './FreightPlacementVisualization';
 import ErrorBoundary from './ErrorBoundary';
