@@ -12,6 +12,23 @@ All notable changes to this project will be documented in this file.
   - Delete templates
   - Template management UI with collapsible panel
   - Empty state for templates
+- **F-009: Route Comparison Tool** - Enhanced side-by-side route comparison
+  - Compare up to 3 routes simultaneously
+  - Side-by-side comparison view with detailed metrics
+  - Table comparison view with best route highlighting
+  - Route selection interface with visual indicators
+  - Comparison metrics (distance, operators, transfers, curves, states)
+  - Summary panel showing best routes for each metric
+  - Select route directly from comparison tool
+  - Toggle between side-by-side and table views
+  - Modal overlay interface
+  - Help tooltips for guidance
+  - Save current submission as template with custom name
+  - Template library accessible from submission creation flow
+  - Load templates to pre-fill submission form (origin, destination, preferences, freight, tags, notes)
+  - Delete templates
+  - Template management UI with collapsible panel
+  - Empty state for templates
 - **F-004: Advanced Search and Filtering** - Enhanced search and filtering capabilities
   - Full-text search across all submission fields
   - Multi-criteria filtering (date range, operators, states, origin, destination, created by, tags, distance range)
