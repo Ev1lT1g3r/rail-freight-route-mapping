@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission, saveSubmission, duplicateSubmission } from '../utils/submissionStorage';
+import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission, saveSubmission, duplicateSubmission, archiveSubmission, unarchiveSubmission, getActiveSubmissions, getArchivedSubmissions } from '../utils/submissionStorage';
 import StatusBadge from './StatusBadge';
 import EmptyState from './EmptyState';
 import HelpTooltip from './HelpTooltip';
@@ -21,7 +21,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
   }, []);
 
   const loadSubmissions = () => {
-    const all = getAllSubmissions();
+    const all = showArchived ? getArchivedSubmissions() : getActiveSubmissions();
     setSubmissions(all);
   };
 
@@ -248,22 +248,60 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
               </button>
             </div>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => handleBulkStatusChange(WORKFLOW_STATUS.SUBMITTED)}
-                disabled={selectedSubmissions.size === 0}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '14px',
-                  backgroundColor: selectedSubmissions.size > 0 ? '#3B82F6' : '#CBD5E1',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: selectedSubmissions.size > 0 ? 'pointer' : 'not-allowed',
-                  fontWeight: '600'
-                }}
-              >
-                Mark as Submitted
-              </button>
+              {!showArchived && (
+                <>
+                  <button
+                    onClick={() => handleBulkStatusChange(WORKFLOW_STATUS.SUBMITTED)}
+                    disabled={selectedSubmissions.size === 0}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      backgroundColor: selectedSubmissions.size > 0 ? '#3B82F6' : '#CBD5E1',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: selectedSubmissions.size > 0 ? 'pointer' : 'not-allowed',
+                      fontWeight: '600'
+                    }}
+                  >
+                    Mark as Submitted
+                  </button>
+                  <button
+                    onClick={handleBulkArchive}
+                    disabled={selectedSubmissions.size === 0}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      backgroundColor: selectedSubmissions.size > 0 ? '#8B5CF6' : '#C4B5FD',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: selectedSubmissions.size > 0 ? 'pointer' : 'not-allowed',
+                      fontWeight: '600'
+                    }}
+                  >
+                    Archive Selected
+                  </button>
+                </>
+              )}
+              {showArchived && (
+                <button
+                  onClick={handleBulkUnarchive}
+                  disabled={selectedSubmissions.size === 0}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    backgroundColor: selectedSubmissions.size > 0 ? '#10B981' : '#A7F3D0',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: selectedSubmissions.size > 0 ? 'pointer' : 'not-allowed',
+                    fontWeight: '600'
+                  }}
+                >
+                  Unarchive Selected
+                </button>
+              )}
               <button
                 onClick={handleBulkDelete}
                 disabled={selectedSubmissions.size === 0}
@@ -304,10 +342,33 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
             style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
           >
             <option value="all">All</option>
-            {Object.values(WORKFLOW_STATUS).map(status => (
-              <option key={status} value={status}>{status}</option>
-            ))}
+            {Object.values(WORKFLOW_STATUS)
+              .filter(status => showArchived ? status === WORKFLOW_STATUS.ARCHIVED : status !== WORKFLOW_STATUS.ARCHIVED)
+              .map(status => (
+                <option key={status} value={status}>{status}</option>
+              ))}
           </select>
+          <button
+            onClick={() => {
+              setShowArchived(!showArchived);
+              setFilterStatus('all');
+            }}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              backgroundColor: showArchived ? '#10B981' : '#64748B',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            {showArchived ? '📦 Viewing Archived' : '📋 Viewing Active'}
+          </button>
         </div>
 
         <div>
@@ -435,6 +496,52 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
                       }}
                     >
                       Edit
+                    </button>
+                  )}
+                  {!showArchived && submission.status !== WORKFLOW_STATUS.ARCHIVED && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (archiveSubmission(submission.id, currentUser)) {
+                          success('Submission archived');
+                          loadSubmissions();
+                        }
+                      }}
+                      style={{
+                        padding: '5px 10px',
+                        backgroundColor: '#8B5CF6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Archive
+                    </button>
+                  )}
+                  {showArchived && submission.status === WORKFLOW_STATUS.ARCHIVED && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (unarchiveSubmission(submission.id, currentUser)) {
+                          success('Submission unarchived');
+                          loadSubmissions();
+                        }
+                      }}
+                      style={{
+                        padding: '5px 10px',
+                        backgroundColor: '#10B981',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Unarchive
                     </button>
                   )}
                   <button

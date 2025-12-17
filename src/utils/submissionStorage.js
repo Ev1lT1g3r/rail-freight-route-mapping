@@ -8,7 +8,8 @@ export const WORKFLOW_STATUS = {
   SUBMITTED: 'Submitted',
   PENDING_APPROVAL: 'Pending Approval',
   APPROVED: 'Approved',
-  REJECTED: 'Rejected'
+  REJECTED: 'Rejected',
+  ARCHIVED: 'Archived'
 };
 
 export function getAllSubmissions() {
@@ -97,5 +98,60 @@ export function duplicateSubmission(id, currentUser = 'Current User') {
     console.error('Error duplicating submission:', e);
     return null;
   }
+}
+
+export function archiveSubmission(id, currentUser = 'Current User') {
+  try {
+    const submission = getSubmissionById(id);
+    if (!submission) {
+      return false;
+    }
+
+    const archived = {
+      ...submission,
+      status: WORKFLOW_STATUS.ARCHIVED,
+      archivedDate: new Date().toISOString(),
+      archivedBy: currentUser,
+      updatedDate: new Date().toISOString(),
+      updatedBy: currentUser
+    };
+
+    return saveSubmission(archived);
+  } catch (e) {
+    console.error('Error archiving submission:', e);
+    return false;
+  }
+}
+
+export function unarchiveSubmission(id, currentUser = 'Current User') {
+  try {
+    const submission = getSubmissionById(id);
+    if (!submission || submission.status !== WORKFLOW_STATUS.ARCHIVED) {
+      return false;
+    }
+
+    // Restore to previous status or default to DRAFT
+    const restored = {
+      ...submission,
+      status: submission.previousStatus || WORKFLOW_STATUS.DRAFT,
+      archivedDate: null,
+      archivedBy: null,
+      updatedDate: new Date().toISOString(),
+      updatedBy: currentUser
+    };
+
+    return saveSubmission(restored);
+  } catch (e) {
+    console.error('Error unarchiving submission:', e);
+    return false;
+  }
+}
+
+export function getArchivedSubmissions() {
+  return getAllSubmissions().filter(s => s.status === WORKFLOW_STATUS.ARCHIVED);
+}
+
+export function getActiveSubmissions() {
+  return getAllSubmissions().filter(s => s.status !== WORKFLOW_STATUS.ARCHIVED);
 }
 
