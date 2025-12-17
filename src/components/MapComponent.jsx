@@ -216,8 +216,8 @@ function MapComponent({
               <span class="marker-label">O</span>
               <div class="marker-pulse"></div>
             </div>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16]
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
           });
         } else if (isDestination) {
           icon = L.divIcon({
@@ -226,8 +226,8 @@ function MapComponent({
               <span class="marker-label">D</span>
               <div class="marker-pulse"></div>
             </div>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16]
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
           });
         } else {
           icon = L.icon({
