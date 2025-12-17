@@ -206,29 +206,37 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
       {/* Large Route Map with Statistics */}
       <div style={{ marginBottom: '20px' }}>
         <h3 style={{ marginBottom: '15px', color: '#0F172A' }}>Route Map & Statistics</h3>
-        <div style={{ 
-          position: 'relative',
-          width: '100%',
-          height: '600px',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #E2E8F0'
-        }}>
-          <MapComponent
-            stations={stations}
-            origin={submission.origin}
-            destination={submission.destination}
-            onOriginSelect={() => {}}
-            onDestinationSelect={() => {}}
-            routes={submission.selectedRoute && submission.selectedRoute.segments && submission.selectedRoute.segments.length > 0 
-              ? [submission.selectedRoute] 
-              : []}
-            selectedRouteIndex={submission.selectedRoute && submission.selectedRoute.segments && submission.selectedRoute.segments.length > 0 
-              ? 0 
-              : null}
-          />
-        </div>
+        {submission.selectedRoute && submission.selectedRoute.segments && submission.selectedRoute.segments.length > 0 ? (
+          <div style={{ 
+            position: 'relative',
+            width: '100%',
+            height: '600px',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #E2E8F0'
+          }}>
+            <MapComponent
+              stations={stations}
+              origin={submission.origin}
+              destination={submission.destination}
+              onOriginSelect={() => {}}
+              onDestinationSelect={() => {}}
+              routes={[submission.selectedRoute]}
+              selectedRouteIndex={0}
+            />
+          </div>
+        ) : (
+          <div style={{ 
+            padding: '40px',
+            textAlign: 'center',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px',
+            border: '1px solid #E2E8F0'
+          }}>
+            <p style={{ color: '#64748B', margin: 0 }}>No route data available for this submission.</p>
+          </div>
+        )}
       </div>
 
       {/* Route Details Section */}

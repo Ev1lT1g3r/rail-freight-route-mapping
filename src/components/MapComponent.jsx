@@ -274,8 +274,13 @@ function MapComponent({
 
   // Render all routes
   useEffect(() => {
-    if (!mapInstanceRef.current || !routes || routes.length === 0) {
-      // If we have origin/destination but no routes, still show markers
+    // Wait for map to be initialized
+    if (!mapInstanceRef.current || !isMounted) {
+      return;
+    }
+
+    // If no routes, just show origin/destination markers
+    if (!routes || routes.length === 0) {
       return;
     }
 
@@ -286,6 +291,14 @@ function MapComponent({
     try {
       const map = mapInstanceRef.current;
       const allBounds = [];
+      
+      // Add origin and destination to bounds if available
+      if (origin && stations[origin]) {
+        allBounds.push([stations[origin].lat, stations[origin].lng]);
+      }
+      if (destination && stations[destination]) {
+        allBounds.push([stations[destination].lat, stations[destination].lng]);
+      }
 
       // Draw all routes
       routes.forEach((route, routeIndex) => {
@@ -534,18 +547,48 @@ function MapComponent({
         try {
           const bounds = L.latLngBounds(allBounds);
           const isSingleRoute = routes.length === 1;
-          map.fitBounds(bounds, { 
-            padding: isSingleRoute ? [80, 80] : [50, 50],
-            maxZoom: isSingleRoute ? 12 : 10  // Zoom in more for single route
-          });
+          
+          // Use setTimeout to ensure map is ready
+          setTimeout(() => {
+            if (mapInstanceRef.current) {
+              mapInstanceRef.current.fitBounds(bounds, { 
+                padding: isSingleRoute ? [80, 80] : [50, 50],
+                maxZoom: isSingleRoute ? 12 : 10,  // Zoom in more for single route
+                animate: true,
+                duration: 1.0
+              });
+            }
+          }, 100);
         } catch (error) {
           console.error('Error fitting route bounds:', error);
+        }
+      } else {
+        // If no bounds from routes, zoom to origin/destination if available
+        if (origin && destination && stations[origin] && stations[destination]) {
+          try {
+            const bounds = L.latLngBounds([
+              [stations[origin].lat, stations[origin].lng],
+              [stations[destination].lat, stations[destination].lng]
+            ]);
+            setTimeout(() => {
+              if (mapInstanceRef.current) {
+                mapInstanceRef.current.fitBounds(bounds, {
+                  padding: [80, 80],
+                  maxZoom: 10,
+                  animate: true,
+                  duration: 1.0
+                });
+              }
+            }, 100);
+          } catch (error) {
+            console.error('Error fitting origin/destination bounds:', error);
+          }
         }
       }
     } catch (error) {
       console.error('Error rendering routes:', error);
     }
-  }, [routes, selectedRouteIndex, cleanupMapElements]);
+  }, [routes, selectedRouteIndex, cleanupMapElements, isMounted, origin, destination, stations]);
 
   // Cleanup on unmount
   useEffect(() => {
