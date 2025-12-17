@@ -11,7 +11,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
   const [sortBy, setSortBy] = useState('date');
   const [selectedSubmissions, setSelectedSubmissions] = useState(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
-  const { success } = useToast();
+  const { success, error: showError } = useToast();
 
   useEffect(() => {
     loadSubmissions();

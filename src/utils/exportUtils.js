@@ -1,4 +1,5 @@
 // Export utilities for submissions
+import { stations } from '../data/railNetwork';
 
 export function exportSubmissionToJSON(submission) {
   const dataStr = JSON.stringify(submission, null, 2);
@@ -108,7 +109,6 @@ export function exportSubmissionsToCSV(submissions) {
 }
 
 export function exportSubmissionToText(submission) {
-  const stations = require('../data/railNetwork').stations;
   const originStation = stations[submission.origin];
   const destStation = stations[submission.destination];
 
