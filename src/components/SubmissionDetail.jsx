@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { getSubmissionById, saveSubmission, WORKFLOW_STATUS } from '../utils/submissionStorage';
+import { getSubmissionById, saveSubmission, WORKFLOW_STATUS, duplicateSubmission } from '../utils/submissionStorage';
 import MapComponent from './MapComponent';
 import StatusBadge from './StatusBadge';
 import HelpTooltip from './HelpTooltip';
+import { useToast } from '../contexts/ToastContext';
 import { stations } from '../data/railNetwork';
 
 // Operator colors for route segments
@@ -21,10 +22,11 @@ const getOperatorColor = (operator) => {
   return colors[operator] || '#A0A0A0';
 };
 
-function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', isApprover = false }) {
+function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current User', isApprover = false }) {
   const submission = getSubmissionById(submissionId);
   const [rejectionReason, setRejectionReason] = useState('');
   const [notes, setNotes] = useState(submission?.notes || '');
+  const { success } = useToast();
 
   if (!submission) {
     return (
@@ -117,28 +119,58 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
         </div>
       </div>
       <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h2 style={{ margin: 0, color: '#0F172A' }}>Submission Information</h2>
             <HelpTooltip content="View complete submission details including route information, freight specifications, and approval workflow status. Approvers can approve or reject submissions from this page.">
               <span style={{ color: '#6B7280', cursor: 'help', fontSize: '18px' }}>ℹ️</span>
             </HelpTooltip>
           </div>
-        <button
-          onClick={onBack}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          ← Back to List
-        </button>
-      </div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                const duplicated = duplicateSubmission(submissionId, currentUser);
+                if (duplicated) {
+                  success('Submission duplicated! Opening in edit mode...');
+                  setTimeout(() => {
+                    if (onEdit) {
+                      onEdit(duplicated.id);
+                    }
+                  }, 500);
+                }
+              }}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#10B981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              📋 Duplicate
+            </button>
+            <button
+              onClick={onBack}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              ← Back to List
+            </button>
+          </div>
+        </div>
 
       <div style={{ 
         padding: '20px', 

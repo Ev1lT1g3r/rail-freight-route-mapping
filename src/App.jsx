@@ -129,6 +129,7 @@ function AppContent() {
           onCreateNew={handleCreateNew}
           onEditSubmission={handleEditSubmission}
           onBackToHome={() => setCurrentView(VIEWS.HOME)}
+          currentUser={currentUser || 'Guest User'}
         />
       )}
 

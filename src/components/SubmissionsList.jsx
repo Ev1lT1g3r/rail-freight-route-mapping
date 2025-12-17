@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission, saveSubmission } from '../utils/submissionStorage';
+import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission, saveSubmission, duplicateSubmission } from '../utils/submissionStorage';
 import StatusBadge from './StatusBadge';
 import EmptyState from './EmptyState';
 import HelpTooltip from './HelpTooltip';
+import { useToast } from '../contexts/ToastContext';
 
-function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBackToHome }) {
+function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBackToHome, currentUser = 'Current User' }) {
   const [submissions, setSubmissions] = useState([]);
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [selectedSubmissions, setSelectedSubmissions] = useState(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
+  const { success } = useToast();
 
   useEffect(() => {
     loadSubmissions();
@@ -112,6 +114,21 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
       setSelectedSubmissions(new Set());
     } else {
       setSelectedSubmissions(new Set(sortedSubmissions.map(s => s.id)));
+    }
+  };
+
+  const handleDuplicate = (id, e) => {
+    e?.stopPropagation();
+    const duplicated = duplicateSubmission(id, currentUser);
+    if (duplicated) {
+      success('Submission duplicated successfully! Opening in edit mode...');
+      loadSubmissions();
+      // Navigate to edit the duplicated submission
+      setTimeout(() => {
+        if (onEditSubmission) {
+          onEditSubmission(duplicated.id);
+        }
+      }, 500);
     }
   };
 

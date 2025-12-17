@@ -64,3 +64,38 @@ export function createSubmissionId() {
   return `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+export function duplicateSubmission(id, currentUser = 'Current User') {
+  try {
+    const submission = getSubmissionById(id);
+    if (!submission) {
+      return null;
+    }
+
+    // Create a new submission with copied data
+    const duplicated = {
+      ...submission,
+      id: createSubmissionId(),
+      name: submission.name ? `${submission.name} (Copy)` : undefined,
+      status: WORKFLOW_STATUS.DRAFT,
+      createdDate: new Date().toISOString(),
+      createdBy: currentUser,
+      submittedDate: null,
+      submittedBy: null,
+      approvedDate: null,
+      approvedBy: null,
+      rejectedDate: null,
+      rejectedBy: null,
+      rejectionReason: null,
+      updatedDate: new Date().toISOString(),
+      updatedBy: currentUser
+    };
+
+    // Remove the original ID from the duplicated object to ensure it's treated as new
+    saveSubmission(duplicated);
+    return duplicated;
+  } catch (e) {
+    console.error('Error duplicating submission:', e);
+    return null;
+  }
+}
+

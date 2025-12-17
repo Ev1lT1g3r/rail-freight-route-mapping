@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import HelpTooltip from './HelpTooltip';
+import { FREIGHT_PRESETS, getPresetsByCategory } from '../data/freightPresets';
 
 function FreightSpecification({ freight, onFreightChange, validationErrors = {} }) {
   const [localFreight, setLocalFreight] = useState(freight || {
@@ -30,6 +31,26 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
     }
   };
 
+  const handlePresetSelect = (presetKey) => {
+    const preset = FREIGHT_PRESETS[presetKey];
+    if (preset) {
+      const presetFreight = {
+        ...localFreight,
+        description: preset.name,
+        length: preset.length,
+        width: preset.width,
+        height: preset.height,
+        weight: preset.weight
+      };
+      setLocalFreight(presetFreight);
+      if (onFreightChange) {
+        onFreightChange(presetFreight);
+      }
+    }
+  };
+
+  const presetsByCategory = getPresetsByCategory();
+
   return (
     <div style={{ 
       padding: '20px', 
@@ -38,6 +59,42 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
       marginBottom: '20px'
     }}>
       <h3 style={{ marginTop: 0, color: '#0F172A' }}>Freight Specifications</h3>
+      
+      <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #ddd' }}>
+        <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          Quick Presets:
+          <HelpTooltip content="Select a common freight type preset to quickly fill in dimensions and weight. You can modify the values after selecting a preset.">
+            <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+          </HelpTooltip>
+        </label>
+        <select
+          onChange={(e) => {
+            if (e.target.value) {
+              handlePresetSelect(e.target.value);
+              e.target.value = ''; // Reset select
+            }
+          }}
+          style={{
+            width: '100%',
+            padding: '8px',
+            borderRadius: '4px',
+            border: '1px solid #ddd',
+            fontSize: '14px',
+            backgroundColor: '#fff'
+          }}
+        >
+          <option value="">Select a freight preset...</option>
+          {Object.entries(presetsByCategory).map(([category, presets]) => (
+            <optgroup key={category} label={category}>
+              {presets.map(preset => (
+                <option key={preset.name} value={Object.keys(FREIGHT_PRESETS).find(k => FREIGHT_PRESETS[k].name === preset.name)}>
+                  {preset.name} - {preset.description}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
       
       <div style={{ marginBottom: '15px' }}>
         <label htmlFor="freight-description" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
