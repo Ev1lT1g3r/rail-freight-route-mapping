@@ -52,8 +52,8 @@ export function applyFilters(submissions, filters) {
   }
 
   return submissions.filter(submission => {
-    // Status filter
-    if (filters.status && filters.status !== 'all') {
+    // Status filter - only apply if explicitly set and not 'all'
+    if (filters.status && filters.status !== 'all' && filters.status !== undefined && filters.status !== null) {
       if (submission.status !== filters.status) return false;
     }
 

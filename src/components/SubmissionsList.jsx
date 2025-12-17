@@ -91,17 +91,34 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
     ? fullTextSearch(submissions, searchQuery)
     : submissions;
   
-  const advancedFiltered = applyFilters(searchFiltered, {
+  // Only pass status to applyFilters if filterStatus is explicitly set (not 'all')
+  const filterConfig = {
     ...filters,
-    status: filterStatus !== 'all' ? filterStatus : filters.status
-  });
+    status: filterStatus !== 'all' ? filterStatus : undefined
+  };
+  
+  const advancedFiltered = applyFilters(searchFiltered, filterConfig);
 
   const filteredSubmissions = advancedFiltered;
 
   // Debug logging
   useEffect(() => {
+    console.log('Submission filtering state:', {
+      totalSubmissions: submissions.length,
+      searchFiltered: searchFiltered.length,
+      advancedFiltered: advancedFiltered.length,
+      finalFiltered: filteredSubmissions.length,
+      sorted: sortedSubmissions.length,
+      searchQuery: searchQuery || '(none)',
+      filterStatus,
+      filters: Object.keys(filters).filter(k => {
+        const v = filters[k];
+        return Array.isArray(v) ? v.length > 0 : v && v !== 'all' && v !== '';
+      })
+    });
+    
     if (submissions.length > 0 && filteredSubmissions.length === 0) {
-      console.log('Submissions filtered out:', {
+      console.warn('⚠️ All submissions filtered out!', {
         totalSubmissions: submissions.length,
         searchQuery,
         filters,
@@ -109,7 +126,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
         sampleSubmission: submissions[0]
       });
     }
-  }, [submissions.length, filteredSubmissions.length, searchQuery, filters, filterStatus]);
+  }, [submissions.length, searchFiltered.length, advancedFiltered.length, filteredSubmissions.length, sortedSubmissions.length, searchQuery, filters, filterStatus]);
 
   const sortedSubmissions = [...filteredSubmissions].sort((a, b) => {
     if (sortBy === 'date') {
