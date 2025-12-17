@@ -41,6 +41,8 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   const [validationErrors, setValidationErrors] = useState({});
   const [savedRoutes, setSavedRoutes] = useState([]);
   const [showSavedRoutes, setShowSavedRoutes] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   // Determine initial step based on existing submission state
   const getInitialStep = () => {
@@ -55,9 +57,10 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
 
   const selectedRoute = selectedRouteIndex !== null ? routes[selectedRouteIndex] : null;
 
-  // Load saved routes on mount
+  // Load saved routes and templates on mount
   useEffect(() => {
     setSavedRoutes(getAllSavedRoutes());
+    setTemplates(getAllTemplates());
   }, []);
 
   // Step definitions for progress indicator
@@ -479,6 +482,24 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
               <div style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', marginBottom: '15px' }}>
                   <button
+                    onClick={() => setShowTemplates(!showTemplates)}
+                    style={{
+                      padding: '12px 24px',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      backgroundColor: '#8B5CF6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    📋 Templates ({templates.length})
+                  </button>
+                  <button
                     onClick={handleFindRoutes}
                     disabled={!origin || !destination || isLoading}
                     className="sigma-btn-primary"
@@ -495,6 +516,24 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                   
                   {origin && destination && (
                     <>
+                      <button
+                        onClick={handleSaveAsTemplate}
+                        style={{
+                          padding: '12px 24px',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          backgroundColor: '#F59E0B',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        💾 Save as Template
+                      </button>
                       {!isCurrentRouteSaved ? (
                         <button
                           onClick={handleSaveRoute}
