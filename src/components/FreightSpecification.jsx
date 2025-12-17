@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import HelpTooltip from './HelpTooltip';
 
 function FreightSpecification({ freight, onFreightChange, validationErrors = {} }) {
   const [localFreight, setLocalFreight] = useState(freight || {
