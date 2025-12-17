@@ -55,8 +55,11 @@ function AppContent() {
       return;
     }
     // Submission saved, return to list
-    setCurrentView(VIEWS.LIST);
-    setSelectedSubmissionId(null);
+    // Force a small delay to ensure localStorage is written before list loads
+    setTimeout(() => {
+      setCurrentView(VIEWS.LIST);
+      setSelectedSubmissionId(null);
+    }, 150);
   };
 
   const handleNavigateToWorkflow = () => {

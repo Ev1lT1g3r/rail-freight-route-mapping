@@ -292,11 +292,16 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
       updatedBy: currentUser
     };
 
-    if (saveSubmission(submission)) {
+    const saved = saveSubmission(submission);
+    if (saved) {
       success('Submission submitted successfully!');
-      if (onSave) onSave(submission);
+      // Small delay to ensure localStorage write completes before navigation
+      setTimeout(() => {
+        if (onSave) onSave(submission, true);
+      }, 100);
     } else {
-      showError('Error submitting');
+      showError('Error submitting submission. Please try again.');
+      console.error('Failed to save submission:', submission);
     }
   };
 

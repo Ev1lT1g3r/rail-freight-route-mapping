@@ -24,6 +24,11 @@ export function getAllSubmissions() {
 
 export function saveSubmission(submission) {
   try {
+    if (!submission || !submission.id) {
+      console.error('Invalid submission: missing id', submission);
+      return false;
+    }
+
     const submissions = getAllSubmissions();
     const existingIndex = submissions.findIndex(s => s.id === submission.id);
     
@@ -34,12 +39,25 @@ export function saveSubmission(submission) {
     }
     
     // Sort by submission date (newest first)
-    submissions.sort((a, b) => new Date(b.submittedDate || b.createdDate) - new Date(a.submittedDate || a.createdDate));
+    submissions.sort((a, b) => {
+      const dateA = new Date(a.submittedDate || a.createdDate || 0);
+      const dateB = new Date(b.submittedDate || b.createdDate || 0);
+      return dateB - dateA;
+    });
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(submissions));
+    
+    // Verify the save worked
+    const verify = getAllSubmissions();
+    const saved = verify.find(s => s.id === submission.id);
+    if (!saved) {
+      console.error('Submission save verification failed:', submission.id);
+      return false;
+    }
+    
     return true;
   } catch (e) {
-    console.error('Error saving submission:', e);
+    console.error('Error saving submission:', e, submission);
     return false;
   }
 }
