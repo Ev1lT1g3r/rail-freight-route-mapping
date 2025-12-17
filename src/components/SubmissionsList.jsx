@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
-import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission } from '../utils/submissionStorage';
+import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission, saveSubmission } from '../utils/submissionStorage';
 import StatusBadge from './StatusBadge';
+import EmptyState from './EmptyState';
+import HelpTooltip from './HelpTooltip';
 
 function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBackToHome }) {
   const [submissions, setSubmissions] = useState([]);
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('date');
+  const [selectedSubmissions, setSelectedSubmissions] = useState(new Set());
+  const [isBulkMode, setIsBulkMode] = useState(false);
 
   useEffect(() => {
     loadSubmissions();
@@ -50,10 +54,64 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
   });
 
   const handleDelete = (id, e) => {
-    e.stopPropagation();
+    e?.stopPropagation();
     if (window.confirm('Are you sure you want to delete this submission?')) {
       deleteSubmission(id);
       loadSubmissions();
+      setSelectedSubmissions(new Set());
+    }
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedSubmissions.size === 0) return;
+    if (window.confirm(`Are you sure you want to delete ${selectedSubmissions.size} submission(s)?`)) {
+      selectedSubmissions.forEach(id => deleteSubmission(id));
+      loadSubmissions();
+      setSelectedSubmissions(new Set());
+      setIsBulkMode(false);
+    }
+  };
+
+  const handleBulkStatusChange = (newStatus) => {
+    if (selectedSubmissions.size === 0) return;
+    if (window.confirm(`Change status of ${selectedSubmissions.size} submission(s) to "${newStatus}"?`)) {
+      selectedSubmissions.forEach(id => {
+        const submission = submissions.find(s => s.id === id);
+        if (submission) {
+          const updated = {
+            ...submission,
+            status: newStatus,
+            updatedDate: new Date().toISOString()
+          };
+          if (newStatus === WORKFLOW_STATUS.SUBMITTED && !submission.submittedDate) {
+            updated.submittedDate = new Date().toISOString();
+            updated.submittedBy = submission.createdBy || 'System';
+          }
+          saveSubmission(updated);
+        }
+      });
+      loadSubmissions();
+      setSelectedSubmissions(new Set());
+      setIsBulkMode(false);
+    }
+  };
+
+  const handleSelectSubmission = (id, e) => {
+    e?.stopPropagation();
+    const newSelected = new Set(selectedSubmissions);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedSubmissions(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedSubmissions.size === sortedSubmissions.length) {
+      setSelectedSubmissions(new Set());
+    } else {
+      setSelectedSubmissions(new Set(sortedSubmissions.map(s => s.id)));
     }
   };
 
@@ -96,20 +154,118 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
         </div>
       </div>
       <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, color: '#0F172A' }}>All Submissions</h2>
-        <button
-          onClick={onCreateNew}
-          className="sigma-btn-primary"
-          style={{
-            padding: '10px 20px',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }}
-        >
-          + New Submission
-        </button>
-      </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <h2 style={{ margin: 0, color: '#0F172A' }}>All Submissions</h2>
+            <HelpTooltip content="View and manage all your freight rail route submissions. Use filters and sorting to find specific submissions quickly.">
+              <span style={{ color: '#6B7280', cursor: 'help', fontSize: '18px' }}>ℹ️</span>
+            </HelpTooltip>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {sortedSubmissions.length > 0 && (
+              <button
+                onClick={() => {
+                  setIsBulkMode(!isBulkMode);
+                  setSelectedSubmissions(new Set());
+                }}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  backgroundColor: isBulkMode ? '#10B981' : '#64748B',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {isBulkMode ? '✓ Bulk Mode' : 'Bulk Actions'}
+              </button>
+            )}
+            <button
+              onClick={onCreateNew}
+              className="sigma-btn-primary"
+              style={{
+                padding: '10px 20px',
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }}
+            >
+              + New Submission
+            </button>
+          </div>
+        </div>
+
+        {isBulkMode && sortedSubmissions.length > 0 && (
+          <div style={{
+            padding: '15px',
+            backgroundColor: '#EFF6FF',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            border: '2px solid #3B82F6',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '15px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: '600', color: '#1E40AF' }}>
+                {selectedSubmissions.size} of {sortedSubmissions.length} selected
+              </span>
+              <button
+                onClick={handleSelectAll}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '14px',
+                  backgroundColor: 'white',
+                  color: '#3B82F6',
+                  border: '1px solid #3B82F6',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                {selectedSubmissions.size === sortedSubmissions.length ? 'Deselect All' : 'Select All'}
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => handleBulkStatusChange(WORKFLOW_STATUS.SUBMITTED)}
+                disabled={selectedSubmissions.size === 0}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  backgroundColor: selectedSubmissions.size > 0 ? '#3B82F6' : '#CBD5E1',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: selectedSubmissions.size > 0 ? 'pointer' : 'not-allowed',
+                  fontWeight: '600'
+                }}
+              >
+                Mark as Submitted
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={selectedSubmissions.size === 0}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  backgroundColor: selectedSubmissions.size > 0 ? '#EF4444' : '#FCA5A5',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: selectedSubmissions.size > 0 ? 'pointer' : 'not-allowed',
+                  fontWeight: '600'
+                }}
+              >
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        )}
 
       <div style={{ 
         display: 'flex', 
@@ -119,7 +275,12 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
         alignItems: 'center'
       }}>
         <div>
-          <label style={{ marginRight: '10px', fontWeight: 'bold' }}>Filter by Status:</label>
+          <label style={{ marginRight: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            Filter by Status:
+            <HelpTooltip content="Filter submissions by their current workflow status. Use 'All' to see every submission regardless of status.">
+              <span style={{ color: '#6B7280', cursor: 'help', fontSize: '14px' }}>ℹ️</span>
+            </HelpTooltip>
+          </label>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -133,7 +294,12 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
         </div>
 
         <div>
-          <label style={{ marginRight: '10px', fontWeight: 'bold' }}>Sort by:</label>
+          <label style={{ marginRight: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            Sort by:
+            <HelpTooltip content="Sort submissions by date (newest first), status (alphabetical), or shipping origin yard (alphabetical).">
+              <span style={{ color: '#6B7280', cursor: 'help', fontSize: '14px' }}>ℹ️</span>
+            </HelpTooltip>
+          </label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -141,7 +307,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
           >
             <option value="date">Date</option>
             <option value="status">Status</option>
-            <option value="origin">Shipping Origin</option>
+            <option value="origin">Shipping Origin Yard</option>
           </select>
         </div>
 
@@ -151,83 +317,68 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
       </div>
 
       {sortedSubmissions.length === 0 ? (
-        <div style={{
-          padding: '60px 40px',
-          textAlign: 'center',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '12px',
-          border: '2px dashed #dee2e6',
-          color: '#6c757d'
-        }}>
-          <div style={{ fontSize: '64px', marginBottom: '20px', opacity: 0.5 }}>📋</div>
-          <h3 style={{ 
-            fontSize: '24px', 
-            marginBottom: '12px', 
-            color: '#495057',
-            fontWeight: '600'
-          }}>
-            {filterStatus === 'all' ? 'No Submissions Yet' : `No ${filterStatus} Submissions`}
-          </h3>
-          <p style={{ fontSize: '16px', marginBottom: '24px', maxWidth: '500px', margin: '0 auto 24px' }}>
-            {filterStatus === 'all' 
-              ? 'Get started by creating your first freight rail route submission. Plan routes, specify freight details, and track approvals all in one place.'
-              : `No submissions found with status "${filterStatus}". Try selecting a different status filter or create a new submission.`
-            }
-          </p>
-          {filterStatus === 'all' && (
-            <button
-              onClick={onCreateNew}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: '#3B82F6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#2563EB';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 12px rgba(59, 130, 246, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#3B82F6';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 6px rgba(59, 130, 246, 0.3)';
-              }}
-            >
-              + Create Your First Submission
-            </button>
-          )}
-        </div>
+        <EmptyState
+          icon="📋"
+          title={filterStatus === 'all' ? 'No Submissions Yet' : `No ${filterStatus} Submissions`}
+          message={filterStatus === 'all' 
+            ? 'Get started by creating your first freight rail route submission. Plan routes, specify freight details, and track approvals all in one place.'
+            : `No submissions found with status "${filterStatus}". Try selecting a different status filter or create a new submission.`
+          }
+          actionLabel={filterStatus === 'all' ? '+ Create Your First Submission' : null}
+          onAction={filterStatus === 'all' ? onCreateNew : null}
+          secondaryActionLabel={filterStatus !== 'all' ? 'Clear Filter' : null}
+          onSecondaryAction={filterStatus !== 'all' ? () => setFilterStatus('all') : null}
+        />
       ) : (
         <div style={{ display: 'grid', gap: '15px' }}>
           {sortedSubmissions.map((submission) => (
             <div
               key={submission.id}
-              onClick={() => onViewSubmission(submission.id)}
+              onClick={() => !isBulkMode && onViewSubmission(submission.id)}
               style={{
                 padding: '20px',
-                border: '2px solid #E2E8F0',
+                border: isBulkMode && selectedSubmissions.has(submission.id) 
+                  ? '3px solid #3B82F6' 
+                  : '2px solid #E2E8F0',
                 borderRadius: '8px',
-                cursor: 'pointer',
-                backgroundColor: '#FFFFFF',
+                cursor: isBulkMode ? 'default' : 'pointer',
+                backgroundColor: isBulkMode && selectedSubmissions.has(submission.id)
+                  ? '#EFF6FF'
+                  : '#FFFFFF',
                 transition: 'all 0.2s',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                boxShadow: isBulkMode && selectedSubmissions.has(submission.id)
+                  ? '0 4px 12px rgba(59, 130, 246, 0.2)'
+                  : '0 1px 3px rgba(0,0,0,0.1)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#3B82F6';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.15)';
+                if (!isBulkMode) {
+                  e.currentTarget.style.borderColor = '#3B82F6';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.15)';
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#E2E8F0';
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                if (!isBulkMode || !selectedSubmissions.has(submission.id)) {
+                  e.currentTarget.style.borderColor = '#E2E8F0';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+                }
               }}
             >
+              {isBulkMode && (
+                <div style={{ marginBottom: '15px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedSubmissions.has(submission.id)}
+                    onChange={(e) => handleSelectSubmission(submission.id, e)}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      cursor: 'pointer',
+                      accentColor: '#3B82F6'
+                    }}
+                  />
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '15px' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>

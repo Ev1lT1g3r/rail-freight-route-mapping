@@ -1,4 +1,5 @@
 import './RouteTable.css';
+import HelpTooltip from './HelpTooltip';
 
 function RouteTable({ routes, selectedRouteIndex, onRouteSelect }) {
   if (!routes || routes.length === 0) {
@@ -21,7 +22,12 @@ function RouteTable({ routes, selectedRouteIndex, onRouteSelect }) {
 
   return (
     <div className="route-table-container">
-      <h3 className="route-table-title">Available Routes</h3>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+        <h3 className="route-table-title">Available Routes</h3>
+        <HelpTooltip content="Compare all available routes side-by-side. Click a row to select that route and see it highlighted on the map. Routes are sorted by total cost score, with the best route at the top.">
+          <span style={{ color: '#6B7280', cursor: 'help', fontSize: '18px' }}>ℹ️</span>
+        </HelpTooltip>
+      </div>
       <div className="route-table-wrapper">
         <table className="route-table">
           <thead>

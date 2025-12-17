@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getSubmissionById, saveSubmission, WORKFLOW_STATUS } from '../utils/submissionStorage';
 import MapComponent from './MapComponent';
 import StatusBadge from './StatusBadge';
+import HelpTooltip from './HelpTooltip';
 import { stations } from '../data/railNetwork';
 
 // Operator colors for route segments
@@ -117,7 +118,12 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
       </div>
       <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, color: '#0F172A' }}>Submission Information</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h2 style={{ margin: 0, color: '#0F172A' }}>Submission Information</h2>
+            <HelpTooltip content="View complete submission details including route information, freight specifications, and approval workflow status. Approvers can approve or reject submissions from this page.">
+              <span style={{ color: '#6B7280', cursor: 'help', fontSize: '18px' }}>ℹ️</span>
+            </HelpTooltip>
+          </div>
         <button
           onClick={onBack}
           style={{
@@ -205,7 +211,12 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
 
       {/* Large Route Map with Statistics */}
       <div style={{ marginBottom: '20px' }}>
-        <h3 style={{ marginBottom: '15px', color: '#0F172A' }}>Route Map & Statistics</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+          <h3 style={{ margin: 0, color: '#0F172A' }}>Route Map & Statistics</h3>
+          <HelpTooltip content="Interactive map showing the selected route with operator-specific segment colors. The statistics panel displays route details including total distance, operator breakdown, and segment information. Transfer points are marked with rotating icons.">
+            <span style={{ color: '#6B7280', cursor: 'help', fontSize: '18px' }}>ℹ️</span>
+          </HelpTooltip>
+        </div>
         {submission.selectedRoute && submission.selectedRoute.segments && submission.selectedRoute.segments.length > 0 ? (
           <div style={{ 
             position: 'relative',
