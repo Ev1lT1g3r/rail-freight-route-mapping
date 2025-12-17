@@ -858,6 +858,31 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
 
               {routes.length > 0 && (
                 <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+                      Found {routes.length} Route{routes.length > 1 ? 's' : ''}
+                    </h3>
+                    {routes.length >= 2 && (
+                      <button
+                        onClick={() => setShowRouteComparison(true)}
+                        style={{
+                          padding: '10px 20px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          backgroundColor: '#8B5CF6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        🔍 Compare Routes
+                      </button>
+                    )}
+                  </div>
                   <div className="map-panel" style={{ marginBottom: '20px' }}>
                     <ErrorBoundary>
                       <MapComponent
@@ -895,6 +920,20 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                     </div>
                   )}
                 </div>
+              )}
+
+              {/* Route Comparison Modal */}
+              {showRouteComparison && routes.length >= 2 && (
+                <RouteComparison
+                  routes={routes}
+                  origin={origin}
+                  destination={destination}
+                  onClose={() => setShowRouteComparison(false)}
+                  onSelectRoute={(routeIndex) => {
+                    setSelectedRouteIndex(routeIndex);
+                    setShowRouteComparison(false);
+                  }}
+                />
               )}
             </>
           )}
