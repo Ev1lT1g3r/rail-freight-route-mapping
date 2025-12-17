@@ -118,7 +118,12 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
 
   // Debug logging - must be after sortedSubmissions is declared
   useEffect(() => {
-    console.log('Submission filtering state:', {
+    const activeFilters = Object.keys(filters).filter(k => {
+      const v = filters[k];
+      return Array.isArray(v) ? v.length > 0 : v && v !== 'all' && v !== '';
+    });
+    
+    console.log('📊 Submission filtering state:', {
       totalSubmissions: submissions.length,
       searchFiltered: searchFiltered.length,
       advancedFiltered: advancedFiltered.length,
@@ -126,10 +131,8 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
       sorted: sortedSubmissions.length,
       searchQuery: searchQuery || '(none)',
       filterStatus,
-      filters: Object.keys(filters).filter(k => {
-        const v = filters[k];
-        return Array.isArray(v) ? v.length > 0 : v && v !== 'all' && v !== '';
-      })
+      activeFilters: activeFilters.length > 0 ? activeFilters : 'none',
+      filterConfig: filterConfig
     });
     
     if (submissions.length > 0 && filteredSubmissions.length === 0) {
@@ -138,10 +141,15 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
         searchQuery,
         filters,
         filterStatus,
+        filterConfig,
         sampleSubmission: submissions[0]
       });
     }
-  }, [submissions.length, searchFiltered.length, advancedFiltered.length, filteredSubmissions.length, sortedSubmissions.length, searchQuery, filters, filterStatus]);
+    
+    if (submissions.length === 0) {
+      console.info('ℹ️ No submissions loaded. Check if submissions exist in localStorage.');
+    }
+  }, [submissions.length, searchFiltered.length, advancedFiltered.length, filteredSubmissions.length, sortedSubmissions.length, searchQuery, filters, filterStatus, filterConfig]);
 
   const handleDelete = (id, e) => {
     e?.stopPropagation();

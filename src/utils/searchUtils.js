@@ -47,7 +47,23 @@ export function fullTextSearch(submissions, query) {
  * Applies multi-criteria filters to submissions
  */
 export function applyFilters(submissions, filters) {
-  if (!filters || Object.keys(filters).length === 0) {
+  if (!filters) {
+    return submissions;
+  }
+  
+  // If all filter values are empty/default, return all submissions
+  const hasActiveFilters = Object.keys(filters).some(key => {
+    const value = filters[key];
+    if (key === 'status') {
+      return value && value !== 'all' && value !== undefined && value !== null;
+    }
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+    return value && value !== '' && value !== undefined && value !== null;
+  });
+  
+  if (!hasActiveFilters) {
     return submissions;
   }
 
