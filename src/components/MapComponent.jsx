@@ -303,6 +303,13 @@ function MapComponent({
               return;
             }
 
+            // Get operator color for this segment
+            const operator = segment.operator || 'Default';
+            const operatorColor = OPERATOR_COLORS[operator]?.color || OPERATOR_COLORS.Default.color;
+            const segmentColor = isSelected ? operatorColor : routeColor;
+            const segmentOpacity = isSelected ? 0.95 : routeOpacity;
+            const segmentWeight = isSelected ? 10 : routeWeight;
+
             // Generate rail line path
             let railLinePath;
             try {
@@ -321,28 +328,81 @@ function MapComponent({
               railLinePath = [[segmentStart.lat, segmentStart.lng], [segmentEnd.lat, segmentEnd.lng]];
             }
 
-            // Create polyline
+            // Create polyline with operator color
             const segmentPolyline = L.polyline(railLinePath, {
-              color: routeColor,
-              weight: routeWeight,
-              opacity: routeOpacity,
+              color: segmentColor,
+              weight: segmentWeight,
+              opacity: segmentOpacity,
               smoothFactor: 1.0,
               lineCap: 'round',
               lineJoin: 'round',
-              className: `route-segment route-${routeIndex} segment-${segIndex}`
+              className: `route-segment route-${routeIndex} segment-${segIndex} operator-${operator}`
             }).addTo(map);
 
-            // Add shadow for selected route
+            // Add shadow for selected route segments
             if (isSelected) {
               const shadowPolyline = L.polyline(railLinePath, {
-                color: routeColor,
-                weight: routeWeight + 4,
+                color: segmentColor,
+                weight: segmentWeight + 4,
                 opacity: 0.3,
                 smoothFactor: 1.0,
                 lineCap: 'round',
                 lineJoin: 'round'
               }).addTo(map);
               routePolylinesRef.current.push(shadowPolyline);
+            }
+
+            // Add operator label at midpoint of segment for selected route
+            if (isSelected && railLinePath.length > 0) {
+              const midpointIndex = Math.floor(railLinePath.length / 2);
+              const [midLat, midLng] = railLinePath[midpointIndex];
+              
+              const operatorLabel = L.marker([midLat, midLng], {
+                icon: L.divIcon({
+                  className: 'operator-label-marker',
+                  html: `<div class="operator-label-badge" style="background: ${operatorColor}; border-color: white;">
+                    <span class="operator-logo-small">${OPERATOR_COLORS[operator]?.logo || '🚂'}</span>
+                    <span class="operator-name-small">${operator}</span>
+                  </div>`,
+                  iconSize: [null, null],
+                  iconAnchor: [0, 0]
+                })
+              }).addTo(map);
+              
+              operatorLabel.bindTooltip(`
+                <div class="segment-tooltip">
+                  <div class="tooltip-header">
+                    <span class="operator-logo">${OPERATOR_COLORS[operator]?.logo || '🚂'}</span>
+                    <strong>${OPERATOR_COLORS[operator]?.name || operator}</strong>
+                  </div>
+                  <div class="tooltip-content">
+                    <div class="tooltip-row">
+                      <span class="tooltip-label">From:</span>
+                      <span class="tooltip-value">${segmentStart.name || segmentStart}</span>
+                    </div>
+                    <div class="tooltip-row">
+                      <span class="tooltip-label">To:</span>
+                      <span class="tooltip-value">${segmentEnd.name || segmentEnd}</span>
+                    </div>
+                    <div class="tooltip-row">
+                      <span class="tooltip-label">Distance:</span>
+                      <span class="tooltip-value">${segment.distance?.toFixed(0) || 'N/A'} miles</span>
+                    </div>
+                    ${segment.curveScore !== undefined ? `
+                    <div class="tooltip-row">
+                      <span class="tooltip-label">Curves:</span>
+                      <span class="tooltip-value">${segment.curveScore.toFixed(1)}</span>
+                    </div>
+                    ` : ''}
+                  </div>
+                </div>
+              `, {
+                className: 'segment-tooltip-container',
+                direction: 'top',
+                offset: [0, -10]
+              });
+              
+              routeMarkersRef.current.push(operatorLabel);
             }
 
             routePolylinesRef.current.push(segmentPolyline);
@@ -392,13 +452,14 @@ function MapComponent({
         }
       });
 
-      // Fit bounds to all routes
+      // Fit bounds to all routes - zoom in more for single route
       if (allBounds.length > 0) {
         try {
           const bounds = L.latLngBounds(allBounds);
+          const isSingleRoute = routes.length === 1;
           map.fitBounds(bounds, { 
-            padding: [50, 50],
-            maxZoom: 10
+            padding: isSingleRoute ? [80, 80] : [50, 50],
+            maxZoom: isSingleRoute ? 12 : 10  // Zoom in more for single route
           });
         } catch (error) {
           console.error('Error fitting route bounds:', error);
