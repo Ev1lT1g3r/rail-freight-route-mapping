@@ -1054,16 +1054,18 @@ VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 3. Integrate Palantir Foundry authentication
 4. Add environment configuration for Foundry
 5. Design Foundry object types and schemas
-5. **UX: Add breadcrumb navigation**
 6. **UX: Enhance route comparison capabilities**
 7. **UX: Improve map controls and terminal search on map**
-8. **UX: Enhance empty states throughout**
-9. **UX: Add contextual help tooltips**
-10. **UX: Improve status badges and visual feedback**
-11. **Functional: Add bulk operations for submissions**
-12. **Functional: Implement submission templates**
-13. **Functional: Add route comparison tool**
-14. **Functional: Enhance approval workflow with comments**
+8. **Functional: Implement submission templates**
+9. **Functional: Add route comparison tool**
+10. **Functional: Enhance approval workflow with comments**
+
+### High Priority (Immediate) - ✅ Recently Completed
+11. ✅ **UX: Add breadcrumb navigation** - COMPLETED (v1.5.0)
+12. ✅ **UX: Enhance empty states throughout** - COMPLETED (v1.5.0)
+13. ✅ **UX: Add contextual help tooltips** - COMPLETED (v1.5.0)
+14. ✅ **UX: Improve status badges and visual feedback** - COMPLETED (StatusBadge already has icons)
+15. ✅ **Functional: Add bulk operations for submissions** - COMPLETED (v1.5.0)
 
 ### Medium Priority (Next Quarter)
 1. Complete Foundry OSDK integration
@@ -1138,13 +1140,22 @@ VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 
 ## Recent Achievements
 
-### ✅ v1.4.0 (Latest)
+### ✅ v1.5.0 (Latest)
+1. **Reusable EmptyState Component** - Consistent, animated empty states throughout application
+2. **Bulk Operations** - Select multiple submissions, bulk delete, and bulk status changes
+3. **Enhanced Empty States** - Replaced inline empty states with reusable EmptyState component
+4. **Contextual Help Tooltips** - Added help tooltips to SubmissionsList, SubmissionDetail, RouteTable
+5. **Improved Breadcrumb Navigation** - Enhanced styling and functionality
+6. **Better User Guidance** - More discoverable features with help tooltips and improved empty states
+
+### ✅ v1.4.0
 1. **Enhanced Route Finding Algorithm** - Improved path exploration, supports longer routes (up to 15 stations)
 2. **Network Connectivity** - All 90+ freight yards fully connected, fixed isolated stations
 3. **Unlimited Freight Yard Selection** - Removed dropdown limits, shows all available yards
 4. **Terminology Updates** - Updated from "terminals" to "freight yards" throughout application
 5. **Improved Error Handling** - Better validation and error messages for route finding
 6. **Component Fixes** - Fixed missing HelpTooltip import in FreightSpecification
+7. **Map Enhancements** - Auto-zoom to routes, operator-specific segment colors, transfer point markers
 
 ### ✅ v1.3.0
 1. **Toast Notification System** - Replaced all alert() calls with non-blocking toast notifications
@@ -1158,13 +1169,14 @@ VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 9. **Documentation** - Updated README, API.md, and CHANGELOG
 
 ### 📊 Current Status
-- **Test Coverage**: 116+ tests, all passing
-- **Components**: All major components tested
+- **Test Coverage**: 129+ tests, all passing
+- **Components**: All major components tested (including new EmptyState component)
 - **Documentation**: Comprehensive and up-to-date
-- **UX Improvements**: Major UX enhancements completed
+- **UX Improvements**: Major UX enhancements completed (empty states, bulk operations, help tooltips)
 - **Code Quality**: Clean, well-tested codebase
 - **Network**: 90+ freight yards, 155+ connections, fully connected
 - **Route Finding**: Enhanced algorithm with improved path exploration
+- **User Experience**: Enhanced with bulk operations, contextual help, and improved empty states
 
 ## Success Metrics
 
