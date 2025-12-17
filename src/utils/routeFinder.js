@@ -39,8 +39,10 @@ export function findRoutes(origin, destination, preferences) {
     states: new Set()
   }];
 
-  // Increase max path length to allow longer routes
-  const maxPathLength = Math.max(maxTransfers + 1, 15); // At least 15 stations
+  // Calculate max path length based on maxTransfers
+  // maxTransfers = number of transfer points, so path length = maxTransfers + 2 (origin + destination)
+  // But allow up to 15 stations for very long routes when maxTransfers is high
+  const maxPathLength = maxTransfers >= 5 ? 15 : maxTransfers + 2;
   let iterations = 0;
   const maxIterations = 10000; // Prevent infinite loops
 

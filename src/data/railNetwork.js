@@ -200,6 +200,8 @@ export const connections = [
   { from: 'CLT', to: 'RAL', distance: 170, operator: 'CSX', curveScore: 3, states: ['NC'] },
   { from: 'ATL', to: 'CHW', distance: 380, operator: 'CSX', curveScore: 5, states: ['GA', 'SC', 'NC', 'WV'] },
   { from: 'CHW', to: 'PIT', distance: 180, operator: 'CSX', curveScore: 4, states: ['WV', 'PA'] },
+  { from: 'CHA', to: 'CHW', distance: 50, operator: 'CSX', curveScore: 2, states: ['WV'] },
+  { from: 'CHA', to: 'PIT', distance: 220, operator: 'CSX', curveScore: 4, states: ['WV', 'PA'] },
   { from: 'RAL', to: 'NOR', distance: 170, operator: 'CSX', curveScore: 3, states: ['NC', 'VA'] },
   { from: 'NOR', to: 'RIC', distance: 90, operator: 'CSX', curveScore: 2, states: ['VA'] },
   { from: 'RIC', to: 'WAS', distance: 110, operator: 'CSX', curveScore: 3, states: ['VA', 'DC'] },
