@@ -7,7 +7,9 @@ export function findRoutes(origin, destination, preferences) {
     weightDistance = 1.0,
     weightSingleOperator = 0.5,
     weightCurves = 0.3,
-    maxTransfers = 5
+    maxTransfers = 5,
+    requireOperators = [],
+    avoidOperators = []
   } = preferences || {};
 
   // Validate inputs
@@ -73,6 +75,21 @@ export function findRoutes(origin, destination, preferences) {
       try {
         const route = buildRouteDetails(current);
         if (route && route.segments && route.segments.length > 0) {
+          // Apply operator constraints
+          const routeOperators = new Set(route.segments.map(s => s.operator));
+          
+          // Check requireOperators constraint
+          if (requireOperators.length > 0) {
+            const hasRequired = requireOperators.some(op => routeOperators.has(op));
+            if (!hasRequired) continue; // Skip route if it doesn't include required operator
+          }
+          
+          // Check avoidOperators constraint
+          if (avoidOperators.length > 0) {
+            const hasAvoided = avoidOperators.some(op => routeOperators.has(op));
+            if (hasAvoided) continue; // Skip route if it uses avoided operator
+          }
+          
           routes.push(route);
           if (routes.length >= 3) break; // Get top 3
         }

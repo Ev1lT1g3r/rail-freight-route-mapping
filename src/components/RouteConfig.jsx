@@ -152,6 +152,71 @@ function RouteConfig({ preferences, onPreferencesChange }) {
         <small>Maximum number of interline transfers allowed</small>
       </div>
       </div>
+
+      {/* Route Constraints */}
+      <div style={{ 
+        padding: '15px', 
+        backgroundColor: '#fff', 
+        borderRadius: '6px',
+        border: '1px solid #ddd',
+        marginTop: '20px'
+      }}>
+        <h4 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>Route Constraints</h4>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
+            Require Operators:
+            <HelpTooltip content="Select operators that must be included in the route. Routes will only be shown if they use at least one of these operators.">
+              <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+            </HelpTooltip>
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {['BNSF', 'UP', 'CSX', 'NS', 'CP', 'CN', 'KCS'].map(op => (
+              <label key={op} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={(preferences.requireOperators || []).includes(op)}
+                  onChange={(e) => {
+                    const current = preferences.requireOperators || [];
+                    const updated = e.target.checked
+                      ? [...current, op]
+                      : current.filter(o => o !== op);
+                    onPreferencesChange({ ...preferences, requireOperators: updated });
+                  }}
+                />
+                <span style={{ fontSize: '14px' }}>{op}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 'bold' }}>
+            Avoid Operators:
+            <HelpTooltip content="Select operators to exclude from routes. Routes using any of these operators will be filtered out.">
+              <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+            </HelpTooltip>
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {['BNSF', 'UP', 'CSX', 'NS', 'CP', 'CN', 'KCS'].map(op => (
+              <label key={op} style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={(preferences.avoidOperators || []).includes(op)}
+                  onChange={(e) => {
+                    const current = preferences.avoidOperators || [];
+                    const updated = e.target.checked
+                      ? [...current, op]
+                      : current.filter(o => o !== op);
+                    onPreferencesChange({ ...preferences, avoidOperators: updated });
+                  }}
+                />
+                <span style={{ fontSize: '14px' }}>{op}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

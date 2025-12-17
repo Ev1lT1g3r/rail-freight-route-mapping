@@ -8,6 +8,7 @@ import ErrorBoundary from './ErrorBoundary';
 import ProgressIndicator from './ProgressIndicator';
 import TerminalSearch from './TerminalSearch';
 import HelpTooltip from './HelpTooltip';
+import TagInput from './TagInput';
 import { stations } from '../data/railNetwork';
 import { findRoutes } from '../utils/routeFinder';
 import { saveRoute, getAllSavedRoutes, isRouteSaved, deleteSavedRoute } from '../utils/routeStorage';
@@ -24,12 +25,15 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
     weightDistance: 1.0,
     weightSingleOperator: 0.5,
     weightCurves: 0.3,
-    maxTransfers: 5
+    maxTransfers: 5,
+    requireOperators: [],
+    avoidOperators: []
   });
   const [routes, setRoutes] = useState(existingSubmission?.routes || []);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(existingSubmission?.selectedRouteIndex ?? null);
   const [notes, setNotes] = useState(existingSubmission?.notes || '');
   const [submissionName, setSubmissionName] = useState(existingSubmission?.name || '');
+  const [tags, setTags] = useState(existingSubmission?.tags || []);
   const [freight, setFreight] = useState(existingSubmission?.freight || null);
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
@@ -200,6 +204,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
       selectedRouteIndex,
       selectedRoute: selectedRoute,
       freight,
+      tags,
       notes,
       status: WORKFLOW_STATUS.DRAFT,
       createdDate: existingSubmission?.createdDate || new Date().toISOString(),
@@ -234,6 +239,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
       selectedRouteIndex,
       selectedRoute: selectedRoute,
       freight,
+      tags,
       notes,
       status: WORKFLOW_STATUS.SUBMITTED,
       createdDate: existingSubmission?.createdDate || new Date().toISOString(),
