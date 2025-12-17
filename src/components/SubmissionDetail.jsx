@@ -221,8 +221,12 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
             destination={submission.destination}
             onOriginSelect={() => {}}
             onDestinationSelect={() => {}}
-            routes={submission.selectedRoute ? [submission.selectedRoute] : []}
-            selectedRouteIndex={submission.selectedRoute ? 0 : null}
+            routes={submission.selectedRoute && submission.selectedRoute.segments && submission.selectedRoute.segments.length > 0 
+              ? [submission.selectedRoute] 
+              : []}
+            selectedRouteIndex={submission.selectedRoute && submission.selectedRoute.segments && submission.selectedRoute.segments.length > 0 
+              ? 0 
+              : null}
           />
         </div>
       </div>

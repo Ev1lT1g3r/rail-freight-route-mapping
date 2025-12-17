@@ -274,7 +274,10 @@ function MapComponent({
 
   // Render all routes
   useEffect(() => {
-    if (!mapInstanceRef.current || !routes || routes.length === 0) return;
+    if (!mapInstanceRef.current || !routes || routes.length === 0) {
+      // If we have origin/destination but no routes, still show markers
+      return;
+    }
 
     cleanupMapElements();
     setHoveredSegment(null);
@@ -286,7 +289,37 @@ function MapComponent({
 
       // Draw all routes
       routes.forEach((route, routeIndex) => {
-        if (!route || !route.path || route.path.length < 2) return;
+        // Validate route structure - check for path or segments
+        if (!route) return;
+        
+        // Route must have either path array or segments array
+        const hasPath = route.path && Array.isArray(route.path) && route.path.length >= 2;
+        const hasSegments = route.segments && Array.isArray(route.segments) && route.segments.length > 0;
+        
+        if (!hasPath && !hasSegments) {
+          console.warn('Route missing path or segments:', route);
+          return;
+        }
+
+        // If route has segments but no path, we can still render from segments
+        if (!hasPath && hasSegments) {
+          // Build path from segments
+          const pathFromSegments = [];
+          route.segments.forEach((segment, idx) => {
+            if (segment.from && !pathFromSegments.find(s => s.code === segment.from.code)) {
+              pathFromSegments.push(segment.from);
+            }
+            if (segment.to && !pathFromSegments.find(s => s.code === segment.to.code)) {
+              pathFromSegments.push(segment.to);
+            }
+          });
+          route.path = pathFromSegments;
+        }
+        
+        if (!route.path || route.path.length < 2) {
+          console.warn('Route path is invalid:', route);
+          return;
+        }
 
         const isSelected = routeIndex === selectedRouteIndex;
         const routeColor = isSelected ? ROUTE_COLORS[0] : ROUTE_COLORS[routeIndex % ROUTE_COLORS.length];
@@ -296,10 +329,50 @@ function MapComponent({
         // Draw each segment
         if (route.segments && route.segments.length > 0) {
           route.segments.forEach((segment, segIndex) => {
-            const segmentStart = segment.from || route.path[segIndex];
-            const segmentEnd = segment.to || route.path[segIndex + 1];
+            // Get segment start and end - prefer segment.from/to, fallback to path
+            let segmentStart = segment.from;
+            let segmentEnd = segment.to;
             
-            if (!segmentStart || !segmentEnd || !segmentStart.lat || !segmentStart.lng || !segmentEnd.lat || !segmentEnd.lng) {
+            // Fallback to path if segment doesn't have from/to
+            if (!segmentStart && route.path && route.path[segIndex]) {
+              segmentStart = route.path[segIndex];
+            }
+            if (!segmentEnd && route.path && route.path[segIndex + 1]) {
+              segmentEnd = route.path[segIndex + 1];
+            }
+            
+            // Validate coordinates
+            if (!segmentStart || !segmentEnd) {
+              console.warn(`Segment ${segIndex} missing start or end:`, segment);
+              return;
+            }
+            
+            // Handle both object format (with lat/lng) and code format (need to lookup)
+            let startLat, startLng, endLat, endLng;
+            
+            if (typeof segmentStart === 'object' && segmentStart.lat !== undefined && segmentStart.lng !== undefined) {
+              startLat = segmentStart.lat;
+              startLng = segmentStart.lng;
+            } else if (typeof segmentStart === 'string' && stations[segmentStart]) {
+              startLat = stations[segmentStart].lat;
+              startLng = stations[segmentStart].lng;
+            } else {
+              console.warn(`Segment ${segIndex} start invalid:`, segmentStart);
+              return;
+            }
+            
+            if (typeof segmentEnd === 'object' && segmentEnd.lat !== undefined && segmentEnd.lng !== undefined) {
+              endLat = segmentEnd.lat;
+              endLng = segmentEnd.lng;
+            } else if (typeof segmentEnd === 'string' && stations[segmentEnd]) {
+              endLat = stations[segmentEnd].lat;
+              endLng = stations[segmentEnd].lng;
+            } else {
+              console.warn(`Segment ${segIndex} end invalid:`, segmentEnd);
+              return;
+            }
+            
+            if (!startLat || !startLng || !endLat || !endLng) {
               return;
             }
 
@@ -314,18 +387,18 @@ function MapComponent({
             let railLinePath;
             try {
               const segmentData = {
-                from: { lat: segmentStart.lat, lng: segmentStart.lng },
-                to: { lat: segmentEnd.lat, lng: segmentEnd.lng },
+                from: { lat: startLat, lng: startLng },
+                to: { lat: endLat, lng: endLng },
                 curveScore: segment.curveScore || 5,
                 states: segment.states || []
               };
               railLinePath = generateSegmentRailPath(segmentData);
               
               if (!railLinePath || railLinePath.length < 2) {
-                railLinePath = [[segmentStart.lat, segmentStart.lng], [segmentEnd.lat, segmentEnd.lng]];
+                railLinePath = [[startLat, startLng], [endLat, endLng]];
               }
             } catch (error) {
-              railLinePath = [[segmentStart.lat, segmentStart.lng], [segmentEnd.lat, segmentEnd.lng]];
+              railLinePath = [[startLat, startLng], [endLat, endLng]];
             }
 
             // Create polyline with operator color
@@ -357,6 +430,10 @@ function MapComponent({
               const midpointIndex = Math.floor(railLinePath.length / 2);
               const [midLat, midLng] = railLinePath[midpointIndex];
               
+              // Get display names for tooltip
+              const fromName = typeof segmentStart === 'object' ? (segmentStart.name || segmentStart.code || 'Unknown') : (stations[segmentStart]?.name || segmentStart);
+              const toName = typeof segmentEnd === 'object' ? (segmentEnd.name || segmentEnd.code || 'Unknown') : (stations[segmentEnd]?.name || segmentEnd);
+              
               const operatorLabel = L.marker([midLat, midLng], {
                 icon: L.divIcon({
                   className: 'operator-label-marker',
@@ -378,11 +455,11 @@ function MapComponent({
                   <div class="tooltip-content">
                     <div class="tooltip-row">
                       <span class="tooltip-label">From:</span>
-                      <span class="tooltip-value">${segmentStart.name || segmentStart}</span>
+                      <span class="tooltip-value">${fromName}</span>
                     </div>
                     <div class="tooltip-row">
                       <span class="tooltip-label">To:</span>
-                      <span class="tooltip-value">${segmentEnd.name || segmentEnd}</span>
+                      <span class="tooltip-value">${toName}</span>
                     </div>
                     <div class="tooltip-row">
                       <span class="tooltip-label">Distance:</span>
