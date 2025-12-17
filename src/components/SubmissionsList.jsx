@@ -44,7 +44,18 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
     loadSearchHistory();
     // Refresh every 5 seconds to catch updates
     const interval = setInterval(loadSubmissions, 5000);
-    return () => clearInterval(interval);
+    
+    // Listen for submission updates
+    const handleSubmissionsUpdate = () => {
+      console.log('Submissions update event received, reloading...');
+      loadSubmissions();
+    };
+    window.addEventListener('submissionsUpdated', handleSubmissionsUpdate);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('submissionsUpdated', handleSubmissionsUpdate);
+    };
   }, [showArchived]);
 
   const loadSavedSearches = () => {
@@ -57,6 +68,11 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
 
   const loadSubmissions = () => {
     const all = showArchived ? getArchivedSubmissions() : getActiveSubmissions();
+    console.log('Loading submissions:', {
+      showArchived,
+      totalLoaded: all.length,
+      sampleIds: all.slice(0, 3).map(s => s.id)
+    });
     setSubmissions(all);
   };
 

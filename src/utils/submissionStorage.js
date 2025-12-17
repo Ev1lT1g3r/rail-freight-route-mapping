@@ -55,6 +55,17 @@ export function saveSubmission(submission) {
       return false;
     }
     
+    console.log('Submission saved successfully:', {
+      id: submission.id,
+      status: submission.status,
+      totalSubmissions: verify.length
+    });
+    
+    // Dispatch event to notify components of update
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('submissionsUpdated'));
+    }
+    
     return true;
   } catch (e) {
     console.error('Error saving submission:', e, submission);

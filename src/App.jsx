@@ -46,6 +46,12 @@ function AppContent() {
   };
 
   const handleSaveSubmission = (submission, shouldNavigateAway = true) => {
+    console.log('handleSaveSubmission called:', {
+      submissionId: submission?.id,
+      status: submission?.status,
+      shouldNavigateAway
+    });
+    
     // If it's a draft save and user wants to continue editing, don't navigate away
     if (!shouldNavigateAway && submission.status === WORKFLOW_STATUS.DRAFT) {
       // Stay on the form, just update the submission ID if it's new
@@ -57,9 +63,12 @@ function AppContent() {
     // Submission saved, return to list
     // Force a small delay to ensure localStorage is written before list loads
     setTimeout(() => {
+      console.log('Navigating to list view after save');
       setCurrentView(VIEWS.LIST);
       setSelectedSubmissionId(null);
-    }, 150);
+      // Force a page refresh of submissions by triggering a custom event
+      window.dispatchEvent(new CustomEvent('submissionsUpdated'));
+    }, 200);
   };
 
   const handleNavigateToWorkflow = () => {
