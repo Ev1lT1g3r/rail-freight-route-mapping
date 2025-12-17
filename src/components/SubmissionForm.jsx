@@ -163,11 +163,13 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
 
         const foundRoutes = findRoutes(origin, destination, preferences);
         setRoutes(foundRoutes);
-        if (foundRoutes.length > 0) {
-          setSelectedRouteIndex(0);
-          success(`Found ${foundRoutes.length} route${foundRoutes.length > 1 ? 's' : ''}`);
+        setSelectedRouteIndex(null);
+        setIsLoading(false);
+        
+        if (foundRoutes.length === 0) {
+          showError('No routes found between these freight yards. Try different yards or adjust route preferences.');
         } else {
-          warning('No routes found between these freight yards. Try different yards or adjust route preferences.');
+          success(`Found ${foundRoutes.length} route${foundRoutes.length > 1 ? 's' : ''}`);
         }
       } catch (err) {
         console.error('Route finding error:', err);
@@ -370,21 +372,167 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
 
               <RouteConfig preferences={preferences} onPreferencesChange={setPreferences} />
 
-              <div style={{ marginBottom: '20px', textAlign: 'center' }}>
-                <button
-                  onClick={handleFindRoutes}
-                  disabled={!origin || !destination || isLoading}
-                  className="sigma-btn-primary"
-                  style={{
-                    padding: '12px 30px',
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    opacity: (!origin || !destination || isLoading) ? 0.6 : 1,
-                    cursor: (!origin || !destination || isLoading) ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  {isLoading ? 'Finding Routes...' : 'Find Routes'}
-                </button>
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', marginBottom: '15px' }}>
+                  <button
+                    onClick={handleFindRoutes}
+                    disabled={!origin || !destination || isLoading}
+                    className="sigma-btn-primary"
+                    style={{
+                      padding: '12px 30px',
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      opacity: (!origin || !destination || isLoading) ? 0.6 : 1,
+                      cursor: (!origin || !destination || isLoading) ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {isLoading ? 'Finding Routes...' : 'Find Routes'}
+                  </button>
+                  
+                  {origin && destination && (
+                    <>
+                      {!isCurrentRouteSaved ? (
+                        <button
+                          onClick={handleSaveRoute}
+                          style={{
+                            padding: '12px 24px',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            backgroundColor: '#10B981',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}
+                        >
+                          ⭐ Save Route
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            deleteSavedRoute(origin, destination, preferences);
+                            setSavedRoutes(getAllSavedRoutes());
+                            success('Route removed from favorites');
+                          }}
+                          style={{
+                            padding: '12px 24px',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            backgroundColor: '#EF4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                          }}
+                        >
+                          ⭐ Remove from Favorites
+                        </button>
+                      )}
+                      
+                      <button
+                        onClick={() => setShowSavedRoutes(!showSavedRoutes)}
+                        style={{
+                          padding: '12px 24px',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          backgroundColor: '#64748B',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        📋 {showSavedRoutes ? 'Hide' : 'Show'} Saved Routes ({savedRoutes.length})
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {showSavedRoutes && savedRoutes.length > 0 && (
+                  <div style={{ 
+                    padding: '15px', 
+                    backgroundColor: '#F0F9FF', 
+                    borderRadius: '8px',
+                    border: '1px solid #3B82F6',
+                    marginBottom: '15px'
+                  }}>
+                    <h4 style={{ marginTop: 0, marginBottom: '15px' }}>Saved Routes</h4>
+                    <div style={{ display: 'grid', gap: '10px' }}>
+                      {savedRoutes.map((savedRoute, idx) => {
+                        const originStation = stations[savedRoute.origin];
+                        const destStation = stations[savedRoute.destination];
+                        return (
+                          <div
+                            key={idx}
+                            onClick={() => handleLoadSavedRoute(savedRoute)}
+                            style={{
+                              padding: '12px',
+                              backgroundColor: 'white',
+                              borderRadius: '6px',
+                              border: '1px solid #ddd',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = '#3B82F6';
+                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(59, 130, 246, 0.2)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = '#ddd';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
+                          >
+                            <div>
+                              <strong>{originStation?.name || savedRoute.origin} → {destStation?.name || savedRoute.destination}</strong>
+                              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                Saved: {new Date(savedRoute.savedDate).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <button
+                              onClick={(e) => handleDeleteSavedRoute(savedRoute, e)}
+                              style={{
+                                padding: '6px 12px',
+                                backgroundColor: '#EF4444',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '12px'
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {showSavedRoutes && savedRoutes.length === 0 && (
+                  <div style={{ 
+                    padding: '20px', 
+                    textAlign: 'center',
+                    backgroundColor: '#F9FAFB',
+                    borderRadius: '8px',
+                    color: '#6B7280',
+                    marginBottom: '15px'
+                  }}>
+                    No saved routes yet. Save frequently used routes for quick access!
+                  </div>
+                )}
               </div>
 
               {validationErrors.routes && (
