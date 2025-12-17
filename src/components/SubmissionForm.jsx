@@ -13,7 +13,9 @@ import { stations } from '../data/railNetwork';
 import { findRoutes } from '../utils/routeFinder';
 import { saveRoute, getAllSavedRoutes, isRouteSaved, deleteSavedRoute } from '../utils/routeStorage';
 import { saveSubmission, createSubmissionId, WORKFLOW_STATUS, getSubmissionById } from '../utils/submissionStorage';
+import { getAllTemplates, saveTemplate, deleteTemplate, createTemplateFromSubmission } from '../utils/templateStorage';
 import { useToast } from '../contexts/ToastContext';
+import EmptyState from './EmptyState';
 
 function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current User' }) {
   const existingSubmission = submissionId ? getSubmissionById(submissionId) : null;
@@ -234,6 +236,55 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   };
 
   const isCurrentRouteSaved = origin && destination && isRouteSaved(origin, destination, preferences);
+
+  const handleLoadTemplate = (template) => {
+    setOrigin(template.origin);
+    setDestination(template.destination);
+    setPreferences(template.preferences || preferences);
+    if (template.freight) {
+      setFreight(template.freight);
+    }
+    if (template.tags) {
+      setTags(template.tags);
+    }
+    if (template.notes) {
+      setNotes(template.notes);
+    }
+    setShowTemplates(false);
+    success('Template loaded!');
+  };
+
+  const handleSaveAsTemplate = () => {
+    if (!origin || !destination) {
+      showError('Please select origin and destination first');
+      return;
+    }
+
+    const name = window.prompt('Enter a name for this template:');
+    if (!name || !name.trim()) {
+      return;
+    }
+
+    const template = createTemplateFromSubmission({
+      origin,
+      destination,
+      preferences,
+      freight,
+      tags,
+      notes,
+      createdBy: currentUser
+    }, name.trim());
+
+    if (template) {
+      const templateId = saveTemplate(template);
+      if (templateId) {
+        success('Template saved successfully!');
+        setTemplates(getAllTemplates());
+      } else {
+        showError('Error saving template');
+      }
+    }
+  };
 
   const handleSaveDraft = () => {
     const submission = {
