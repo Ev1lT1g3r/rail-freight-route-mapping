@@ -12,6 +12,58 @@ All notable changes to this project will be documented in this file.
 - Export capabilities (PDF, Excel)
 - Mobile app version
 
+## [1.5.0] - 2024-12-16
+
+### Added
+- **Reusable EmptyState Component**
+  - Consistent empty state design throughout application
+  - Animated icons with floating effect
+  - Support for primary and secondary action buttons
+  - Customizable icons, titles, and messages
+  - Used in SubmissionsList and RouteResults
+
+- **Bulk Operations for Submissions**
+  - Bulk mode toggle to enable multi-selection
+  - Checkbox selection for individual submissions
+  - Select All / Deselect All functionality
+  - Bulk delete selected submissions
+  - Bulk status change (mark as Submitted)
+  - Visual feedback for selected items
+  - Selection counter display
+
+- **Enhanced Contextual Help**
+  - Help tooltips in SubmissionsList (filters, sorting, bulk operations)
+  - Help tooltips in SubmissionDetail (route map, submission info)
+  - Help tooltips in RouteTable (route comparison)
+  - Improved user guidance and feature discoverability
+
+### Changed
+- **Empty States**
+  - Replaced inline empty state code with reusable EmptyState component
+  - Consistent styling and animations across all empty states
+  - Better user experience with actionable empty states
+
+- **SubmissionsList**
+  - Added bulk operations UI with selection checkboxes
+  - Enhanced filter and sort labels with help tooltips
+  - Improved empty state with EmptyState component
+  - Better visual feedback for selected submissions
+
+- **RouteResults**
+  - Replaced inline empty state with EmptyState component
+  - Consistent empty state design
+
+### Fixed
+- Fixed missing CHW station definition (consolidated to CHA)
+- Fixed missing ALB station reference (changed to ABQ)
+- Removed duplicate CHA-PIT connection
+- All network connections now reference valid stations
+
+### Testing
+- Added EmptyState component tests (6 tests)
+- Updated SubmissionsList tests for bulk operations
+- All 129+ tests passing
+
 ## [1.4.0] - 2024-12-16
 
 ### Added
