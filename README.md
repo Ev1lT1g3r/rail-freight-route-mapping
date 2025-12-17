@@ -2,6 +2,8 @@
 
 A comprehensive web application for managing freight rail route submissions with approval workflow, freight placement visualization, and center of gravity calculations. Built with React and Leaflet, featuring Sigma IQ branding.
 
+**Version 1.5.0** - Now with bulk operations, enhanced empty states, contextual help, and improved navigation!
+
 ## Overview
 
 This application provides a complete solution for freight rail route planning and submission management. Users can find optimal routes, specify freight details, visualize freight placement on rail cars, and manage submissions through an approval workflow.
