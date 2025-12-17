@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ROUTE_PRESETS, findMatchingPreset } from '../utils/routePresets';
+import HelpTooltip from './HelpTooltip';
 
 function RouteConfig({ preferences, onPreferencesChange }) {
   const [selectedPreset, setSelectedPreset] = useState(findMatchingPreset(preferences));
@@ -64,8 +65,11 @@ function RouteConfig({ preferences, onPreferencesChange }) {
         <h4 style={{ marginTop: 0, marginBottom: '15px', fontSize: '16px' }}>Custom Preferences</h4>
       
       <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
           Distance Weight: {preferences.weightDistance.toFixed(1)}
+          <HelpTooltip content="Controls how much the algorithm prioritizes shorter routes. Higher values (up to 2.0) will favor routes with fewer total miles, while lower values allow longer routes if they have other advantages like fewer transfers or operators.">
+            <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+          </HelpTooltip>
         </label>
         <input
           type="range"
@@ -83,8 +87,11 @@ function RouteConfig({ preferences, onPreferencesChange }) {
       </div>
 
       <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
           Single Operator Preference: {preferences.weightSingleOperator.toFixed(1)}
+          <HelpTooltip content="Penalizes routes that require transfers between different railroad operators. Higher values strongly favor routes that use a single operator throughout, which can reduce complexity and potential delays from interline transfers.">
+            <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+          </HelpTooltip>
         </label>
         <input
           type="range"
@@ -102,8 +109,11 @@ function RouteConfig({ preferences, onPreferencesChange }) {
       </div>
 
       <div style={{ marginBottom: '15px' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
           Straight Route Preference: {preferences.weightCurves.toFixed(1)}
+          <HelpTooltip content="Penalizes routes with many curves and turns. Higher values favor straighter routes, which can be important for freight that is sensitive to lateral forces or requires more stable transport conditions.">
+            <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+          </HelpTooltip>
         </label>
         <input
           type="range"
@@ -121,8 +131,11 @@ function RouteConfig({ preferences, onPreferencesChange }) {
       </div>
 
       <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
           Max Transfers: {preferences.maxTransfers}
+          <HelpTooltip content="Sets the maximum number of interline transfer points allowed in a route. Lower values (1-2) will only show routes with minimal transfers, while higher values (5-10) allow more complex routes with multiple operator changes.">
+            <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+          </HelpTooltip>
         </label>
         <input
           type="range"

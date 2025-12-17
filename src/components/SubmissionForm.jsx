@@ -7,6 +7,7 @@ import FreightPlacementVisualization from './FreightPlacementVisualization';
 import ErrorBoundary from './ErrorBoundary';
 import ProgressIndicator from './ProgressIndicator';
 import TerminalSearch from './TerminalSearch';
+import HelpTooltip from './HelpTooltip';
 import { stations } from '../data/railNetwork';
 import { findRoutes } from '../utils/routeFinder';
 import { saveSubmission, createSubmissionId, WORKFLOW_STATUS, getSubmissionById } from '../utils/submissionStorage';
@@ -294,8 +295,11 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
 
           {/* Submission Name */}
           <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
               Submission Name {currentStep === 'review' && <span style={{ color: '#EF4444' }}>*</span>}:
+              <HelpTooltip content="Give your submission a descriptive name to help you identify it later. This name will appear in the submissions list and can be used for searching and filtering.">
+                <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+              </HelpTooltip>
             </label>
             <input
               type="text"

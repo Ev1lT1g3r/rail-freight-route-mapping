@@ -39,8 +39,11 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
       <h3 style={{ marginTop: 0, color: '#0F172A' }}>Freight Specifications</h3>
       
       <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="freight-description" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        <label htmlFor="freight-description" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
           Freight Description:
+          <HelpTooltip content="Describe the type of freight being shipped (e.g., 'Steel coils', 'Machinery', 'Containers'). This helps with documentation and compliance tracking.">
+            <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+          </HelpTooltip>
         </label>
         <input
           id="freight-description"
@@ -59,10 +62,13 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', marginBottom: '15px' }}>
-        <div>
-          <label htmlFor="freight-length" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Length (feet):
-          </label>
+              <div>
+                <label htmlFor="freight-length" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Length (feet):
+                  <HelpTooltip content="The length of the freight in feet, measured along the longest dimension. This is used to determine if the freight fits on the selected rail car.">
+                    <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+                  </HelpTooltip>
+                </label>
           <input
             id="freight-length"
             type="number"
@@ -137,10 +143,13 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
           )}
         </div>
 
-        <div>
-          <label htmlFor="freight-weight" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Weight (pounds):
-          </label>
+              <div>
+                <label htmlFor="freight-weight" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Weight (pounds):
+                  <HelpTooltip content="The total weight of the freight in pounds. This is critical for ensuring the freight doesn't exceed the rail car's weight capacity and for calculating center of gravity.">
+                    <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+                  </HelpTooltip>
+                </label>
           <input
             id="freight-weight"
             type="number"

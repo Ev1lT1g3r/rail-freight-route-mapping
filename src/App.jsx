@@ -5,6 +5,7 @@ import SubmissionsList from './components/SubmissionsList';
 import SubmissionForm from './components/SubmissionForm';
 import SubmissionDetail from './components/SubmissionDetail';
 import ToastContainer from './components/ToastContainer';
+import Breadcrumb from './components/Breadcrumb';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 import { WORKFLOW_STATUS } from './utils/submissionStorage';
 
@@ -68,9 +69,53 @@ function AppContent() {
     setCurrentView(VIEWS.LIST);
   };
 
+  // Generate breadcrumb items based on current view
+  const getBreadcrumbs = () => {
+    const breadcrumbs = [
+      { label: 'Home', path: VIEWS.HOME }
+    ];
+
+    if (currentView === VIEWS.LIST) {
+      breadcrumbs.push({ label: 'Submissions', path: VIEWS.LIST });
+    } else if (currentView === VIEWS.CREATE) {
+      breadcrumbs.push(
+        { label: 'Submissions', path: VIEWS.LIST },
+        { label: 'New Submission', path: VIEWS.CREATE }
+      );
+    } else if (currentView === VIEWS.EDIT) {
+      breadcrumbs.push(
+        { label: 'Submissions', path: VIEWS.LIST },
+        { label: 'Edit Submission', path: VIEWS.EDIT }
+      );
+    } else if (currentView === VIEWS.VIEW) {
+      breadcrumbs.push(
+        { label: 'Submissions', path: VIEWS.LIST },
+        { label: 'Submission Details', path: VIEWS.VIEW }
+      );
+    }
+
+    return breadcrumbs;
+  };
+
+  const handleBreadcrumbNavigate = (path) => {
+    if (path === VIEWS.HOME) {
+      setCurrentView(VIEWS.HOME);
+      setSelectedSubmissionId(null);
+    } else if (path === VIEWS.LIST) {
+      handleBackToList();
+    }
+  };
+
   return (
     <div className="App">
       <ToastContainer toasts={toasts} onRemove={removeToast} />
+      {currentView !== VIEWS.HOME && (
+        <div style={{ padding: '16px 32px', backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb' }}>
+          <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+            <Breadcrumb items={getBreadcrumbs()} onNavigate={handleBreadcrumbNavigate} />
+          </div>
+        </div>
+      )}
       {currentView === VIEWS.HOME && (
         <HomePage
           onNavigateToWorkflow={handleNavigateToWorkflow}

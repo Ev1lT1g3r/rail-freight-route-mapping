@@ -19,39 +19,6 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
     setSubmissions(all);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case WORKFLOW_STATUS.APPROVED:
-        return '#10B981'; // Sigma success green
-      case WORKFLOW_STATUS.REJECTED:
-        return '#EF4444'; // Sigma error red
-      case WORKFLOW_STATUS.PENDING_APPROVAL:
-        return '#F59E0B'; // Sigma warning amber
-      case WORKFLOW_STATUS.SUBMITTED:
-        return '#3B82F6'; // Sigma secondary blue
-      case WORKFLOW_STATUS.DRAFT:
-        return '#64748B'; // Sigma gray
-      default:
-        return '#64748B';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case WORKFLOW_STATUS.APPROVED:
-        return '✓';
-      case WORKFLOW_STATUS.REJECTED:
-        return '✗';
-      case WORKFLOW_STATUS.PENDING_APPROVAL:
-        return '⏳';
-      case WORKFLOW_STATUS.SUBMITTED:
-        return '📤';
-      case WORKFLOW_STATUS.DRAFT:
-        return '📝';
-      default:
-        return '•';
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
