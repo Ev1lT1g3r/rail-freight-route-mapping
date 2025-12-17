@@ -193,6 +193,48 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
     }, 500);
   };
 
+  const handleSaveRoute = () => {
+    if (!origin || !destination) {
+      showError('Please select origin and destination first');
+      return;
+    }
+    
+    const routeData = {
+      origin,
+      destination,
+      preferences: { ...preferences }
+    };
+    
+    if (saveRoute(routeData)) {
+      success('Route saved to favorites!');
+      setSavedRoutes(getAllSavedRoutes());
+    } else {
+      showError('Error saving route');
+    }
+  };
+
+  const handleLoadSavedRoute = (savedRoute) => {
+    setOrigin(savedRoute.origin);
+    setDestination(savedRoute.destination);
+    setPreferences(savedRoute.preferences);
+    setShowSavedRoutes(false);
+    setRoutes([]);
+    setSelectedRouteIndex(null);
+    success('Route loaded from favorites!');
+  };
+
+  const handleDeleteSavedRoute = (savedRoute, e) => {
+    e.stopPropagation();
+    if (window.confirm('Delete this saved route?')) {
+      if (deleteSavedRoute(savedRoute.origin, savedRoute.destination, savedRoute.preferences)) {
+        success('Saved route deleted');
+        setSavedRoutes(getAllSavedRoutes());
+      }
+    }
+  };
+
+  const isCurrentRouteSaved = origin && destination && isRouteSaved(origin, destination, preferences);
+
   const handleSaveDraft = () => {
     const submission = {
       id: submissionId || createSubmissionId(),
