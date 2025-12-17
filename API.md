@@ -10,6 +10,7 @@
   onViewSubmission: (id: string) => void;
   onCreateNew: () => void;
   onEditSubmission: (id: string) => void;
+  onBackToHome?: () => void;
 }
 ```
 
@@ -17,6 +18,14 @@
 - Displays all submissions with filtering and sorting
 - Shows submission status, dates, and metadata
 - Provides edit and delete actions
+- **Bulk Operations**:
+  - Bulk mode toggle
+  - Multi-select with checkboxes
+  - Select All / Deselect All
+  - Bulk delete selected submissions
+  - Bulk status change (mark as Submitted)
+- Contextual help tooltips for filters and sorting
+- Enhanced empty states with actionable CTAs
 
 ### SubmissionForm
 
@@ -54,6 +63,10 @@
 - Approval/rejection actions (for approvers)
 - Full metadata display
 - Route and freight visualization
+- Large interactive map with auto-zoom to route
+- Operator-specific segment colors and labels
+- Transfer point markers
+- Contextual help tooltips
 
 ### FreightSpecification
 

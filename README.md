@@ -150,13 +150,18 @@ src/
 │   ├── MapComponent.jsx              # Interactive map with Leaflet (satellite view support)
 │   ├── RouteConfig.jsx               # Route preference controls with presets
 │   ├── RouteResults.jsx              # Route display and details
-│   ├── SubmissionsList.jsx           # Main landing page with all submissions
+│   ├── RouteTable.jsx                 # Route comparison table
+│   ├── SubmissionsList.jsx           # Main landing page with all submissions (bulk operations)
 │   ├── SubmissionForm.jsx            # Multi-step submission form
 │   ├── SubmissionDetail.jsx          # Submission detail view with approval actions
 │   ├── FreightSpecification.jsx      # Freight input form
 │   ├── FreightPlacementVisualization.jsx  # Freight placement visualization
 │   ├── TerminalSearch.jsx            # Terminal autocomplete search component
 │   ├── ProgressIndicator.jsx         # Multi-step progress indicator
+│   ├── EmptyState.jsx                # Reusable empty state component
+│   ├── StatusBadge.jsx               # Status badge with icons
+│   ├── HelpTooltip.jsx               # Contextual help tooltip component
+│   ├── Breadcrumb.jsx                # Breadcrumb navigation component
 │   ├── Toast.jsx                     # Toast notification component
 │   ├── ToastContainer.jsx             # Toast container component
 │   ├── HomePage.jsx                  # Home page with login

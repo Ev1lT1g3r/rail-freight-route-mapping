@@ -14,7 +14,8 @@ vi.mock('../utils/submissionStorage', () => ({
     APPROVED: 'Approved',
     REJECTED: 'Rejected'
   },
-  deleteSubmission: vi.fn()
+  deleteSubmission: vi.fn(),
+  saveSubmission: vi.fn()
 }));
 
 describe('SubmissionsList Component', () => {
@@ -127,6 +128,141 @@ describe('SubmissionsList Component', () => {
       expect(screen.getByText(/LAX → DEN/i)).toBeInTheDocument();
       // The submitted one might still be in DOM but filtered, so we check it's not visible in the list
     }
+  });
+
+  it('should enable bulk mode when bulk actions button is clicked', async () => {
+    const user = userEvent.setup();
+    const mockSubmissions = [
+      {
+        id: 'sub1',
+        origin: 'CHI',
+        destination: 'KC',
+        status: 'Draft',
+        createdDate: new Date().toISOString()
+      }
+    ];
+
+    submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
+    
+    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    
+    const bulkButton = screen.getByText(/Bulk Actions/i);
+    await user.click(bulkButton);
+    
+    expect(screen.getByText(/Bulk Mode/i)).toBeInTheDocument();
+    expect(screen.getByText(/Select All/i)).toBeInTheDocument();
+  });
+
+  it('should show checkboxes when bulk mode is enabled', async () => {
+    const user = userEvent.setup();
+    const mockSubmissions = [
+      {
+        id: 'sub1',
+        origin: 'CHI',
+        destination: 'KC',
+        status: 'Draft',
+        createdDate: new Date().toISOString()
+      }
+    ];
+
+    submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
+    
+    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    
+    const bulkButton = screen.getByText(/Bulk Actions/i);
+    await user.click(bulkButton);
+    
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes.length).toBeGreaterThan(0);
+  });
+
+  it('should select submission when checkbox is clicked in bulk mode', async () => {
+    const user = userEvent.setup();
+    const mockSubmissions = [
+      {
+        id: 'sub1',
+        origin: 'CHI',
+        destination: 'KC',
+        status: 'Draft',
+        createdDate: new Date().toISOString()
+      }
+    ];
+
+    submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
+    
+    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    
+    const bulkButton = screen.getByText(/Bulk Actions/i);
+    await user.click(bulkButton);
+    
+    const checkboxes = screen.getAllByRole('checkbox');
+    const submissionCheckbox = checkboxes.find(cb => cb.type === 'checkbox' && cb !== screen.getByText(/Select All/i)?.closest('button')?.querySelector('input'));
+    
+    if (submissionCheckbox) {
+      await user.click(submissionCheckbox);
+      expect(screen.getByText(/1 of 1 selected/i)).toBeInTheDocument();
+    }
+  });
+
+  it('should call deleteSubmission when bulk delete is clicked', async () => {
+    const user = userEvent.setup();
+    window.confirm = vi.fn(() => true);
+    
+    const mockSubmissions = [
+      {
+        id: 'sub1',
+        origin: 'CHI',
+        destination: 'KC',
+        status: 'Draft',
+        createdDate: new Date().toISOString()
+      }
+    ];
+
+    submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
+    
+    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    
+    const bulkButton = screen.getByText(/Bulk Actions/i);
+    await user.click(bulkButton);
+    
+    const checkboxes = screen.getAllByRole('checkbox');
+    const submissionCheckbox = checkboxes.find(cb => cb.type === 'checkbox');
+    
+    if (submissionCheckbox) {
+      await user.click(submissionCheckbox);
+      
+      const deleteButton = screen.getByText(/Delete Selected/i);
+      await user.click(deleteButton);
+      
+      expect(window.confirm).toHaveBeenCalled();
+      expect(submissionStorage.deleteSubmission).toHaveBeenCalledWith('sub1');
+    }
+  });
+
+  it('should not allow clicking submission card when in bulk mode', async () => {
+    const user = userEvent.setup();
+    const mockSubmissions = [
+      {
+        id: 'sub1',
+        origin: 'CHI',
+        destination: 'KC',
+        status: 'Draft',
+        createdDate: new Date().toISOString()
+      }
+    ];
+
+    submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
+    
+    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    
+    const bulkButton = screen.getByText(/Bulk Actions/i);
+    await user.click(bulkButton);
+    
+    const submissionCard = screen.getByText(/CHI → KC/i).closest('div');
+    await user.click(submissionCard);
+    
+    // Should not call onViewSubmission when in bulk mode
+    expect(mockOnViewSubmission).not.toHaveBeenCalled();
   });
 });
 
