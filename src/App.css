@@ -118,6 +118,7 @@
 }
 
 .map-panel {
+  grid-column: 1 / -1; /* Span full width on smaller screens */
   background-color: var(--sigma-white);
   border-radius: 8px;
   padding: 10px;

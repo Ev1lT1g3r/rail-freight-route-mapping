@@ -1,18 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { generateSegmentRailPath } from '../utils/railLinePath';
+import './MapComponent.css';
 
-// Operator colors and branding
+// Enhanced operator colors and branding
 const OPERATOR_COLORS = {
-  'BNSF': { color: '#FFD700', name: 'BNSF Railway', logo: '🚂' },
-  'UP': { color: '#FF6B35', name: 'Union Pacific', logo: '🚂' },
-  'CSX': { color: '#4ECDC4', name: 'CSX Transportation', logo: '🚂' },
-  'NS': { color: '#45B7D1', name: 'Norfolk Southern', logo: '🚂' },
-  'CN': { color: '#96CEB4', name: 'Canadian National', logo: '🚂' },
-  'CP': { color: '#FFEAA7', name: 'Canadian Pacific', logo: '🚂' },
-  'Multiple': { color: '#A0A0A0', name: 'Multiple Operators', logo: '🚂' },
-  'Default': { color: '#FF0000', name: 'Unknown', logo: '🚂' }
+  'BNSF': { color: '#FFD700', name: 'BNSF Railway', logo: '🚂', darkColor: '#D4AF37' },
+  'UP': { color: '#FF6B35', name: 'Union Pacific', logo: '🚂', darkColor: '#E55A2B' },
+  'CSX': { color: '#4ECDC4', name: 'CSX Transportation', logo: '🚂', darkColor: '#3BA99F' },
+  'NS': { color: '#45B7D1', name: 'Norfolk Southern', logo: '🚂', darkColor: '#2E9FC4' },
+  'CN': { color: '#96CEB4', name: 'Canadian National', logo: '🚂', darkColor: '#7AB89A' },
+  'CP': { color: '#FFEAA7', name: 'Canadian Pacific', logo: '🚂', darkColor: '#E6D396' },
+  'KCS': { color: '#A29BFE', name: 'Kansas City Southern', logo: '🚂', darkColor: '#8B7FE8' },
+  'KCSM': { color: '#A29BFE', name: 'KCSM', logo: '🚂', darkColor: '#8B7FE8' },
+  'Multiple': { color: '#A0A0A0', name: 'Multiple Operators', logo: '🚂', darkColor: '#808080' },
+  'Default': { color: '#FF0000', name: 'Unknown', logo: '🚂', darkColor: '#CC0000' }
 };
 
 // Fix for default marker icons
@@ -25,7 +28,7 @@ if (typeof window !== 'undefined' && L && L.Icon && L.Icon.Default) {
       shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
     });
   } catch (e) {
-    console.warn('Leaflet icon setup warning:', e);
+    // Silently handle icon setup errors
   }
 }
 
@@ -42,17 +45,69 @@ function MapComponent({
   const markersRef = useRef([]);
   const routeMarkersRef = useRef([]);
   const routePolylinesRef = useRef([]);
-  const operatorInfoPanelsRef = useRef([]);
+  const segmentPolylinesRef = useRef([]);
+  const transferMarkersRef = useRef([]);
   const operatorLegendRef = useRef(null);
-  const polylineRef = useRef(null);
+  const statsPanelRef = useRef(null);
   const tileLayerRef = useRef(null);
   const satelliteLayerRef = useRef(null);
   const layerControlRef = useRef(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [mapView, setMapView] = useState('map'); // 'map' or 'satellite'
+  const [mapView, setMapView] = useState('satellite');
+  const [hoveredSegment, setHoveredSegment] = useState(null);
+  const [selectedSegmentIndex, setSelectedSegmentIndex] = useState(null);
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  // Cleanup function
+  const cleanupMapElements = useCallback(() => {
+    if (!mapInstanceRef.current) return;
+
+    const map = mapInstanceRef.current;
+
+    // Remove all markers
+    [...markersRef.current, ...routeMarkersRef.current, ...transferMarkersRef.current].forEach(marker => {
+      try {
+        map.removeLayer(marker);
+      } catch (e) {
+        // Ignore removal errors
+      }
+    });
+    markersRef.current = [];
+    routeMarkersRef.current = [];
+    transferMarkersRef.current = [];
+
+    // Remove all polylines
+    [...routePolylinesRef.current, ...segmentPolylinesRef.current].forEach(polyline => {
+      try {
+        map.removeLayer(polyline);
+      } catch (e) {
+        // Ignore removal errors
+      }
+    });
+    routePolylinesRef.current = [];
+    segmentPolylinesRef.current = [];
+
+    // Remove controls
+    if (operatorLegendRef.current) {
+      try {
+        map.removeControl(operatorLegendRef.current);
+      } catch (e) {
+        // Ignore removal errors
+      }
+      operatorLegendRef.current = null;
+    }
+
+    if (statsPanelRef.current) {
+      try {
+        map.removeControl(statsPanelRef.current);
+      } catch (e) {
+        // Ignore removal errors
+      }
+      statsPanelRef.current = null;
+    }
   }, []);
 
   // Initialize map
@@ -63,483 +118,536 @@ function MapComponent({
 
     // Initialize map if it doesn't exist
     if (!mapInstanceRef.current) {
-      mapInstanceRef.current = L.map(mapRef.current, {
-        center: [39.8283, -98.5795],
-        zoom: 4,
-        scrollWheelZoom: true,
-        zoomControl: true
-      });
+      try {
+        mapInstanceRef.current = L.map(mapRef.current, {
+          center: [39.8283, -98.5795],
+          zoom: 4,
+          scrollWheelZoom: true,
+          zoomControl: true,
+          attributionControl: true
+        });
 
-      // Add standard map tile layer
-      tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      });
+        // Add standard map tile layer
+        tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19
+        });
 
-      // Add satellite/imagery tile layer (Esri World Imagery)
-      satelliteLayerRef.current = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: '&copy; <a href="https://www.esri.com/">Esri</a> &copy; <a href="https://www.esri.com/">Esri</a>',
-        maxZoom: 19
-      });
+        // Add satellite/imagery tile layer
+        satelliteLayerRef.current = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '&copy; <a href="https://www.esri.com/">Esri</a>',
+          maxZoom: 19
+        });
 
-      // Add default map layer
-      tileLayerRef.current.addTo(mapInstanceRef.current);
+        // Add default satellite layer
+        satelliteLayerRef.current.addTo(mapInstanceRef.current);
 
-      // Add layer control
-      const baseMaps = {
-        'Map View': tileLayerRef.current,
-        'Satellite View': satelliteLayerRef.current
-      };
-      layerControlRef.current = L.control.layers(baseMaps).addTo(mapInstanceRef.current);
+        // Add layer control
+        const baseMaps = {
+          'Satellite View': satelliteLayerRef.current,
+          'Map View': tileLayerRef.current
+        };
+        layerControlRef.current = L.control.layers(baseMaps).addTo(mapInstanceRef.current);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+        return;
+      }
     }
 
     const map = mapInstanceRef.current;
+    cleanupMapElements();
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => {
-      map.removeLayer(marker);
-    });
-    markersRef.current = [];
-
-    // Add markers for all stations with different styles for origin/destination
-    Object.entries(stations).forEach(([code, station]) => {
-      const isOrigin = code === origin;
-      const isDestination = code === destination;
-      
-      // Create custom icon based on whether it's origin or destination
-      let icon;
-      if (isOrigin) {
-        icon = L.divIcon({
-          className: 'origin-marker',
-          html: `<div style="
-            width: 24px;
-            height: 24px;
-            background-color: #00ff00;
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-            font-size: 14px;
-          ">O</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        });
-      } else if (isDestination) {
-        icon = L.divIcon({
-          className: 'destination-marker',
-          html: `<div style="
-            width: 24px;
-            height: 24px;
-            background-color: #ff0000;
-            border: 3px solid white;
-            border-radius: 50%;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-            font-size: 14px;
-          ">D</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        });
-      } else {
-        // Default marker for other stations
-        icon = L.icon({
-          iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-          iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41]
-        });
-      }
-      
-      const marker = L.marker([station.lat, station.lng], { icon })
-        .addTo(map)
-        .bindPopup(`
-          <div>
-            <strong>${station.name}</strong><br />
-            ${station.state}<br />
-            ${station.operator}${isOrigin ? '<br /><strong style="color: green;">ORIGIN</strong>' : ''}${isDestination ? '<br /><strong style="color: red;">DESTINATION</strong>' : ''}
-          </div>
-        `);
-
-      // Add click handler
-      marker.on('click', () => {
-        if (!origin) {
-          onOriginSelect(code);
-        } else if (!destination && code !== origin) {
-          onDestinationSelect(code);
+    // Add markers for all stations
+    try {
+      Object.entries(stations).forEach(([code, station]) => {
+        const isOrigin = code === origin;
+        const isDestination = code === destination;
+        
+        let icon;
+        if (isOrigin) {
+          icon = L.divIcon({
+            className: 'origin-marker',
+            html: `<div class="station-marker origin">
+              <span class="marker-label">O</span>
+              <div class="marker-pulse"></div>
+            </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+          });
+        } else if (isDestination) {
+          icon = L.divIcon({
+            className: 'destination-marker',
+            html: `<div class="station-marker destination">
+              <span class="marker-label">D</span>
+              <div class="marker-pulse"></div>
+            </div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+          });
+        } else {
+          icon = L.icon({
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+            iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+          });
         }
+        
+        const marker = L.marker([station.lat, station.lng], { icon })
+          .addTo(map)
+          .bindPopup(`
+            <div class="station-popup">
+              <strong>${station.name}</strong><br />
+              <span class="station-state">${station.state}</span><br />
+              <span class="station-operator">${station.operator}</span>
+              ${isOrigin ? '<br /><strong class="origin-badge">ORIGIN</strong>' : ''}
+              ${isDestination ? '<br /><strong class="destination-badge">DESTINATION</strong>' : ''}
+            </div>
+          `);
+
+        marker.on('click', () => {
+          if (!origin) {
+            onOriginSelect?.(code);
+          } else if (!destination && code !== origin) {
+            onDestinationSelect?.(code);
+          }
+        });
+
+        markersRef.current.push(marker);
       });
+    } catch (error) {
+      console.error('Error adding station markers:', error);
+    }
 
-      markersRef.current.push(marker);
-    });
-
-    // Cleanup function
     return () => {
-      // Don't destroy map on cleanup, just remove markers
+      cleanupMapElements();
     };
-  }, [isMounted, stations, origin, destination, onOriginSelect, onDestinationSelect]);
+  }, [isMounted, stations, origin, destination, onOriginSelect, onDestinationSelect, cleanupMapElements]);
 
   // Update map bounds when origin/destination changes
   useEffect(() => {
     if (!mapInstanceRef.current || (!origin && !destination)) return;
 
-    const bounds = [];
-    if (origin && stations[origin]) {
-      bounds.push([stations[origin].lat, stations[origin].lng]);
-    }
-    if (destination && stations[destination]) {
-      bounds.push([stations[destination].lat, stations[destination].lng]);
-    }
-
-    if (bounds.length > 0) {
-      try {
-        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
-      } catch (e) {
-        console.warn('Error fitting bounds:', e);
+    try {
+      const bounds = [];
+      if (origin && stations[origin]) {
+        bounds.push([stations[origin].lat, stations[origin].lng]);
       }
+      if (destination && stations[destination]) {
+        bounds.push([stations[destination].lat, stations[destination].lng]);
+      }
+
+      if (bounds.length > 0) {
+        mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
+      }
+    } catch (error) {
+      console.error('Error updating map bounds:', error);
     }
   }, [origin, destination, stations]);
 
-  // Update route polyline - draw through all intermediate stations
+  // Render route with detailed visualization
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
-    // Remove existing route markers and polylines
-    routeMarkersRef.current.forEach(marker => {
-      mapInstanceRef.current.removeLayer(marker);
-    });
-    routeMarkersRef.current = [];
+    cleanupMapElements();
+    setHoveredSegment(null);
+    setSelectedSegmentIndex(null);
 
-    routePolylinesRef.current.forEach(polyline => {
-      mapInstanceRef.current.removeLayer(polyline);
-    });
-    routePolylinesRef.current = [];
-
-    // Remove operator info panels
-    operatorInfoPanelsRef.current.forEach(panel => {
-      mapInstanceRef.current.removeLayer(panel);
-    });
-    operatorInfoPanelsRef.current = [];
-
-    // Remove operator legend
-    if (operatorLegendRef.current) {
-      mapInstanceRef.current.removeControl(operatorLegendRef.current);
-      operatorLegendRef.current = null;
+    if (!selectedRoute || !selectedRoute.path || selectedRoute.path.length < 2) {
+      return;
     }
 
-    // Remove existing polyline
-    if (polylineRef.current) {
-      mapInstanceRef.current.removeLayer(polylineRef.current);
-      polylineRef.current = null;
-    }
-
-    // Add new polyline if route is selected - draw through all stations in path
-    if (selectedRoute && selectedRoute.path && selectedRoute.path.length > 1) {
-      
-      // Switch to satellite view when route is shown
-      if (satelliteLayerRef.current && tileLayerRef.current) {
-        mapInstanceRef.current.removeLayer(tileLayerRef.current);
-        satelliteLayerRef.current.addTo(mapInstanceRef.current);
-        setMapView('satellite');
-      }
-
-      // Create polyline through all stations in the route path (follows actual route)
+    try {
+      const map = mapInstanceRef.current;
       const positions = selectedRoute.path.map(station => [station.lat, station.lng]);
-      
-      // Calculate operator statistics using actual segment distances
+
+      // Calculate comprehensive statistics
       const operatorStats = {};
-      if (selectedRoute.segments) {
-        selectedRoute.segments.forEach(segment => {
+      const segmentDetails = [];
+      let totalDistance = 0;
+
+      if (selectedRoute.segments && selectedRoute.segments.length > 0) {
+        selectedRoute.segments.forEach((segment, index) => {
+          const segmentDistance = segment.distance || 0;
+          totalDistance += segmentDistance;
+
           if (!operatorStats[segment.operator]) {
             operatorStats[segment.operator] = {
               distance: 0,
               segments: 0,
-              stations: new Set()
+              stations: new Set(),
+              color: OPERATOR_COLORS[segment.operator]?.color || OPERATOR_COLORS.Default.color
             };
           }
           operatorStats[segment.operator].segments++;
-          // Use actual segment distance from route data (already in miles)
-          const segmentDistance = segment.distance || 0;
           operatorStats[segment.operator].distance += segmentDistance;
-          
-          // Track stations for this operator
-          if (segment.from && segment.from.code) {
-            operatorStats[segment.operator].stations.add(segment.from.code);
+
+          const segmentStart = segment.from || selectedRoute.path[index];
+          const segmentEnd = segment.to || selectedRoute.path[index + 1];
+
+          if (segmentStart && segmentEnd) {
+            operatorStats[segment.operator].stations.add(segmentStart.code || segmentStart.name);
+            operatorStats[segment.operator].stations.add(segmentEnd.code || segmentEnd.name);
           }
-          if (segment.to && segment.to.code) {
-            operatorStats[segment.operator].stations.add(segment.to.code);
-          }
+
+          segmentDetails.push({
+            index,
+            operator: segment.operator,
+            from: segmentStart,
+            to: segmentEnd,
+            distance: segmentDistance,
+            curveScore: segment.curveScore || 0,
+            states: segment.states || []
+          });
         });
       }
 
-            // Draw route line with operator-specific colors for each segment
-            if (selectedRoute.segments && selectedRoute.segments.length > 0) {
-        // Draw each segment with operator-specific styling along actual rail lines
-        selectedRoute.segments.forEach((segment, segIndex) => {
-          // Get segment start and end from the segment object or path
-                const segmentStart = segment.from || selectedRoute.path[segIndex];
-                const segmentEnd = segment.to || selectedRoute.path[segIndex + 1];
+      // Draw each segment with enhanced styling
+      segmentDetails.forEach((segmentDetail, segIndex) => {
+        const { from, to, operator, distance, curveScore, states } = segmentDetail;
+        
+        if (!from || !to || !from.lat || !from.lng || !to.lat || !to.lng) {
+          return;
+        }
+
+        const operatorInfo = OPERATOR_COLORS[operator] || OPERATOR_COLORS.Default;
+        const segmentColor = operatorInfo.color;
+        const darkColor = operatorInfo.darkColor || segmentColor;
+
+        // Generate rail line path
+        let railLinePath;
+        try {
+          const segmentData = {
+            from: { lat: from.lat, lng: from.lng },
+            to: { lat: to.lat, lng: to.lng },
+            curveScore: curveScore,
+            states: states
+          };
+          railLinePath = generateSegmentRailPath(segmentData);
           
-          if (segmentStart && segmentEnd && segmentStart.lat && segmentStart.lng && segmentEnd.lat && segmentEnd.lng) {
-            let railLinePath;
-            
-            try {
-              // Generate realistic rail line path with intermediate waypoints
-              const segmentData = {
-                from: { lat: segmentStart.lat, lng: segmentStart.lng },
-                to: { lat: segmentEnd.lat, lng: segmentEnd.lng },
-                curveScore: segment.curveScore || 5,
-                states: segment.states || []
-              };
-              
-              // Generate rail line path with intermediate waypoints
-              railLinePath = generateSegmentRailPath(segmentData);
-              
-              // Validate path points
-              if (!railLinePath || railLinePath.length < 2) {
-                // Fallback to simple two-point path
-                railLinePath = [
-                  [segmentStart.lat, segmentStart.lng],
-                  [segmentEnd.lat, segmentEnd.lng]
-                ];
-              }
-            } catch (error) {
-              console.warn('Error generating rail line path, using straight line:', error);
-              // Fallback to straight line if path generation fails
-              railLinePath = [
-                [segmentStart.lat, segmentStart.lng],
-                [segmentEnd.lat, segmentEnd.lng]
-              ];
-            }
-            
-            const operatorInfo = OPERATOR_COLORS[segment.operator] || OPERATOR_COLORS.Default;
-            const segmentColor = operatorInfo.color;
-            
-            try {
-              // Enhanced polyline following rail lines with smooth curves
-              const segmentPolyline = L.polyline(railLinePath, {
-                color: segmentColor,
-                weight: 10,
-                opacity: 0.9,
-                smoothFactor: 1.0, // Smooth the curves
-                lineCap: 'round',
-                lineJoin: 'round'
-              }).addTo(mapInstanceRef.current);
-              
-              // Add shadow/glow effect with a slightly offset polyline
-              const shadowPolyline = L.polyline(railLinePath, {
-                color: segmentColor,
-                weight: 14,
-                opacity: 0.3,
-                smoothFactor: 1.0,
-                lineCap: 'round',
-                lineJoin: 'round'
-              }).addTo(mapInstanceRef.current);
-              routePolylinesRef.current.push(shadowPolyline);
-              routePolylinesRef.current.push(segmentPolyline);
-            } catch (error) {
-              console.error('Error creating polyline:', error, railLinePath);
-            }
-            
-            // Add operator label at midpoint of the rail line path
-            try {
-              const midPointIndex = Math.floor(railLinePath.length / 2);
-              const midPoint = railLinePath[midPointIndex] || railLinePath[Math.floor(railLinePath.length / 2)];
-              const midLat = midPoint[0];
-              const midLng = midPoint[1];
-              
-              if (midLat && midLng && !isNaN(midLat) && !isNaN(midLng)) {
-                const label = L.marker([midLat, midLng], {
-                  icon: L.divIcon({
-                    className: 'operator-label',
-                    html: `<div style="
-                      background: linear-gradient(135deg, ${segmentColor} 0%, ${segmentColor}dd 100%);
-                      color: white;
-                      padding: 6px 12px;
-                      border-radius: 6px;
-                      font-size: 12px;
-                      font-weight: bold;
-                      white-space: nowrap;
-                      box-shadow: 0 3px 8px rgba(0,0,0,0.4);
-                      border: 2px solid white;
-                      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-                    ">${operatorInfo.logo} ${segment.operator}</div>`,
-                    iconSize: [80, 28],
-                    iconAnchor: [40, 14]
-                  })
-                }).addTo(mapInstanceRef.current);
-                
-                // Add info popup on hover with correct segment distance
-                const startName = segmentStart.name || segmentStart.code || 'Unknown';
-                const endName = segmentEnd.name || segmentEnd.code || 'Unknown';
-                const segmentDistance = segment.distance || 0; // Use actual segment distance
-                label.bindTooltip(`
-                  <div style="font-size: 12px; line-height: 1.4;">
-                    <strong>${operatorInfo.name}</strong><br/>
-                    Segment: ${startName} → ${endName}<br/>
-                    Distance: ${segmentDistance.toFixed(0)} miles
-                  </div>
-                `, { permanent: false, direction: 'top' });
-                
-                routeMarkersRef.current.push(label);
-              }
-            } catch (error) {
-              console.error('Error creating operator label:', error);
-            }
-          } else {
-            console.warn('Invalid segment data:', { segment, segIndex, segmentStart, segmentEnd });
+          if (!railLinePath || railLinePath.length < 2) {
+            railLinePath = [[from.lat, from.lng], [to.lat, to.lng]];
+          }
+        } catch (error) {
+          railLinePath = [[from.lat, from.lng], [to.lat, to.lng]];
+        }
+
+        // Create interactive segment polyline
+        const segmentPolyline = L.polyline(railLinePath, {
+          color: segmentColor,
+          weight: 8,
+          opacity: 0.9,
+          smoothFactor: 1.0,
+          lineCap: 'round',
+          lineJoin: 'round',
+          className: `route-segment segment-${segIndex}`
+        }).addTo(map);
+
+        // Add shadow/glow effect
+        const shadowPolyline = L.polyline(railLinePath, {
+          color: segmentColor,
+          weight: 12,
+          opacity: 0.3,
+          smoothFactor: 1.0,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }).addTo(map);
+
+        routePolylinesRef.current.push(shadowPolyline);
+        segmentPolylinesRef.current.push(segmentPolyline);
+
+        // Add hover effects
+        segmentPolyline.on('mouseover', () => {
+          setHoveredSegment(segIndex);
+          segmentPolyline.setStyle({
+            weight: 12,
+            opacity: 1.0
+          });
+        });
+
+        segmentPolyline.on('mouseout', () => {
+          if (selectedSegmentIndex !== segIndex) {
+            setHoveredSegment(null);
+            segmentPolyline.setStyle({
+              weight: 8,
+              opacity: 0.9
+            });
           }
         });
 
-        // Add operator legend panel
-        const legendHtml = `
-          <div style="
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            font-size: 12px;
-            min-width: 200px;
-          ">
-            <div style="font-weight: bold; margin-bottom: 10px; font-size: 14px; border-bottom: 2px solid #ddd; padding-bottom: 6px;">
-              Route Operators
+        segmentPolyline.on('click', () => {
+          setSelectedSegmentIndex(segIndex);
+        });
+
+        // Add detailed tooltip
+        const fromName = from.name || from.code || 'Unknown';
+        const toName = to.name || to.code || 'Unknown';
+        const statesStr = states.length > 0 ? states.join(', ') : 'N/A';
+        
+        segmentPolyline.bindTooltip(`
+          <div class="segment-tooltip">
+            <div class="tooltip-header">
+              <span class="operator-logo">${operatorInfo.logo}</span>
+              <strong>${operatorInfo.name}</strong>
             </div>
-            ${Object.entries(operatorStats).map(([op, stats]) => {
-              const opInfo = OPERATOR_COLORS[op] || OPERATOR_COLORS.Default;
-              return `
-                <div style="margin-bottom: 8px; padding: 6px; background: #f8f9fa; border-radius: 4px; border-left: 4px solid ${opInfo.color};">
-                  <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                    <span style="font-size: 16px; margin-right: 6px;">${opInfo.logo}</span>
-                    <strong style="color: ${opInfo.color};">${op}</strong>
-                  </div>
-                  <div style="font-size: 11px; color: #666; margin-left: 22px;">
-                    ${stats.segments} segment${stats.segments !== 1 ? 's' : ''} • 
-                    ${stats.distance.toFixed(0)} miles<br/>
-                    ${stats.stations.size} station${stats.stations.size !== 1 ? 's' : ''}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-            <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 11px; color: #666;">
-              Total: ${selectedRoute.totalDistance.toFixed(0)} miles<br/>
-              ${selectedRoute.operatorCount} operator${selectedRoute.operatorCount !== 1 ? 's' : ''}
+            <div class="tooltip-content">
+              <div class="tooltip-row">
+                <span class="tooltip-label">Route:</span>
+                <span class="tooltip-value">${fromName} → ${toName}</span>
+              </div>
+              <div class="tooltip-row">
+                <span class="tooltip-label">Distance:</span>
+                <span class="tooltip-value">${distance.toFixed(0)} miles</span>
+              </div>
+              <div class="tooltip-row">
+                <span class="tooltip-label">States:</span>
+                <span class="tooltip-value">${statesStr}</span>
+              </div>
+              <div class="tooltip-row">
+                <span class="tooltip-label">Curve Score:</span>
+                <span class="tooltip-value">${curveScore}/10</span>
+              </div>
             </div>
           </div>
-        `;
+        `, {
+          permanent: false,
+          direction: 'top',
+          className: 'segment-tooltip-container',
+          offset: [0, -10]
+        });
 
-        operatorLegendRef.current = L.control({ position: 'topright' });
-        operatorLegendRef.current.onAdd = function() {
-          const div = L.DomUtil.create('div', 'operator-legend');
-          div.innerHTML = legendHtml;
-          L.DomEvent.disableClickPropagation(div);
-          return div;
-        };
-        operatorLegendRef.current.addTo(mapInstanceRef.current);
-      } else {
-        // Fallback: single polyline if segments not available - always show something
+        // Add operator label at midpoint
         try {
-          polylineRef.current = L.polyline(positions, {
-            color: '#3B82F6',
-            weight: 10,
-            opacity: 0.9,
-            smoothFactor: 1.0,
-            lineCap: 'round',
-            lineJoin: 'round'
-          }).addTo(mapInstanceRef.current);
+          const midPointIndex = Math.floor(railLinePath.length / 2);
+          const midPoint = railLinePath[midPointIndex] || railLinePath[Math.floor(railLinePath.length / 2)];
+          const [midLat, midLng] = midPoint;
           
-          // Add shadow for fallback too
-          const shadowPolyline = L.polyline(positions, {
-            color: '#3B82F6',
-            weight: 14,
-            opacity: 0.3,
-            smoothFactor: 1.0,
-            lineCap: 'round',
-            lineJoin: 'round'
-          }).addTo(mapInstanceRef.current);
-          routePolylinesRef.current.push(shadowPolyline);
+          if (midLat && midLng && !isNaN(midLat) && !isNaN(midLng)) {
+            const label = L.marker([midLat, midLng], {
+              icon: L.divIcon({
+                className: 'operator-label',
+                html: `<div class="operator-label-badge" style="background: linear-gradient(135deg, ${segmentColor} 0%, ${darkColor} 100%);">
+                  <span class="operator-logo-small">${operatorInfo.logo}</span>
+                  <span class="operator-name-small">${operator}</span>
+                </div>`,
+                iconSize: [100, 30],
+                iconAnchor: [50, 15]
+              })
+            }).addTo(map);
+            
+            routeMarkersRef.current.push(label);
+          }
         } catch (error) {
-          console.error('Error drawing fallback polyline:', error);
+          // Ignore label creation errors
         }
+      });
+
+      // Add transfer point markers
+      if (selectedRoute.transferPoints && selectedRoute.transferPoints.length > 0) {
+        selectedRoute.transferPoints.forEach((transfer, index) => {
+          if (transfer.station && transfer.station.lat && transfer.station.lng) {
+            const transferMarker = L.marker([transfer.station.lat, transfer.station.lng], {
+              icon: L.divIcon({
+                className: 'transfer-marker',
+                html: `<div class="transfer-point">
+                  <div class="transfer-icon">🔄</div>
+                  <div class="transfer-label">Transfer</div>
+                </div>`,
+                iconSize: [60, 60],
+                iconAnchor: [30, 30]
+              })
+            }).addTo(map);
+
+            transferMarker.bindPopup(`
+              <div class="transfer-popup">
+                <strong>Transfer Point</strong><br/>
+                <span>${transfer.station.name}</span><br/>
+                <div class="transfer-operators">
+                  <span class="operator-badge" style="background: ${OPERATOR_COLORS[transfer.fromOperator]?.color || '#ccc'}">
+                    ${transfer.fromOperator}
+                  </span>
+                  <span class="transfer-arrow">→</span>
+                  <span class="operator-badge" style="background: ${OPERATOR_COLORS[transfer.toOperator]?.color || '#ccc'}">
+                    ${transfer.toOperator}
+                  </span>
+                </div>
+              </div>
+            `);
+
+            transferMarkersRef.current.push(transferMarker);
+          }
+        });
       }
 
-      // Add waypoint markers at each intermediate station in the route
+      // Add waypoint markers for intermediate stations
       selectedRoute.path.forEach((station, index) => {
         if (index > 0 && index < selectedRoute.path.length - 1) {
-          // Intermediate waypoint marker (orange)
-          const marker = L.marker([station.lat, station.lng], {
+          const waypointMarker = L.marker([station.lat, station.lng], {
             icon: L.divIcon({
-              className: 'route-intermediate-marker',
-              html: `<div style="
-                width: 16px;
-                height: 16px;
-                background-color: #ff8800;
-                border: 3px solid white;
-                border-radius: 50%;
-                box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-              "></div>`,
-              iconSize: [16, 16],
-              iconAnchor: [8, 8]
+              className: 'waypoint-marker',
+              html: `<div class="waypoint-dot"></div>`,
+              iconSize: [12, 12],
+              iconAnchor: [6, 6]
             })
-          }).addTo(mapInstanceRef.current);
+          }).addTo(map);
           
-          marker.bindPopup(`
-            <div>
-              <strong>${station.name}</strong><br />
-              ${station.state}<br />
+          waypointMarker.bindPopup(`
+            <div class="waypoint-popup">
+              <strong>${station.name}</strong><br/>
+              <span>${station.state}</span><br/>
               <em>Route waypoint</em>
             </div>
           `);
           
-          routeMarkersRef.current.push(marker);
+          routeMarkersRef.current.push(waypointMarker);
         }
       });
 
-      // Fit bounds to route with tighter padding for closer view
+      // Add comprehensive statistics panel
+      const statsHtml = `
+        <div class="route-stats-panel">
+          <div class="stats-header">
+            <h3>Route Statistics</h3>
+          </div>
+          <div class="stats-content">
+            <div class="stat-group">
+              <div class="stat-item">
+                <span class="stat-label">Total Distance</span>
+                <span class="stat-value">${totalDistance.toFixed(0)} miles</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Total Segments</span>
+                <span class="stat-value">${segmentDetails.length}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Operators</span>
+                <span class="stat-value">${Object.keys(operatorStats).length}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Transfer Points</span>
+                <span class="stat-value">${selectedRoute.transferPoints?.length || 0}</span>
+              </div>
+            </div>
+            <div class="operator-breakdown">
+              <h4>Operator Breakdown</h4>
+              ${Object.entries(operatorStats).map(([op, stats]) => {
+                const opInfo = OPERATOR_COLORS[op] || OPERATOR_COLORS.Default;
+                const percentage = totalDistance > 0 ? ((stats.distance / totalDistance) * 100).toFixed(1) : 0;
+                return `
+                  <div class="operator-stat-row">
+                    <div class="operator-stat-header">
+                      <span class="operator-stat-logo">${opInfo.logo}</span>
+                      <strong>${opInfo.name}</strong>
+                      <span class="operator-stat-percentage">${percentage}%</span>
+                    </div>
+                    <div class="operator-stat-details">
+                      <span>${stats.distance.toFixed(0)} miles</span>
+                      <span>•</span>
+                      <span>${stats.segments} segment${stats.segments !== 1 ? 's' : ''}</span>
+                      <span>•</span>
+                      <span>${stats.stations.size} station${stats.stations.size !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="operator-stat-bar">
+                      <div class="operator-stat-bar-fill" style="width: ${percentage}%; background: ${opInfo.color};"></div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            ${segmentDetails.length > 0 ? `
+              <div class="segment-list">
+                <h4>Segment Details</h4>
+                <div class="segment-list-content">
+                  ${segmentDetails.map((seg, idx) => {
+                    const segOpInfo = OPERATOR_COLORS[seg.operator] || OPERATOR_COLORS.Default;
+                    return `
+                      <div class="segment-list-item ${selectedSegmentIndex === idx ? 'selected' : ''}" 
+                           data-segment-index="${idx}">
+                        <div class="segment-list-color" style="background: ${segOpInfo.color};"></div>
+                        <div class="segment-list-content">
+                          <div class="segment-list-route">
+                            ${seg.from.name || seg.from.code} → ${seg.to.name || seg.to.code}
+                          </div>
+                          <div class="segment-list-details">
+                            <span>${seg.operator}</span>
+                            <span>•</span>
+                            <span>${seg.distance.toFixed(0)} miles</span>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+
+      statsPanelRef.current = L.control({ position: 'topleft' });
+      statsPanelRef.current.onAdd = function() {
+        const div = L.DomUtil.create('div', 'route-stats-container');
+        div.innerHTML = statsHtml;
+        L.DomEvent.disableClickPropagation(div);
+        
+        // Add click handlers for segment list items
+        div.querySelectorAll('.segment-list-item').forEach((item, idx) => {
+          item.addEventListener('click', () => {
+            setSelectedSegmentIndex(idx);
+            // Scroll segment into view on map
+            const segment = segmentDetails[idx];
+            if (segment && segment.from && segment.to) {
+              const bounds = L.latLngBounds([
+                [segment.from.lat, segment.from.lng],
+                [segment.to.lat, segment.to.lng]
+              ]);
+              map.fitBounds(bounds, { padding: [100, 100] });
+            }
+          });
+        });
+        
+        return div;
+      };
+      statsPanelRef.current.addTo(map);
+
+      // Fit bounds to route
       if (positions.length > 0) {
         try {
-          // Calculate tighter bounds for closer zoom
           const bounds = L.latLngBounds(positions);
-          mapInstanceRef.current.fitBounds(bounds, { 
-            padding: [20, 20], // Reduced padding for closer view
-            maxZoom: 12 // Limit max zoom for better track visibility
+          map.fitBounds(bounds, { 
+            padding: [50, 50],
+            maxZoom: 10
           });
           
-          // If route is short, zoom in even closer
+          // Zoom in closer for shorter routes
           const boundsSize = bounds.getNorthEast().distanceTo(bounds.getSouthWest());
-          if (boundsSize < 500000) { // Less than ~500km
+          if (boundsSize < 500000) {
             setTimeout(() => {
-              mapInstanceRef.current.setZoom(Math.min(mapInstanceRef.current.getZoom() + 2, 14));
+              const currentZoom = map.getZoom();
+              map.setZoom(Math.min(currentZoom + 1, 12));
             }, 500);
           }
-        } catch (e) {
-          console.warn('Error fitting route bounds:', e);
+        } catch (error) {
+          console.error('Error fitting route bounds:', error);
         }
       }
-    } else {
-      // No route selected - switch back to map view
-      if (satelliteLayerRef.current && tileLayerRef.current && mapView === 'satellite') {
-        mapInstanceRef.current.removeLayer(satelliteLayerRef.current);
-        tileLayerRef.current.addTo(mapInstanceRef.current);
-        setMapView('map');
-      }
+    } catch (error) {
+      console.error('Error rendering route:', error);
     }
-  }, [selectedRoute, mapView]);
+  }, [selectedRoute, cleanupMapElements, hoveredSegment, selectedSegmentIndex]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.remove();
+        } catch (error) {
+          // Ignore cleanup errors
+        }
         mapInstanceRef.current = null;
       }
     };
@@ -547,8 +655,9 @@ function MapComponent({
 
   if (!isMounted) {
     return (
-      <div style={{ height: '600px', width: '100%', borderRadius: '8px', padding: '20px', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
+      <div className="map-container loading">
+        <div className="map-loading">
+          <div className="loading-spinner"></div>
           <p>Loading map...</p>
         </div>
       </div>
@@ -557,8 +666,8 @@ function MapComponent({
 
   if (!stations || Object.keys(stations).length === 0) {
     return (
-      <div style={{ height: '600px', width: '100%', borderRadius: '8px', padding: '20px', backgroundColor: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
+      <div className="map-container error">
+        <div className="map-error">
           <p>Stations data not available</p>
         </div>
       </div>
@@ -566,10 +675,9 @@ function MapComponent({
   }
 
   return (
-    <div 
-      ref={mapRef}
-      style={{ height: '600px', width: '100%', borderRadius: '8px', overflow: 'hidden', position: 'relative', zIndex: 0 }}
-    />
+    <div className="map-container">
+      <div ref={mapRef} className="map-wrapper" />
+    </div>
   );
 }
 

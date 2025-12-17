@@ -393,8 +393,8 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
               )}
 
               {routes.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                  <div className="map-panel">
+                <div style={{ marginBottom: '20px' }}>
+                  <div className="map-panel" style={{ marginBottom: '20px' }}>
                     <ErrorBoundary>
                       <MapComponent
                         stations={stations}
@@ -406,6 +406,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                       />
                     </ErrorBoundary>
                   </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
 
                   <div>
                     <RouteResults
