@@ -1,16 +1,67 @@
 import { useState } from 'react';
 import HelpTooltip from './HelpTooltip';
 import { FREIGHT_PRESETS, getPresetsByCategory } from '../data/freightPresets';
+import { 
+  UNIT_SYSTEMS, 
+  convertLength, 
+  convertWeight, 
+  getLengthUnitLabel, 
+  getWeightUnitLabel 
+} from '../utils/unitConverter';
 
 function FreightSpecification({ freight, onFreightChange, validationErrors = {} }) {
-  const [localFreight, setLocalFreight] = useState(freight || {
-    description: '',
-    length: 0,
-    width: 0,
-    height: 0,
-    weight: 0,
-    diagram: null
-  });
+  const [unitSystem, setUnitSystem] = useState(UNIT_SYSTEMS.IMPERIAL);
+  
+  // Convert freight to current unit system if needed
+  const getInitialFreight = () => {
+    if (!freight) {
+      return {
+        description: '',
+        length: 0,
+        width: 0,
+        height: 0,
+        weight: 0,
+        diagram: null,
+        unitSystem: UNIT_SYSTEMS.IMPERIAL
+      };
+    }
+    
+    // If freight has a different unit system, convert it
+    if (freight.unitSystem && freight.unitSystem !== unitSystem) {
+      return {
+        ...freight,
+        length: convertLength(freight.length, freight.unitSystem, unitSystem),
+        width: convertLength(freight.width, freight.unitSystem, unitSystem),
+        height: convertLength(freight.height, freight.unitSystem, unitSystem),
+        weight: convertWeight(freight.weight, freight.unitSystem, unitSystem),
+        unitSystem
+      };
+    }
+    
+    return { ...freight, unitSystem: freight.unitSystem || UNIT_SYSTEMS.IMPERIAL };
+  };
+  
+  const [localFreight, setLocalFreight] = useState(getInitialFreight());
+  
+  // Update local freight when unit system changes
+  const handleUnitSystemChange = (newSystem) => {
+    if (newSystem === unitSystem) return;
+    
+    const converted = {
+      ...localFreight,
+      length: convertLength(localFreight.length, unitSystem, newSystem),
+      width: convertLength(localFreight.width, unitSystem, newSystem),
+      height: convertLength(localFreight.height, unitSystem, newSystem),
+      weight: convertWeight(localFreight.weight, unitSystem, newSystem),
+      unitSystem: newSystem
+    };
+    
+    setLocalFreight(converted);
+    setUnitSystem(newSystem);
+    if (onFreightChange) {
+      onFreightChange(converted);
+    }
+  };
 
   const handleChange = (field, value) => {
     const updated = { ...localFreight, [field]: value };
@@ -58,7 +109,31 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
       borderRadius: '8px',
       marginBottom: '20px'
     }}>
-      <h3 style={{ marginTop: 0, color: '#0F172A' }}>Freight Specifications</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, color: '#0F172A' }}>Freight Specifications</h3>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '14px' }}>
+            Unit System:
+            <HelpTooltip content="Switch between Imperial (feet, pounds) and Metric (meters, kilograms) units. Values will be automatically converted when you switch.">
+              <span style={{ color: '#6B7280', cursor: 'help', fontSize: '14px' }}>ℹ️</span>
+            </HelpTooltip>
+          </label>
+          <select
+            value={unitSystem}
+            onChange={(e) => handleUnitSystemChange(e.target.value)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '4px',
+              border: '1px solid #ddd',
+              fontSize: '14px',
+              fontWeight: '600'
+            }}
+          >
+            <option value={UNIT_SYSTEMS.IMPERIAL}>Imperial (ft, lbs)</option>
+            <option value={UNIT_SYSTEMS.METRIC}>Metric (m, kg)</option>
+          </select>
+        </div>
+      </div>
       
       <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#fff', borderRadius: '6px', border: '1px solid #ddd' }}>
         <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -122,8 +197,8 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', marginBottom: '15px' }}>
               <div>
                 <label htmlFor="freight-length" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Length (feet):
-                  <HelpTooltip content="The length of the freight in feet, measured along the longest dimension. This is used to determine if the freight fits on the selected rail car.">
+                  Length ({getLengthUnitLabel(unitSystem)}):
+                  <HelpTooltip content={`The length of the freight in ${getLengthUnitLabel(unitSystem)}, measured along the longest dimension. This is used to determine if the freight fits on the selected rail car.`}>
                     <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
                   </HelpTooltip>
                 </label>
@@ -151,7 +226,7 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
 
         <div>
           <label htmlFor="freight-width" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Width (feet):
+            Width ({getLengthUnitLabel(unitSystem)}):
           </label>
           <input
             id="freight-width"
@@ -177,7 +252,7 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
 
         <div>
           <label htmlFor="freight-height" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Height (feet):
+            Height ({getLengthUnitLabel(unitSystem)}):
           </label>
           <input
             id="freight-height"
@@ -203,7 +278,7 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
 
               <div>
                 <label htmlFor="freight-weight" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Weight (pounds):
+                  Weight ({getWeightUnitLabel(unitSystem)}):
                   <HelpTooltip content="The total weight of the freight in pounds. This is critical for ensuring the freight doesn't exceed the rail car's weight capacity and for calculating center of gravity.">
                     <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
                   </HelpTooltip>

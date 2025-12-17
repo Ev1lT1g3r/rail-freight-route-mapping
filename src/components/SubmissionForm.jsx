@@ -10,6 +10,7 @@ import TerminalSearch from './TerminalSearch';
 import HelpTooltip from './HelpTooltip';
 import { stations } from '../data/railNetwork';
 import { findRoutes } from '../utils/routeFinder';
+import { saveRoute, getAllSavedRoutes, isRouteSaved, deleteSavedRoute } from '../utils/routeStorage';
 import { saveSubmission, createSubmissionId, WORKFLOW_STATUS, getSubmissionById } from '../utils/submissionStorage';
 import { useToast } from '../contexts/ToastContext';
 
@@ -32,6 +33,8 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   const [freight, setFreight] = useState(existingSubmission?.freight || null);
   const [isLoading, setIsLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [savedRoutes, setSavedRoutes] = useState([]);
+  const [showSavedRoutes, setShowSavedRoutes] = useState(false);
 
   // Determine initial step based on existing submission state
   const getInitialStep = () => {
@@ -45,6 +48,11 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   const [currentStep, setCurrentStep] = useState(getInitialStep());
 
   const selectedRoute = selectedRouteIndex !== null ? routes[selectedRouteIndex] : null;
+
+  // Load saved routes on mount
+  useEffect(() => {
+    setSavedRoutes(getAllSavedRoutes());
+  }, []);
 
   // Step definitions for progress indicator
   const steps = {
