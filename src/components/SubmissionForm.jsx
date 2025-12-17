@@ -579,6 +579,25 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                       )}
                       
                       <button
+                        onClick={handleSaveAsTemplate}
+                        style={{
+                          padding: '12px 24px',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          backgroundColor: '#F59E0B',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        💾 Save as Template
+                      </button>
+                      
+                      <button
                         onClick={() => setShowSavedRoutes(!showSavedRoutes)}
                         style={{
                           padding: '12px 24px',
@@ -677,6 +696,151 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                   </div>
                 )}
               </div>
+
+              {/* Templates Panel */}
+              {showTemplates && (
+                <div style={{
+                  marginTop: '15px',
+                  padding: '20px',
+                  backgroundColor: '#F8F9FA',
+                  borderRadius: '8px',
+                  border: '1px solid #E5E7EB',
+                  maxHeight: '400px',
+                  overflowY: 'auto'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>Submission Templates</h3>
+                    <button
+                      onClick={() => setShowTemplates(false)}
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '14px',
+                        backgroundColor: '#6B7280',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Close
+                    </button>
+                  </div>
+                  {templates.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#6B7280' }}>
+                      <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
+                      <h4 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>No Templates Yet</h4>
+                      <p style={{ margin: '0 0 20px 0', fontSize: '14px' }}>
+                        Create templates from your submissions to quickly start new ones with pre-filled data.
+                      </p>
+                      {origin && destination && (
+                        <button
+                          onClick={handleSaveAsTemplate}
+                          style={{
+                            padding: '10px 20px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            backgroundColor: '#F59E0B',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Create Template from Current Submission
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {templates.map(template => (
+                        <div
+                          key={template.id}
+                          style={{
+                            padding: '15px',
+                            backgroundColor: 'white',
+                            borderRadius: '8px',
+                            border: '1px solid #E5E7EB',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#8B5CF6';
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(139, 92, 246, 0.2)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = '#E5E7EB';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                              <strong style={{ fontSize: '16px' }}>{template.name}</strong>
+                              {template.description && (
+                                <span style={{ fontSize: '12px', color: '#6B7280' }}>{template.description}</span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '14px', color: '#6B7280', marginBottom: '4px' }}>
+                              <strong>Route:</strong> {template.origin} → {template.destination}
+                            </div>
+                            {template.freight && (
+                              <div style={{ fontSize: '12px', color: '#9CA3AF' }}>
+                                Freight: {template.freight.description || 'Specified'} | 
+                                {template.tags && template.tags.length > 0 && ` Tags: ${template.tags.join(', ')}`}
+                              </div>
+                            )}
+                            <div style={{ fontSize: '11px', color: '#9CA3AF', marginTop: '4px' }}>
+                              Created: {new Date(template.createdDate).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleLoadTemplate(template)}
+                              style={{
+                                padding: '8px 16px',
+                                fontSize: '14px',
+                                backgroundColor: '#8B5CF6',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                              }}
+                            >
+                              Load
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Delete this template?')) {
+                                  if (deleteTemplate(template.id)) {
+                                    success('Template deleted');
+                                    setTemplates(getAllTemplates());
+                                  }
+                                }
+                              }}
+                              style={{
+                                padding: '8px 16px',
+                                fontSize: '14px',
+                                backgroundColor: '#EF4444',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {validationErrors.routes && (
                 <div style={{ 
