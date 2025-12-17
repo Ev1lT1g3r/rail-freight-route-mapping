@@ -28,7 +28,11 @@ describe('SubmissionsList Component', () => {
   });
 
   it('should render empty state when no submissions', () => {
-    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    render(
+      <ToastProvider>
+        <SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />
+      </ToastProvider>
+    );
     
     expect(screen.getByText(/No Submissions Yet/i)).toBeInTheDocument();
     expect(screen.getByText(/Create Your First Submission/i)).toBeInTheDocument();
@@ -54,7 +58,11 @@ describe('SubmissionsList Component', () => {
 
     submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
     
-    const { container } = render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    const { container } = render(
+      <ToastProvider>
+        <SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />
+      </ToastProvider>
+    );
     
     // Check that the route path is displayed
     expect(container.textContent).toMatch(/CHI.*KC/i);
@@ -62,7 +70,11 @@ describe('SubmissionsList Component', () => {
 
   it('should call onCreateNew when new submission button is clicked', async () => {
     const user = userEvent.setup();
-    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    render(
+      <ToastProvider>
+        <SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />
+      </ToastProvider>
+    );
     
     const newButton = screen.getByRole('button', { name: /New Submission/i }) || 
                      screen.getByText(/\+ New Submission/i);
@@ -86,7 +98,11 @@ describe('SubmissionsList Component', () => {
 
     submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
     
-    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    render(
+      <ToastProvider>
+        <SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />
+      </ToastProvider>
+    );
     
     const submissionCard = screen.getByText(/CHI → KC/i).closest('div');
     await user.click(submissionCard);
@@ -115,7 +131,11 @@ describe('SubmissionsList Component', () => {
 
     submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
     
-    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    render(
+      <ToastProvider>
+        <SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />
+      </ToastProvider>
+    );
     
     // Find the select element by finding all selects and getting the first one (filter)
     const selects = screen.getAllByRole('combobox');
@@ -190,7 +210,11 @@ describe('SubmissionsList Component', () => {
 
     submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
     
-    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    render(
+      <ToastProvider>
+        <SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />
+      </ToastProvider>
+    );
     
     const bulkButton = screen.getByText(/Bulk Actions/i);
     await user.click(bulkButton);
@@ -220,7 +244,11 @@ describe('SubmissionsList Component', () => {
 
     submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
     
-    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    render(
+      <ToastProvider>
+        <SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />
+      </ToastProvider>
+    );
     
     const bulkButton = screen.getByText(/Bulk Actions/i);
     await user.click(bulkButton);
@@ -253,7 +281,11 @@ describe('SubmissionsList Component', () => {
 
     submissionStorage.getAllSubmissions.mockReturnValue(mockSubmissions);
     
-    render(<SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />);
+    render(
+      <ToastProvider>
+        <SubmissionsList onViewSubmission={mockOnViewSubmission} onCreateNew={mockOnCreateNew} />
+      </ToastProvider>
+    );
     
     const bulkButton = screen.getByText(/Bulk Actions/i);
     await user.click(bulkButton);
