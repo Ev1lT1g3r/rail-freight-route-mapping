@@ -402,10 +402,35 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                         destination={destination}
                         onOriginSelect={handleOriginSelect}
                         onDestinationSelect={handleDestinationSelect}
-                        selectedRoute={selectedRoute}
+                        routes={routes}
+                        selectedRouteIndex={selectedRouteIndex}
                       />
                     </ErrorBoundary>
                   </div>
+                  
+                  <RouteTable
+                    routes={routes}
+                    selectedRouteIndex={selectedRouteIndex}
+                    onRouteSelect={(idx) => {
+                      setSelectedRouteIndex(idx);
+                      setValidationErrors(prev => ({ ...prev, routeSelection: null }));
+                    }}
+                  />
+                  
+                  {validationErrors.routeSelection && (
+                    <div style={{ 
+                      padding: '12px', 
+                      backgroundColor: '#FEF2F2', 
+                      border: '1px solid #FECACA', 
+                      borderRadius: '8px',
+                      color: '#EF4444',
+                      fontSize: '14px',
+                      marginTop: '10px'
+                    }}>
+                      {validationErrors.routeSelection}
+                    </div>
+                  )}
+                </div>
               )}
             </>
           )}
