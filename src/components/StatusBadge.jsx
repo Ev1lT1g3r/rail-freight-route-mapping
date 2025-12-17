@@ -33,6 +33,12 @@ function StatusBadge({ status, size = 'medium' }) {
           icon: '📝',
           label: 'Draft'
         };
+      case WORKFLOW_STATUS.ARCHIVED:
+        return {
+          color: '#8B5CF6',
+          icon: '📦',
+          label: 'Archived'
+        };
       default:
         return {
           color: '#64748B',
