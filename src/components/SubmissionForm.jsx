@@ -472,8 +472,8 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
               
               <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
                 <h4>Route Summary</h4>
-                <p><strong>Origin:</strong> {origin} - {stations[origin]?.name}</p>
-                <p><strong>Destination:</strong> {destination} - {stations[destination]?.name}</p>
+                <p><strong>Shipping Origin Yard:</strong> {origin} - {stations[origin]?.name}</p>
+                <p><strong>Delivery Destination Yard:</strong> {destination} - {stations[destination]?.name}</p>
                 {selectedRoute && (
                   <>
                     <p><strong>Distance:</strong> {selectedRoute.totalDistance} miles</p>
