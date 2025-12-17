@@ -34,7 +34,6 @@ export const stations = {
   'NOR': { name: 'Norfolk', lat: 36.8468, lng: -76.2852, state: 'VA', operator: 'NS' },
   'RIC': { name: 'Richmond', lat: 37.5407, lng: -77.4360, state: 'VA', operator: 'CSX' },
   'CHA': { name: 'Charleston', lat: 38.3498, lng: -81.6326, state: 'WV', operator: 'CSX' },
-  'CHW': { name: 'Charleston', lat: 38.3498, lng: -81.6326, state: 'WV', operator: 'CSX' },
   
   // Major US Hubs - Southeast
   'ATL': { name: 'Atlanta', lat: 33.7490, lng: -84.3880, state: 'GA', operator: 'CSX' },
@@ -199,9 +198,8 @@ export const connections = [
   { from: 'ORL', to: 'MIA', distance: 230, operator: 'CSX', curveScore: 4, states: ['FL'] },
   { from: 'ATL', to: 'CLT', distance: 240, operator: 'CSX', curveScore: 4, states: ['GA', 'NC'] },
   { from: 'CLT', to: 'RAL', distance: 170, operator: 'CSX', curveScore: 3, states: ['NC'] },
-  { from: 'ATL', to: 'CHW', distance: 380, operator: 'CSX', curveScore: 5, states: ['GA', 'SC', 'NC', 'WV'] },
-  { from: 'CHW', to: 'PIT', distance: 180, operator: 'CSX', curveScore: 4, states: ['WV', 'PA'] },
-  { from: 'CHA', to: 'CHW', distance: 50, operator: 'CSX', curveScore: 2, states: ['WV'] },
+  { from: 'ATL', to: 'CHA', distance: 380, operator: 'CSX', curveScore: 5, states: ['GA', 'SC', 'NC', 'WV'] },
+  { from: 'CHA', to: 'PIT', distance: 180, operator: 'CSX', curveScore: 4, states: ['WV', 'PA'] },
   { from: 'CHA', to: 'PIT', distance: 220, operator: 'CSX', curveScore: 4, states: ['WV', 'PA'] },
   { from: 'RAL', to: 'NOR', distance: 170, operator: 'CSX', curveScore: 3, states: ['NC', 'VA'] },
   { from: 'NOR', to: 'RIC', distance: 90, operator: 'CSX', curveScore: 2, states: ['VA'] },
