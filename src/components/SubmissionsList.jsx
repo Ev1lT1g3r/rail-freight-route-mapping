@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getAllSubmissions, WORKFLOW_STATUS, deleteSubmission, saveSubmission, duplicateSubmission, archiveSubmission, unarchiveSubmission, getActiveSubmissions, getArchivedSubmissions } from '../utils/submissionStorage';
+import { exportSubmissionsToCSV } from '../utils/exportUtils';
+import { fullTextSearch, applyFilters, getFilterOptions } from '../utils/searchUtils';
+import { getSavedSearches, saveSearch, deleteSavedSearch, getSearchHistory, addToSearchHistory, clearSearchHistory } from '../utils/searchStorage';
 import StatusBadge from './StatusBadge';
 import EmptyState from './EmptyState';
 import HelpTooltip from './HelpTooltip';
@@ -11,14 +14,46 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
   const [sortBy, setSortBy] = useState('date');
   const [selectedSubmissions, setSelectedSubmissions] = useState(new Set());
   const [isBulkMode, setIsBulkMode] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
+  
+  // Advanced search and filtering
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    status: 'all',
+    dateFrom: '',
+    dateTo: '',
+    operators: [],
+    states: [],
+    origin: '',
+    destination: '',
+    createdBy: '',
+    tags: [],
+    minDistance: '',
+    maxDistance: ''
+  });
+  const [savedSearches, setSavedSearches] = useState([]);
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [showSavedSearches, setShowSavedSearches] = useState(false);
+  
   const { success, error: showError } = useToast();
 
   useEffect(() => {
     loadSubmissions();
+    loadSavedSearches();
+    loadSearchHistory();
     // Refresh every 5 seconds to catch updates
     const interval = setInterval(loadSubmissions, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [showArchived]);
+
+  const loadSavedSearches = () => {
+    setSavedSearches(getSavedSearches());
+  };
+
+  const loadSearchHistory = () => {
+    setSearchHistory(getSearchHistory());
+  };
 
   const loadSubmissions = () => {
     const all = showArchived ? getArchivedSubmissions() : getActiveSubmissions();
@@ -35,10 +70,17 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
     }
   };
 
-  const filteredSubmissions = submissions.filter(sub => {
-    if (filterStatus === 'all') return true;
-    return sub.status === filterStatus;
+  // Apply search and filters
+  const searchFiltered = searchQuery 
+    ? fullTextSearch(submissions, searchQuery)
+    : submissions;
+  
+  const advancedFiltered = applyFilters(searchFiltered, {
+    ...filters,
+    status: filterStatus !== 'all' ? filterStatus : filters.status
   });
+
+  const filteredSubmissions = advancedFiltered;
 
   const sortedSubmissions = [...filteredSubmissions].sort((a, b) => {
     if (sortBy === 'date') {
@@ -351,6 +393,417 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
             </div>
           </div>
         )}
+
+      {/* Search Bar */}
+      <div style={{ 
+        marginBottom: '20px',
+        padding: '15px',
+        backgroundColor: '#F8F9FA',
+        borderRadius: '8px',
+        border: '1px solid #E5E7EB'
+      }}>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ flex: 1, minWidth: '250px' }}>
+            <input
+              type="text"
+              placeholder="Search submissions (full-text search across all fields)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 15px',
+                fontSize: '14px',
+                border: '1px solid #ddd',
+                borderRadius: '6px',
+                outline: 'none'
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  addToSearchHistory({ query: searchQuery, filters });
+                }
+              }}
+            />
+          </div>
+          <button
+            onClick={() => {
+              setShowAdvancedFilters(!showAdvancedFilters);
+            }}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: '600',
+              backgroundColor: showAdvancedFilters ? '#3B82F6' : '#6B7280',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            🔍 {showAdvancedFilters ? 'Hide' : 'Show'} Advanced Filters
+          </button>
+          <button
+            onClick={() => {
+              setShowSavedSearches(!showSavedSearches);
+            }}
+            style={{
+              padding: '10px 20px',
+              fontSize: '14px',
+              fontWeight: '600',
+              backgroundColor: '#8B5CF6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            ⭐ Saved Searches ({savedSearches.length})
+          </button>
+          {(searchQuery || Object.values(filters).some(v => Array.isArray(v) ? v.length > 0 : v && v !== 'all' && v !== '')) && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setFilters({
+                  status: 'all',
+                  dateFrom: '',
+                  dateTo: '',
+                  operators: [],
+                  states: [],
+                  origin: '',
+                  destination: '',
+                  createdBy: '',
+                  tags: [],
+                  minDistance: '',
+                  maxDistance: ''
+                });
+                setFilterStatus('all');
+              }}
+              style={{
+                padding: '10px 20px',
+                fontSize: '14px',
+                fontWeight: '600',
+                backgroundColor: '#EF4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              ✕ Clear All
+            </button>
+          )}
+        </div>
+
+        {/* Advanced Filters Panel */}
+        {showAdvancedFilters && (
+          <div style={{
+            marginTop: '15px',
+            padding: '15px',
+            backgroundColor: 'white',
+            borderRadius: '6px',
+            border: '1px solid #E5E7EB'
+          }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Date From</label>
+                <input
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Date To</label>
+                <input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Operators</label>
+                <select
+                  multiple
+                  value={filters.operators}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                    setFilters({ ...filters, operators: selected });
+                  }}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px', minHeight: '80px' }}
+                >
+                  {getFilterOptions(submissions).operators.map(op => (
+                    <option key={op} value={op}>{op}</option>
+                  ))}
+                </select>
+                <small style={{ color: '#6B7280', fontSize: '11px' }}>Hold Ctrl/Cmd to select multiple</small>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>States</label>
+                <select
+                  multiple
+                  value={filters.states}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                    setFilters({ ...filters, states: selected });
+                  }}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px', minHeight: '80px' }}
+                >
+                  {getFilterOptions(submissions).states.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
+                <small style={{ color: '#6B7280', fontSize: '11px' }}>Hold Ctrl/Cmd to select multiple</small>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Origin Yard</label>
+                <select
+                  value={filters.origin}
+                  onChange={(e) => setFilters({ ...filters, origin: e.target.value })}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  <option value="">All Origins</option>
+                  {getFilterOptions(submissions).origins.map(origin => (
+                    <option key={origin} value={origin}>{origin}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Destination Yard</label>
+                <select
+                  value={filters.destination}
+                  onChange={(e) => setFilters({ ...filters, destination: e.target.value })}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  <option value="">All Destinations</option>
+                  {getFilterOptions(submissions).destinations.map(dest => (
+                    <option key={dest} value={dest}>{dest}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Created By</label>
+                <select
+                  value={filters.createdBy}
+                  onChange={(e) => setFilters({ ...filters, createdBy: e.target.value })}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  <option value="">All Users</option>
+                  {getFilterOptions(submissions).createdBys.map(user => (
+                    <option key={user} value={user}>{user}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Tags</label>
+                <select
+                  multiple
+                  value={filters.tags}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                    setFilters({ ...filters, tags: selected });
+                  }}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px', minHeight: '80px' }}
+                >
+                  {getFilterOptions(submissions).tags.map(tag => (
+                    <option key={tag} value={tag}>{tag}</option>
+                  ))}
+                </select>
+                <small style={{ color: '#6B7280', fontSize: '11px' }}>Hold Ctrl/Cmd to select multiple</small>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Min Distance (miles)</label>
+                <input
+                  type="number"
+                  value={filters.minDistance}
+                  onChange={(e) => setFilters({ ...filters, minDistance: e.target.value || '' })}
+                  placeholder="0"
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Max Distance (miles)</label>
+                <input
+                  type="number"
+                  value={filters.maxDistance}
+                  onChange={(e) => setFilters({ ...filters, maxDistance: e.target.value || '' })}
+                  placeholder="∞"
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  const name = window.prompt('Enter a name for this search:');
+                  if (name) {
+                    const searchId = saveSearch({ name, query: searchQuery, filters });
+                    if (searchId) {
+                      success('Search saved!');
+                      loadSavedSearches();
+                    }
+                  }
+                }}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  backgroundColor: '#10B981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                💾 Save Search
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Saved Searches Panel */}
+        {showSavedSearches && (
+          <div style={{
+            marginTop: '15px',
+            padding: '15px',
+            backgroundColor: 'white',
+            borderRadius: '6px',
+            border: '1px solid #E5E7EB',
+            maxHeight: '300px',
+            overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>Saved Searches</h3>
+              <button
+                onClick={() => {
+                  if (window.confirm('Clear all search history?')) {
+                    clearSearchHistory();
+                    loadSearchHistory();
+                    success('Search history cleared');
+                  }
+                }}
+                style={{
+                  padding: '5px 10px',
+                  fontSize: '12px',
+                  backgroundColor: '#EF4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Clear History
+              </button>
+            </div>
+            {savedSearches.length === 0 ? (
+              <p style={{ color: '#6B7280', fontSize: '14px' }}>No saved searches yet. Save a search to reuse it later.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {savedSearches.map(saved => (
+                  <div
+                    key={saved.id}
+                    style={{
+                      padding: '10px',
+                      backgroundColor: '#F8F9FA',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <strong style={{ fontSize: '14px' }}>{saved.name}</strong>
+                      <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                        {saved.config.query && `Query: "${saved.config.query}"`}
+                        {saved.config.query && saved.config.filters && ' | '}
+                        {Object.keys(saved.config.filters || {}).filter(k => {
+                          const v = saved.config.filters[k];
+                          return Array.isArray(v) ? v.length > 0 : v && v !== 'all' && v !== '';
+                        }).length > 0 && 'Filters applied'}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                      <button
+                        onClick={() => {
+                          setSearchQuery(saved.config.query || '');
+                          setFilters(saved.config.filters || filters);
+                          setShowSavedSearches(false);
+                          success('Search loaded!');
+                        }}
+                        style={{
+                          padding: '5px 10px',
+                          fontSize: '12px',
+                          backgroundColor: '#3B82F6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Load
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm('Delete this saved search?')) {
+                            deleteSavedSearch(saved.id);
+                            loadSavedSearches();
+                            success('Search deleted');
+                          }
+                        }}
+                        style={{
+                          padding: '5px 10px',
+                          fontSize: '12px',
+                          backgroundColor: '#EF4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Search History */}
+        {searchHistory.length > 0 && !showSavedSearches && (
+          <div style={{ marginTop: '10px', fontSize: '12px', color: '#6B7280' }}>
+            Recent searches: {searchHistory.slice(0, 5).map((h, idx) => (
+              <span key={h.id}>
+                <button
+                  onClick={() => {
+                    setSearchQuery(h.config.query || '');
+                    setFilters(h.config.filters || filters);
+                    addToSearchHistory({ query: h.config.query, filters: h.config.filters });
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#3B82F6',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    padding: '0 4px'
+                  }}
+                >
+                  {h.config.query || 'Filters only'}
+                </button>
+                {idx < Math.min(4, searchHistory.length - 1) && ' • '}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div style={{ 
         display: 'flex', 
