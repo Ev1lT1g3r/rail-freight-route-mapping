@@ -27,9 +27,9 @@ export function findRoutes(origin, destination, preferences) {
     return [];
   }
 
-  // Use Dijkstra's algorithm with custom cost function
+  // Use improved Dijkstra's algorithm with custom cost function
   const routes = [];
-  const visited = new Set();
+  const visited = new Map(); // Track best cost to each station via each path
   const queue = [{ 
     path: [origin], 
     cost: 0, 
@@ -39,15 +39,32 @@ export function findRoutes(origin, destination, preferences) {
     states: new Set()
   }];
 
-  while (queue.length > 0 && routes.length < 20) {
+  // Increase max path length to allow longer routes
+  const maxPathLength = Math.max(maxTransfers + 1, 15); // At least 15 stations
+  let iterations = 0;
+  const maxIterations = 10000; // Prevent infinite loops
+
+  while (queue.length > 0 && routes.length < 10 && iterations < maxIterations) {
+    iterations++;
+    
     // Sort queue by cost (best first)
     queue.sort((a, b) => a.cost - b.cost);
     const current = queue.shift();
     const currentStation = current.path[current.path.length - 1];
     const pathKey = current.path.join('-');
 
+    // Skip if we've already visited this exact path
     if (visited.has(pathKey)) continue;
-    visited.add(pathKey);
+    
+    // Also skip if we've found a better path to this station
+    const stationKey = `${currentStation}-${current.path.length}`;
+    if (visited.has(stationKey)) {
+      const bestCost = visited.get(stationKey);
+      if (current.cost > bestCost * 1.5) continue; // Skip if significantly worse
+    }
+    
+    visited.set(pathKey, current.cost);
+    visited.set(stationKey, current.cost);
 
     if (currentStation === destination) {
       // Found a route
@@ -56,30 +73,32 @@ export function findRoutes(origin, destination, preferences) {
         if (route && route.segments && route.segments.length > 0) {
           routes.push(route);
           if (routes.length >= 3) break; // Get top 3
-        } else {
-          console.warn('Route found but has no valid segments, skipping');
         }
       } catch (err) {
-        console.warn('Error building route details:', err);
         // Skip this route and continue
       }
       continue;
     }
 
-    if (current.path.length > maxTransfers + 1) continue;
+    // Allow longer paths for better route discovery
+    if (current.path.length > maxPathLength) continue;
 
     // Explore neighbors
     const neighbors = connections.filter(conn => 
       conn.from === currentStation || conn.to === currentStation
     );
 
+    // If no neighbors, skip
+    if (neighbors.length === 0) continue;
+
     for (const conn of neighbors) {
       const nextStation = conn.from === currentStation ? conn.to : conn.from;
       
-      if (current.path.includes(nextStation)) continue; // Avoid cycles
+      // Avoid cycles (don't revisit stations in current path)
+      if (current.path.includes(nextStation)) continue;
 
       const nextOperator = conn.operator;
-      const nextDistance = current.distance + conn.distance;
+      const nextDistance = current.distance + (conn.distance || 0);
       const nextOperators = new Set([...current.operators, nextOperator]);
       const nextCurves = current.totalCurves + (conn.curveScore || 0);
       const nextStates = new Set([...current.states, ...(conn.states || [])]);
@@ -94,6 +113,9 @@ export function findRoutes(origin, destination, preferences) {
       
       // Penalty for curves
       cost += nextCurves * 10 * weightCurves;
+      
+      // Small penalty for path length to prefer shorter paths
+      cost += current.path.length * 5;
 
       queue.push({
         path: [...current.path, nextStation],
