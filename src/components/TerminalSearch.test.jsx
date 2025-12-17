@@ -16,7 +16,7 @@ describe('TerminalSearch Component', () => {
     
     const input = screen.getByRole('textbox');
     expect(input).toBeInTheDocument();
-    expect(input).toHaveAttribute('placeholder', 'Search terminals...');
+    expect(input).toHaveAttribute('placeholder', 'Search freight yards...');
   });
 
   it('should display selected station when value is provided', () => {
@@ -136,7 +136,7 @@ describe('TerminalSearch Component', () => {
     await user.type(input, 'XYZ123');
     
     await waitFor(() => {
-      expect(screen.getByText(/No terminals found matching/i)).toBeInTheDocument();
+      expect(screen.getByText(/No freight yards found matching/i)).toBeInTheDocument();
     });
   });
 
@@ -148,9 +148,9 @@ describe('TerminalSearch Component', () => {
   });
 
   it('should accept custom label', () => {
-    render(<TerminalSearch value="" onChange={mockOnChange} label="Origin Terminal" />);
+    render(<TerminalSearch value="" onChange={mockOnChange} label="Shipping Origin Yard" />);
     
-    expect(screen.getByText(/Origin Terminal/i)).toBeInTheDocument();
+    expect(screen.getByText(/Shipping Origin Yard/i)).toBeInTheDocument();
   });
 });
 

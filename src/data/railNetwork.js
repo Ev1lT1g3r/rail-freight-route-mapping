@@ -1,5 +1,5 @@
 // North American Freight Rail Network Data
-// Comprehensive coverage of major freight rail terminals across US, Canada, and Mexico
+// Comprehensive coverage of major freight rail yards and intermodal facilities across US, Canada, and Mexico
 
 export const stations = {
   // Major US Hubs - Midwest

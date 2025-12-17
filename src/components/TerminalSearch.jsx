@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { stations } from '../data/railNetwork';
 import './TerminalSearch.css';
 
-function TerminalSearch({ value, onChange, placeholder = 'Search terminals...', label, id }) {
+function TerminalSearch({ value, onChange, placeholder = 'Search freight yards...', label, id }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -156,7 +156,7 @@ function TerminalSearch({ value, onChange, placeholder = 'Search terminals...', 
         {isOpen && filteredStations.length === 0 && searchTerm && (
           <div className="terminal-search-dropdown">
             <div className="terminal-search-no-results">
-              No terminals found matching "{searchTerm}"
+              No freight yards found matching "{searchTerm}"
             </div>
           </div>
         )}

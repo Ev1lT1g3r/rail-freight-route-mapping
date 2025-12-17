@@ -56,8 +56,8 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   // Validation functions
   const validateRouteStep = (forFindingRoutes = false) => {
     const errors = {};
-    if (!origin) errors.origin = 'Please select an origin terminal';
-    if (!destination) errors.destination = 'Please select a destination terminal';
+    if (!origin) errors.origin = 'Please select a shipping origin yard';
+    if (!destination) errors.destination = 'Please select a delivery destination yard';
     if (origin === destination) errors.destination = 'Origin and destination must be different';
     
     // Only check for routes/selection if NOT finding routes (i.e., when proceeding to next step)
@@ -119,9 +119,9 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
       setValidationErrors(errors);
       // Show more specific error message
       if (errors.origin) {
-        showError('Please select an origin terminal');
+        showError('Please select a shipping origin yard');
       } else if (errors.destination) {
-        showError('Please select a destination terminal');
+        showError('Please select a delivery destination yard');
       } else {
         showError('Please fix the errors before finding routes');
       }
@@ -135,20 +135,20 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
     setTimeout(() => {
       try {
         if (!origin || !destination) {
-          showError('Please select both origin and destination terminals');
+          showError('Please select both shipping origin and delivery destination yards');
           setIsLoading(false);
           return;
         }
 
         // Validate stations exist
         if (!stations[origin]) {
-          showError(`Origin terminal "${origin}" is not valid. Please select a terminal from the list.`);
+          showError(`Shipping origin yard "${origin}" is not valid. Please select a freight yard from the list.`);
           setIsLoading(false);
           return;
         }
 
         if (!stations[destination]) {
-          showError(`Destination terminal "${destination}" is not valid. Please select a terminal from the list.`);
+          showError(`Delivery destination yard "${destination}" is not valid. Please select a freight yard from the list.`);
           setIsLoading(false);
           return;
         }
@@ -159,7 +159,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
           setSelectedRouteIndex(0);
           success(`Found ${foundRoutes.length} route${foundRoutes.length > 1 ? 's' : ''}`);
         } else {
-          warning('No routes found between these terminals. Try different terminals or adjust route preferences.');
+          warning('No routes found between these freight yards. Try different yards or adjust route preferences.');
         }
       } catch (err) {
         console.error('Route finding error:', err);
@@ -332,10 +332,10 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                 <div>
                   <TerminalSearch
                     id="origin-select"
-                    label="Origin Terminal"
+                    label="Shipping Origin Yard"
                     value={origin}
                     onChange={handleOriginSelect}
-                    placeholder="Search for origin terminal..."
+                    placeholder="Search for shipping origin yard..."
                   />
                   {validationErrors.origin && (
                     <div style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px' }}>
@@ -347,10 +347,10 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                 <div>
                   <TerminalSearch
                     id="destination-select"
-                    label="Destination Terminal"
+                    label="Delivery Destination Yard"
                     value={destination}
                     onChange={handleDestinationSelect}
-                    placeholder="Search for destination terminal..."
+                    placeholder="Search for delivery destination yard..."
                   />
                   {validationErrors.destination && (
                     <div style={{ color: '#EF4444', fontSize: '12px', marginTop: '4px' }}>

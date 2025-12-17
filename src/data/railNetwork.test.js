@@ -119,7 +119,7 @@ describe('Rail Network Data', () => {
 
   describe('Network Connectivity', () => {
     it('should have a connected network', () => {
-      // Check that major freight terminals are connected
+      // Check that major freight yards are connected
       const majorStations = ['CHI', 'KC', 'LAX', 'SEA', 'DEN'];
       majorStations.forEach(station => {
         const connections = getConnections(station);

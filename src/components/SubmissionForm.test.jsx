@@ -39,8 +39,8 @@ describe('SubmissionForm Component', () => {
     );
     
     expect(screen.getByText(/New Route Submission/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Origin Terminal/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Destination Terminal/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Shipping Origin Yard/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Delivery Destination Yard/i)).toBeInTheDocument();
   });
 
   it('should call onCancel when back button is clicked', async () => {
@@ -65,12 +65,12 @@ describe('SubmissionForm Component', () => {
       </ToastProvider>
     );
     
-    const originInput = screen.getByLabelText(/Origin Terminal/i);
+    const originInput = screen.getByLabelText(/Shipping Origin Yard/i);
     await user.type(originInput, 'Chicago');
     // TerminalSearch uses autocomplete, so we just verify the input exists
     expect(originInput).toBeInTheDocument();
     
-    const destInput = screen.getByLabelText(/Destination Terminal/i);
+    const destInput = screen.getByLabelText(/Delivery Destination Yard/i);
     await user.type(destInput, 'Kansas');
     expect(destInput).toBeInTheDocument();
   });
@@ -97,7 +97,7 @@ describe('SubmissionForm Component', () => {
       </ToastProvider>
     );
     
-    // With TerminalSearch, we can save draft even without selecting terminals
+    // With TerminalSearch, we can save draft even without selecting freight yards
     const draftButton = screen.getByText(/Save as Draft/i);
     await user.click(draftButton);
     

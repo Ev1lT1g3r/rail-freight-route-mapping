@@ -19,10 +19,10 @@ function RouteResults({ routes, onRouteSelect, selectedRouteIndex }) {
           No Routes Found
         </h3>
         <p style={{ fontSize: '14px', marginBottom: '8px', maxWidth: '400px', margin: '0 auto 8px' }}>
-          No routes were found between the selected terminals with the current preferences.
+          No routes were found between the selected freight yards with the current preferences.
         </p>
         <p style={{ fontSize: '13px', color: '#868e96' }}>
-          Try adjusting your route preferences or selecting different terminals.
+          Try adjusting your route preferences or selecting different freight yards.
         </p>
       </div>
     );
