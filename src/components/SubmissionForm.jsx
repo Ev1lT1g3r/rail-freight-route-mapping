@@ -406,31 +406,6 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                       />
                     </ErrorBoundary>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-
-                  <div>
-                    <RouteResults
-                      routes={routes}
-                      onRouteSelect={(idx) => {
-                        setSelectedRouteIndex(idx);
-                        setValidationErrors(prev => ({ ...prev, routeSelection: null }));
-                      }}
-                      selectedRouteIndex={selectedRouteIndex}
-                    />
-                    {validationErrors.routeSelection && (
-                      <div style={{ 
-                        padding: '12px', 
-                        backgroundColor: '#FEF2F2', 
-                        border: '1px solid #FECACA', 
-                        borderRadius: '8px',
-                        color: '#DC2626',
-                        marginTop: '10px'
-                      }}>
-                        {validationErrors.routeSelection}
-                      </div>
-                    )}
-                  </div>
-                </div>
               )}
             </>
           )}
