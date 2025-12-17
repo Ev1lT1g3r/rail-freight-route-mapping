@@ -1,9 +1,24 @@
 import { useState } from 'react';
 import { getSubmissionById, saveSubmission, WORKFLOW_STATUS } from '../utils/submissionStorage';
 import MapComponent from './MapComponent';
-import RouteResults from './RouteResults';
 import StatusBadge from './StatusBadge';
 import { stations } from '../data/railNetwork';
+
+// Operator colors for route segments
+const getOperatorColor = (operator) => {
+  const colors = {
+    'BNSF': '#FFD700',
+    'UP': '#FF6B35',
+    'CSX': '#4ECDC4',
+    'NS': '#45B7D1',
+    'CN': '#96CEB4',
+    'CP': '#FFEAA7',
+    'KCS': '#A29BFE',
+    'KCSM': '#A29BFE',
+    'Multiple': '#A0A0A0'
+  };
+  return colors[operator] || '#A0A0A0';
+};
 
 function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', isApprover = false }) {
   const submission = getSubmissionById(submissionId);
@@ -188,32 +203,151 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-        <div>
-          <h3>Route Map</h3>
+      {/* Large Route Map with Statistics */}
+      <div style={{ marginBottom: '20px' }}>
+        <h3 style={{ marginBottom: '15px', color: '#0F172A' }}>Route Map & Statistics</h3>
+        <div style={{ 
+          position: 'relative',
+          width: '100%',
+          height: '600px',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #E2E8F0'
+        }}>
           <MapComponent
             stations={stations}
             origin={submission.origin}
             destination={submission.destination}
             onOriginSelect={() => {}}
             onDestinationSelect={() => {}}
-            selectedRoute={submission.selectedRoute}
+            routes={submission.selectedRoute ? [submission.selectedRoute] : []}
+            selectedRouteIndex={submission.selectedRoute ? 0 : null}
           />
         </div>
+      </div>
 
-        <div>
-          <h3>Selected Route</h3>
-          {submission.selectedRoute ? (
-            <RouteResults
-              routes={[submission.selectedRoute]}
-              onRouteSelect={() => {}}
-              selectedRouteIndex={0}
-            />
-          ) : (
-            <p>No route selected</p>
+      {/* Route Details Section */}
+      {submission.selectedRoute && (
+        <div style={{ 
+          padding: '20px', 
+          backgroundColor: '#f8f9fa', 
+          borderRadius: '8px',
+          marginBottom: '20px'
+        }}>
+          <h3 style={{ marginTop: 0, color: '#0F172A' }}>Route Details</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+            <div>
+              <strong>Total Distance:</strong> {submission.selectedRoute.totalDistance?.toFixed(0) || 'N/A'} miles
+            </div>
+            <div>
+              <strong>Operators:</strong> {submission.selectedRoute.operators?.join(', ') || 'N/A'}
+            </div>
+            <div>
+              <strong>Operator Count:</strong> {submission.selectedRoute.operatorCount || submission.selectedRoute.operators?.length || 'N/A'}
+            </div>
+            <div>
+              <strong>Transfers:</strong> {submission.selectedRoute.transferPoints?.length || 0}
+            </div>
+            <div>
+              <strong>States/Provinces:</strong> {submission.selectedRoute.states?.join(', ') || 'N/A'}
+            </div>
+            {submission.selectedRoute.totalCurves !== undefined && (
+              <div>
+                <strong>Total Curves:</strong> {submission.selectedRoute.totalCurves.toFixed(1)}
+              </div>
+            )}
+            {submission.selectedRoute.totalCost !== undefined && (
+              <div>
+                <strong>Route Cost Score:</strong> {submission.selectedRoute.totalCost.toFixed(2)}
+              </div>
+            )}
+          </div>
+          
+          {submission.selectedRoute.segments && submission.selectedRoute.segments.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <h4 style={{ marginBottom: '10px', color: '#0F172A' }}>Route Segments</h4>
+              <div style={{ 
+                display: 'grid', 
+                gap: '10px',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                padding: '10px',
+                backgroundColor: 'white',
+                borderRadius: '4px'
+              }}>
+                {submission.selectedRoute.segments.map((segment, index) => (
+                  <div 
+                    key={index}
+                    style={{
+                      padding: '12px',
+                      backgroundColor: '#fff',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '4px',
+                      borderLeft: `4px solid ${getOperatorColor(segment.operator)}`
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                      <strong style={{ color: '#0F172A' }}>
+                        {segment.from?.name || segment.from} → {segment.to?.name || segment.to}
+                      </strong>
+                      <span style={{ 
+                        padding: '4px 8px', 
+                        backgroundColor: getOperatorColor(segment.operator),
+                        color: 'white',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: 'bold'
+                      }}>
+                        {segment.operator}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '15px', fontSize: '14px', color: '#64748B' }}>
+                      <span>Distance: {segment.distance?.toFixed(0) || 'N/A'} miles</span>
+                      {segment.curveScore !== undefined && (
+                        <span>Curves: {segment.curveScore.toFixed(1)}</span>
+                      )}
+                      {segment.states && segment.states.length > 0 && (
+                        <span>States: {segment.states.join(', ')}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {submission.selectedRoute.transferPoints && submission.selectedRoute.transferPoints.length > 0 && (
+            <div style={{ marginTop: '20px' }}>
+              <h4 style={{ marginBottom: '10px', color: '#0F172A' }}>Transfer Points</h4>
+              <div style={{ 
+                display: 'grid', 
+                gap: '10px',
+                padding: '10px',
+                backgroundColor: 'white',
+                borderRadius: '4px'
+              }}>
+                {submission.selectedRoute.transferPoints.map((transfer, index) => (
+                  <div 
+                    key={index}
+                    style={{
+                      padding: '10px',
+                      backgroundColor: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    <strong>{transfer.station?.name || transfer.station}</strong>
+                    <div style={{ fontSize: '14px', color: '#64748B', marginTop: '4px' }}>
+                      {transfer.fromOperator} → {transfer.toOperator}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-      </div>
+      )}
 
       <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
