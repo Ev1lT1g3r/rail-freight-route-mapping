@@ -141,7 +141,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
           >
             <option value="date">Date</option>
             <option value="status">Status</option>
-            <option value="origin">Origin</option>
+            <option value="origin">Shipping Origin</option>
           </select>
         </div>
 

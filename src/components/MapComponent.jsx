@@ -212,7 +212,7 @@ function MapComponent({
         if (isOrigin) {
           icon = L.divIcon({
             className: 'origin-marker',
-            html: `<div class="station-marker origin">
+            html: `<div class="station-marker origin" title="Shipping Origin Yard">
               <span class="marker-label">O</span>
               <div class="marker-pulse"></div>
             </div>`,
@@ -222,7 +222,7 @@ function MapComponent({
         } else if (isDestination) {
           icon = L.divIcon({
             className: 'destination-marker',
-            html: `<div class="station-marker destination">
+            html: `<div class="station-marker destination" title="Delivery Destination Yard">
               <span class="marker-label">D</span>
               <div class="marker-pulse"></div>
             </div>`,
@@ -248,8 +248,8 @@ function MapComponent({
               <strong>${station.name}</strong><br />
               <span class="station-state">${station.state}</span><br />
               <span class="station-operator">${station.operator}</span>
-              ${isOrigin ? '<br /><strong class="origin-badge">ORIGIN</strong>' : ''}
-              ${isDestination ? '<br /><strong class="destination-badge">DESTINATION</strong>' : ''}
+              ${isOrigin ? '<br /><strong class="origin-badge">SHIPPING ORIGIN</strong>' : ''}
+              ${isDestination ? '<br /><strong class="destination-badge">DELIVERY DESTINATION</strong>' : ''}
             </div>
           `);
 
