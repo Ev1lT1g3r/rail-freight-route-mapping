@@ -116,6 +116,33 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
     return 0;
   });
 
+  // Debug logging - must be after sortedSubmissions is declared
+  useEffect(() => {
+    console.log('Submission filtering state:', {
+      totalSubmissions: submissions.length,
+      searchFiltered: searchFiltered.length,
+      advancedFiltered: advancedFiltered.length,
+      finalFiltered: filteredSubmissions.length,
+      sorted: sortedSubmissions.length,
+      searchQuery: searchQuery || '(none)',
+      filterStatus,
+      filters: Object.keys(filters).filter(k => {
+        const v = filters[k];
+        return Array.isArray(v) ? v.length > 0 : v && v !== 'all' && v !== '';
+      })
+    });
+    
+    if (submissions.length > 0 && filteredSubmissions.length === 0) {
+      console.warn('⚠️ All submissions filtered out!', {
+        totalSubmissions: submissions.length,
+        searchQuery,
+        filters,
+        filterStatus,
+        sampleSubmission: submissions[0]
+      });
+    }
+  }, [submissions.length, searchFiltered.length, advancedFiltered.length, filteredSubmissions.length, sortedSubmissions.length, searchQuery, filters, filterStatus]);
+
   const handleDelete = (id, e) => {
     e?.stopPropagation();
     if (window.confirm('Are you sure you want to delete this submission?')) {
