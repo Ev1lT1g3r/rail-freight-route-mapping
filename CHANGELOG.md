@@ -12,6 +12,68 @@ All notable changes to this project will be documented in this file.
 - Export capabilities (PDF, Excel)
 - Mobile app version
 
+## [1.6.0] - 2024-12-16
+
+### Added
+- **Submission Duplication/Cloning (F-002)**
+  - Duplicate button in SubmissionsList and SubmissionDetail
+  - Creates new Draft submission with copied data
+  - Auto-navigates to edit mode after duplication
+  - Toast notification on successful duplication
+  - All submission data preserved (route, freight, notes)
+
+- **Freight Dimension Presets (F-015)**
+  - 10 common freight type presets (containers, pallets, steel, machinery, etc.)
+  - Preset dropdown in FreightSpecification component
+  - Organized by category (Containers, Pallets, Steel, Machinery, etc.)
+  - Auto-fills dimensions and weight when preset selected
+  - Help tooltip for preset selection
+
+- **Approval Comments (F-006)**
+  - Optional approval comment field
+  - Approval comments displayed in submission details
+  - Replaced alert() with toast notifications
+  - Enhanced approval/rejection UI with help tooltips
+  - Approval comments stored in submission data
+
+- **Saved Routes/Favorites (F-021)**
+  - Save frequently used routes to favorites
+  - Load saved routes with one click
+  - Delete saved routes
+  - Show/hide saved routes panel
+  - Route storage utility (routeStorage.js)
+  - Visual indicators for saved routes
+  - Route count display
+
+- **Unit Conversion (F-029)**
+  - Unit system toggle (Imperial/Metric)
+  - Automatic conversion when switching systems
+  - Length conversion (feet ↔ meters)
+  - Weight conversion (pounds ↔ kilograms)
+  - Unit labels update based on selected system
+  - Help tooltips for unit conversion
+  - Preserves values when switching systems
+
+### Changed
+- **SubmissionDetail**
+  - Enhanced approval workflow with optional comments
+  - Improved visual feedback for approval actions
+  - Better error handling with toast notifications
+
+- **FreightSpecification**
+  - Added unit system selector
+  - Dynamic unit labels based on selected system
+  - Automatic value conversion on system change
+
+- **SubmissionForm**
+  - Added saved routes management
+  - Route favorites functionality
+  - Improved route finding workflow
+
+### Fixed
+- Fixed duplicate imports in SubmissionForm
+- Improved error handling in route finding
+
 ## [1.5.0] - 2024-12-16
 
 ### Added

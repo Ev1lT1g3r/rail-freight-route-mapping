@@ -1059,13 +1059,18 @@ VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 8. **Functional: Implement submission templates**
 9. **Functional: Enhance approval workflow with comments**
 
-### High Priority (Immediate) - ✅ Recently Completed (v1.5.0)
-1. ✅ **UX: Add breadcrumb navigation** - COMPLETED
-2. ✅ **UX: Enhance empty states throughout** - COMPLETED (EmptyState component)
-3. ✅ **UX: Add contextual help tooltips** - COMPLETED (HelpTooltip in key areas)
-4. ✅ **UX: Improve status badges and visual feedback** - COMPLETED (StatusBadge with icons)
-5. ✅ **Functional: Add bulk operations for submissions** - COMPLETED (bulk delete, bulk status change)
-6. ✅ **Functional: Add route comparison tool** - COMPLETED (RouteTable component)
+### High Priority (Immediate) - ✅ Recently Completed (v1.6.0)
+1. ✅ **UX: Add breadcrumb navigation** - COMPLETED (v1.5.0)
+2. ✅ **UX: Enhance empty states throughout** - COMPLETED (v1.5.0)
+3. ✅ **UX: Add contextual help tooltips** - COMPLETED (v1.5.0)
+4. ✅ **UX: Improve status badges and visual feedback** - COMPLETED (v1.5.0)
+5. ✅ **Functional: Add bulk operations for submissions** - COMPLETED (v1.5.0)
+6. ✅ **Functional: Add route comparison tool** - COMPLETED (v1.5.0)
+7. ✅ **Functional: Submission duplication/cloning (F-002)** - COMPLETED (v1.6.0)
+8. ✅ **Functional: Freight dimension presets (F-015)** - COMPLETED (v1.6.0)
+9. ✅ **Functional: Approval comments and notes (F-006)** - COMPLETED (v1.6.0)
+10. ✅ **Functional: Saved routes/favorites (F-021)** - COMPLETED (v1.6.0)
+11. ✅ **Functional: Unit conversion (F-029)** - COMPLETED (v1.6.0)
 
 ### Medium Priority (Next Quarter)
 1. Complete Foundry OSDK integration
@@ -1145,7 +1150,14 @@ VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 
 ## Recent Achievements
 
-### ✅ v1.5.0 (Latest)
+### ✅ v1.6.0 (Latest)
+1. **Submission Duplication** - Duplicate existing submissions to create similar ones quickly
+2. **Freight Dimension Presets** - 10 common freight type presets for quick entry
+3. **Approval Comments** - Optional comments when approving submissions
+4. **Saved Routes/Favorites** - Save and load frequently used routes
+5. **Unit Conversion** - Switch between Imperial and Metric units with automatic conversion
+
+### ✅ v1.5.0
 1. **Reusable EmptyState Component** - Consistent, animated empty states throughout application
 2. **Bulk Operations** - Select multiple submissions, bulk delete, and bulk status changes
 3. **Enhanced Empty States** - Replaced inline empty states with reusable EmptyState component
