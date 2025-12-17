@@ -139,7 +139,10 @@ function SubmissionDetail({ submissionId, onBack, currentUser = 'Current User', 
             </span>
           </div>
           <div>
-            <strong>Route:</strong> {submission.origin} → {submission.destination} (Freight Yards)
+            <strong>Route:</strong> {submission.origin} → {submission.destination}
+            <div style={{ fontSize: '12px', color: '#6c757d', marginTop: '4px' }}>
+              Shipping Origin Yard → Delivery Destination Yard
+            </div>
           </div>
           <div>
             <strong>Created:</strong> {formatDate(submission.createdDate)}
