@@ -98,6 +98,19 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
 
   const filteredSubmissions = advancedFiltered;
 
+  // Debug logging
+  useEffect(() => {
+    if (submissions.length > 0 && filteredSubmissions.length === 0) {
+      console.log('Submissions filtered out:', {
+        totalSubmissions: submissions.length,
+        searchQuery,
+        filters,
+        filterStatus,
+        sampleSubmission: submissions[0]
+      });
+    }
+  }, [submissions.length, filteredSubmissions.length, searchQuery, filters, filterStatus]);
+
   const sortedSubmissions = [...filteredSubmissions].sort((a, b) => {
     if (sortBy === 'date') {
       const dateA = new Date(a.submittedDate || a.createdDate || 0);
