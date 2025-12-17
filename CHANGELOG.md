@@ -12,6 +12,53 @@ All notable changes to this project will be documented in this file.
 - Export capabilities (PDF, Excel)
 - Mobile app version
 
+## [1.4.0] - 2024-12-16
+
+### Added
+- **Enhanced Route Finding Algorithm**
+  - Improved path exploration with better visited node tracking
+  - Supports routes up to 15 stations for long-distance shipping
+  - Alternative path discovery for better route options
+  - Iteration limits to prevent infinite loops
+  - Graceful handling of missing or invalid connections
+
+- **Expanded Freight Yard Network**
+  - Added connections for isolated stations (Charleston, Lubbock)
+  - All 90+ freight yards now fully connected to the network
+  - 155+ connections across North America
+  - Improved network connectivity validation
+
+- **Unlimited Freight Yard Selection**
+  - Removed 10-item limit when no search term (now shows all 90+ yards)
+  - Removed 20-item limit when searching (shows all matching results)
+  - Alphabetically sorted results for better usability
+  - Increased dropdown max-height to 500px
+
+### Changed
+- **Terminology Updates**
+  - Updated all references from "terminals" to "freight yards" or "rail yards"
+  - Updated labels: "Shipping Origin Yard" and "Delivery Destination Yard"
+  - Updated error messages and help text to reflect freight-appropriate terminology
+  - Updated map markers and popups to use freight yard terminology
+
+- **Route Finding Improvements**
+  - Enhanced algorithm to find routes between any connected freight yards
+  - Better error messages when routes cannot be found
+  - Improved validation for origin and destination selection
+
+### Fixed
+- Fixed isolated stations (Charleston/CHA and Lubbock/LUB) by adding connections
+- Fixed route finding algorithm to properly respect maxTransfers limit
+- Fixed missing HelpTooltip import in FreightSpecification component
+- Fixed dropdown height to accommodate all freight yards
+- Fixed route finding errors with invalid station codes or missing connections
+- Improved error handling in buildRouteDetails function
+
+### Testing
+- Updated all tests to reflect new terminology
+- Updated routeFinder tests for improved algorithm
+- All 116+ tests passing
+
 ## [1.3.0] - 2024-12-16
 
 ### Added

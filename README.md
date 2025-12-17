@@ -9,16 +9,22 @@ This application provides a complete solution for freight rail route planning an
 ## Key Features
 
 ### 🗺️ Interactive Route Finding
-- **Interactive Map**: Visualize freight rail terminals across North America using Leaflet maps
+- **Interactive Map**: Visualize freight rail yards across North America using Leaflet maps
 - **Satellite View**: Automatic satellite/imagery view when routes are selected for detailed track visualization
-- **Route Finding**: Calculate optimal routes using Dijkstra's algorithm with configurable preferences
+- **Route Finding**: Calculate optimal routes using improved Dijkstra's algorithm with configurable preferences
+  - Enhanced path exploration with better connectivity
+  - Supports up to 15 stations for long routes
+  - All 90+ freight yards fully connected to the network
 - **Route Preference Presets**: Quick selection of common route preferences:
   - Fastest Route: Prioritize shortest distance and fewest transfers
   - Simplest Route: Prefer single operator with minimal transfers
   - Straightest Route: Minimize curves and turns for stability
   - Balanced: Balance all factors equally
   - Custom: Manually adjust all preferences
-- **Terminal Search**: Intelligent autocomplete search for origin and destination terminals
+- **Freight Yard Search**: Intelligent autocomplete search for origin and destination freight yards
+  - Shows all 90+ freight yards (no limits)
+  - Alphabetically sorted for easy browsing
+  - Search by code, name, state, or operator
 - **Enhanced Operator-Specific Visualization**: 
   - Color-coded route segments by operator (BNSF, UP, CSX, NS, CN, CP)
   - Gradient styling with shadow effects for better visibility
@@ -181,10 +187,10 @@ src/
 
 1. **Navigate to Submissions**: Click "New Submission" from the main page
 2. **Step 1 - Route Selection**:
-   - Select origin and destination terminals
+   - Select origin and destination freight yards (search from 90+ available yards)
    - Configure route preferences (distance, operator, curves, transfers)
    - Click "Find Routes" to calculate top 3 routes
-   - Select a route from the results
+   - Select a route from the results (all routes displayed simultaneously on map)
 3. **Step 2 - Freight Specification**:
    - Enter freight description
    - Specify dimensions (length, width, height in feet)
@@ -224,13 +230,21 @@ src/
 
 ## Route Finding Algorithm
 
-The route finder uses a modified Dijkstra's algorithm that considers:
+The route finder uses an improved Dijkstra's algorithm that considers:
 - **Distance**: Total route distance in miles
 - **Operator Count**: Number of different railroad operators
 - **Curve Score**: Measure of route straightness (lower is better)
 - **Transfers**: Number of interline transfer points
+- **Path Length**: Supports routes up to 15 stations for long-distance shipping
 
-Routes are scored using weighted preferences and the top 3 routes are returned.
+**Algorithm Improvements:**
+- Enhanced path exploration with better visited node tracking
+- Supports alternative paths to the same destination
+- Iteration limits to prevent infinite loops
+- Graceful handling of missing connections
+- All 90+ freight yards fully connected to the network
+
+Routes are scored using weighted preferences and the top 3 routes are returned, displayed simultaneously on the map with the selected route highlighted.
 
 ## Center of Gravity Calculations
 
@@ -272,13 +286,11 @@ Results include:
 
 ## Freight Rail Network
 
-The application includes data for major Class I freight railroads:
-- **BNSF Railway**
-- **Union Pacific (UP)**
-- **CSX Transportation**
-- **Norfolk Southern (NS)**
-- **Canadian National (CN)**
-- **Canadian Pacific (CP)**
+The application includes comprehensive data for major Class I freight railroads across North America:
+- **90+ Freight Yards**: Major rail yards across United States, Canada, and Mexico
+- **155+ Connections**: Direct connections between freight yards
+- **Full Network Connectivity**: All freight yards connected to the network
+- **Operators**: BNSF Railway, Union Pacific (UP), CSX Transportation, Norfolk Southern (NS), Canadian National (CN), Canadian Pacific (CP), Kansas City Southern (KCS/KCSM)
 
 ## Testing
 

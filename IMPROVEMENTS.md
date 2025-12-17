@@ -271,12 +271,14 @@ const submissions = await foundryClient.objects.query('submissions', {
 ## 🗺️ Map & Route Features
 
 ### 1. Real Rail Line Data
-**Current State:** Simulated rail line paths
+**Current State:** Simulated rail line paths with realistic Catmull-Rom splines
 **Recommendation:** Integrate real rail line data
-- Use OpenRailwayMap API
-- Integrate with rail operator APIs
-- Use GIS data sources (GeoJSON)
-- Real-time track status
+- ✅ Realistic path generation using Catmull-Rom splines - COMPLETED
+- ✅ Routes plotted along intermediate locations - COMPLETED
+- 🔄 Future: Use OpenRailwayMap API
+- 🔄 Future: Integrate with rail operator APIs
+- 🔄 Future: Use GIS data sources (GeoJSON)
+- 🔄 Future: Real-time track status
 
 ### 2. Advanced Map Features
 **Recommendation:**
@@ -288,13 +290,16 @@ const submissions = await foundryClient.objects.query('submissions', {
 - Offline map support
 
 ### 3. Route Optimization
-**Current State:** Basic Dijkstra algorithm
-**Recommendation:** Enhanced routing algorithms
-- A* algorithm for better performance
-- Multi-objective optimization
-- Real-time traffic/status integration
-- Historical route performance data
-- Machine learning for route recommendations
+**Current State:** ✅ Improved Dijkstra algorithm with enhanced path exploration (v1.4.0)
+**Recommendation:** Further enhancements
+- ✅ Enhanced path exploration with better visited node tracking - COMPLETED
+- ✅ Supports routes up to 15 stations - COMPLETED
+- ✅ All freight yards connected - COMPLETED
+- 🔄 Future: A* algorithm for better performance
+- 🔄 Future: Multi-objective optimization
+- 🔄 Future: Real-time traffic/status integration
+- 🔄 Future: Historical route performance data
+- 🔄 Future: Machine learning for route recommendations
 
 ### 4. Route Comparison
 **Recommendation:** Side-by-side route comparison
@@ -1032,12 +1037,16 @@ VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 1. ✅ **UX: Replace alert() with toast notifications** - COMPLETED (v1.3.0)
 2. ✅ **UX: Add progress indicator to multi-step form** - COMPLETED (v1.3.0)
 3. ✅ **UX: Implement inline form validation** - COMPLETED (v1.3.0)
-4. ✅ **UX: Add terminal search/autocomplete** - COMPLETED (v1.3.0)
+4. ✅ **UX: Add freight yard search/autocomplete** - COMPLETED (v1.3.0)
 5. ✅ **UX: Add route preference presets** - COMPLETED (v1.3.0)
 6. ✅ **UX: Enhanced error handling** - COMPLETED (v1.3.0)
 7. ✅ **UX: Loading states throughout** - COMPLETED (v1.3.0)
 8. ✅ Remove console.log statements - COMPLETED
-9. ✅ Comprehensive test coverage (116 tests) - COMPLETED
+9. ✅ Comprehensive test coverage (116+ tests) - COMPLETED
+10. ✅ **Route Finding: Improved algorithm and network connectivity** - COMPLETED (v1.4.0)
+11. ✅ **Terminology: Updated from "terminals" to "freight yards"** - COMPLETED (v1.4.0)
+12. ✅ **Network: Expanded to 90+ freight yards, all connected** - COMPLETED (v1.4.0)
+13. ✅ **UX: Unlimited freight yard selection (removed dropdown limits)** - COMPLETED (v1.4.0)
 
 ### High Priority (Next Sprint)
 1. Implement React Router for navigation
@@ -1088,13 +1097,17 @@ VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 
 ## Implementation Roadmap
 
-### Phase 1: Foundation ✅ COMPLETED (v1.3.0)
+### Phase 1: Foundation ✅ COMPLETED (v1.4.0)
 - ✅ Add comprehensive error handling
 - ✅ Code cleanup (removed console.log)
-- ✅ Comprehensive test coverage (116 tests)
+- ✅ Comprehensive test coverage (116+ tests)
 - ✅ Documentation updates
-- ✅ UX improvements (Toast, Progress, Validation, TerminalSearch, Presets)
+- ✅ UX improvements (Toast, Progress, Validation, Freight Yard Search, Presets)
 - ✅ Loading states throughout
+- ✅ Enhanced route finding algorithm
+- ✅ Network connectivity improvements (90+ freight yards)
+- ✅ Terminology updates (freight yards)
+- ✅ Unlimited freight yard selection
 - 🔄 In Progress: Set up React Router
 - 🔄 In Progress: Create Foundry OSDK service layer
 - 🔄 In Progress: Implement environment configuration for Foundry
@@ -1123,9 +1136,17 @@ VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 - Monitoring and observability
 - Documentation completion
 
-## Recent Achievements (v1.3.0)
+## Recent Achievements
 
-### ✅ Completed Improvements
+### ✅ v1.4.0 (Latest)
+1. **Enhanced Route Finding Algorithm** - Improved path exploration, supports longer routes (up to 15 stations)
+2. **Network Connectivity** - All 90+ freight yards fully connected, fixed isolated stations
+3. **Unlimited Freight Yard Selection** - Removed dropdown limits, shows all available yards
+4. **Terminology Updates** - Updated from "terminals" to "freight yards" throughout application
+5. **Improved Error Handling** - Better validation and error messages for route finding
+6. **Component Fixes** - Fixed missing HelpTooltip import in FreightSpecification
+
+### ✅ v1.3.0
 1. **Toast Notification System** - Replaced all alert() calls with non-blocking toast notifications
 2. **Progress Indicator** - Visual progress tracking for multi-step submission form
 3. **Inline Form Validation** - Real-time validation with clear error messages
@@ -1133,15 +1154,17 @@ VITE_FOUNDRY_OBJECT_TYPE_USERS=users
 5. **Route Preference Presets** - Quick selection of common route preferences
 6. **Enhanced Error Handling** - Comprehensive validation and clear error messages
 7. **Loading States** - Loading indicators throughout the application
-8. **Test Coverage** - Expanded to 116 tests with new component tests
+8. **Test Coverage** - Expanded to 116+ tests with new component tests
 9. **Documentation** - Updated README, API.md, and CHANGELOG
 
 ### 📊 Current Status
-- **Test Coverage**: 116 tests, all passing
+- **Test Coverage**: 116+ tests, all passing
 - **Components**: All major components tested
 - **Documentation**: Comprehensive and up-to-date
 - **UX Improvements**: Major UX enhancements completed
 - **Code Quality**: Clean, well-tested codebase
+- **Network**: 90+ freight yards, 155+ connections, fully connected
+- **Route Finding**: Enhanced algorithm with improved path exploration
 
 ## Success Metrics
 
