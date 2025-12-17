@@ -71,8 +71,24 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
     console.log('Loading submissions:', {
       showArchived,
       totalLoaded: all.length,
-      sampleIds: all.slice(0, 3).map(s => s.id)
+      sampleIds: all.slice(0, 3).map(s => s.id),
+      sampleStatuses: all.slice(0, 3).map(s => s.status),
+      allSubmissions: all.map(s => ({ id: s.id, status: s.status, origin: s.origin, destination: s.destination }))
     });
+    
+    // Also check raw localStorage
+    try {
+      const raw = localStorage.getItem('rail_freight_submissions');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        console.log('Raw localStorage submissions:', parsed.length, parsed.map(s => ({ id: s.id, status: s.status })));
+      } else {
+        console.log('No submissions in localStorage');
+      }
+    } catch (e) {
+      console.error('Error reading localStorage:', e);
+    }
+    
     setSubmissions(all);
   };
 
