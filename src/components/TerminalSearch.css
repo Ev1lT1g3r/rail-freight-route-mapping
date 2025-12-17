@@ -58,6 +58,7 @@
 }
 
 .terminal-search-dropdown {
+  max-height: 400px;
   position: absolute;
   top: 100%;
   left: 0;

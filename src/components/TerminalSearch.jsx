@@ -15,10 +15,14 @@ function TerminalSearch({ value, onChange, placeholder = 'Search freight yards..
   // Filter stations based on search term
   const filteredStations = useMemo(() => {
     if (!searchTerm) {
-      return Object.entries(stations).slice(0, 10); // Show top 10 when no search
+      // Show all stations when no search term (alphabetically sorted)
+      return Object.entries(stations).sort((a, b) => 
+        a[1].name.localeCompare(b[1].name)
+      );
     }
     
     const term = searchTerm.toLowerCase();
+    // Show all matching results when searching
     return Object.entries(stations).filter(([code, station]) => {
       return (
         code.toLowerCase().includes(term) ||
@@ -26,7 +30,7 @@ function TerminalSearch({ value, onChange, placeholder = 'Search freight yards..
         station.state.toLowerCase().includes(term) ||
         station.operator.toLowerCase().includes(term)
       );
-    }).slice(0, 20); // Limit to 20 results
+    }).sort((a, b) => a[1].name.localeCompare(b[1].name));
   }, [searchTerm]);
 
   useEffect(() => {
