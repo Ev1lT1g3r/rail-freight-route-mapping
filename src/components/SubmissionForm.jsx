@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import MapComponent from './MapComponent';
 import RouteConfig from './RouteConfig';
 import RouteTable from './RouteTable';
+import RouteComparison from './RouteComparison';
 import FreightSpecification from './FreightSpecification';
 import FreightPlacementVisualization from './FreightPlacementVisualization';
 import ErrorBoundary from './ErrorBoundary';
