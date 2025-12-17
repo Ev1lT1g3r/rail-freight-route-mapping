@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.0] - 2024-01-XX
+
+### Added
+- **F-001: Submission Templates** - Create, save, and reuse submission templates for common freight types and routes
+  - Save current submission as template with custom name
+  - Template library accessible from submission creation flow
+  - Load templates to pre-fill submission form (origin, destination, preferences, freight, tags, notes)
+  - Delete templates
+  - Template management UI with collapsible panel
+  - Empty state for templates
+- **F-004: Advanced Search and Filtering** - Enhanced search and filtering capabilities
+  - Full-text search across all submission fields
+  - Multi-criteria filtering (date range, operators, states, origin, destination, created by, tags, distance range)
+  - Saved search presets with load/delete functionality
+  - Search history (last 20 searches)
+  - Filter combinations (AND logic)
+  - Advanced filters panel with collapsible UI
+  - Search history quick access
+- **F-017: Submission Archiving** - Archive and unarchive submissions
+  - Archive submissions to remove from active view
+  - Unarchive to restore submissions
+  - Toggle between Active and Archived views
+  - Bulk archive/unarchive operations
+  - Archive button in submission cards
+- **F-030: Export Capabilities** - Export submissions in multiple formats
+  - Export single submission to JSON, CSV, or Text
+  - Export multiple submissions to CSV (filtered or all)
+  - Export dropdown menu in SubmissionDetail
+  - Export button in SubmissionsList
+  - Comprehensive export data including route, freight, workflow info
+
+### Fixed
+- Fixed submitted submissions not being saved to localStorage
+- Fixed submissions not appearing in list after save
+- Added event-based refresh mechanism for submissions list
+- Fixed filter logic to prevent over-filtering
+- Fixed sortedSubmissions initialization error
+- Enhanced save verification and error handling
+- Improved timing for localStorage writes before navigation
+
+### Improved
+- Enhanced debug logging for submission loading and filtering
+- Better error messages and user feedback
+- Improved filter application logic
+- Added localStorage inspection for debugging
+
 ## [Unreleased]
 
 ### Planned
