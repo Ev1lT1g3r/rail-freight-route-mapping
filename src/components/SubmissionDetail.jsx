@@ -25,8 +25,9 @@ const getOperatorColor = (operator) => {
 function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current User', isApprover = false }) {
   const submission = getSubmissionById(submissionId);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [approvalComment, setApprovalComment] = useState('');
   const [notes, setNotes] = useState(submission?.notes || '');
-  const { success } = useToast();
+  const { success, error } = useToast();
 
   if (!submission) {
     return (
@@ -56,22 +57,23 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
       status: WORKFLOW_STATUS.APPROVED,
       approvedDate: new Date().toISOString(),
       approvedBy: currentUser,
+      approvalComment: approvalComment.trim() || null,
       updatedDate: new Date().toISOString(),
       updatedBy: currentUser,
       notes
     };
 
     if (saveSubmission(updated)) {
-      alert('Submission approved successfully!');
-      onBack();
+      success('Submission approved successfully!');
+      setTimeout(() => onBack(), 1000);
     } else {
-      alert('Error approving submission');
+      error('Error approving submission');
     }
   };
 
   const handleReject = () => {
     if (!rejectionReason.trim()) {
-      alert('Please provide a reason for rejection');
+      error('Please provide a reason for rejection');
       return;
     }
 
@@ -91,10 +93,10 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
     };
 
     if (saveSubmission(updated)) {
-      alert('Submission rejected');
-      onBack();
+      success('Submission rejected');
+      setTimeout(() => onBack(), 1000);
     } else {
-      alert('Error rejecting submission');
+      error('Error rejecting submission');
     }
   };
 
@@ -213,16 +215,22 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
               <strong>Submitted By:</strong> {submission.submittedBy}
             </div>
           )}
-          {submission.approvedDate && (
-            <>
-              <div>
-                <strong>Approved:</strong> {formatDate(submission.approvedDate)}
-              </div>
-              <div>
-                <strong>Approved By:</strong> {submission.approvedBy || 'N/A'}
-              </div>
-            </>
-          )}
+                {submission.approvedDate && (
+                  <>
+                    <div>
+                      <strong>Approved:</strong> {formatDate(submission.approvedDate)}
+                    </div>
+                    <div>
+                      <strong>Approved By:</strong> {submission.approvedBy || 'N/A'}
+                    </div>
+                    {submission.approvalComment && (
+                      <div style={{ gridColumn: '1 / -1', marginTop: '10px', padding: '10px', backgroundColor: '#D1FAE5', borderRadius: '6px', border: '1px solid #10B981' }}>
+                        <strong>Approval Comment:</strong>
+                        <p style={{ margin: '5px 0 0 0', color: '#065F46' }}>{submission.approvalComment}</p>
+                      </div>
+                    )}
+                  </>
+                )}
           {submission.rejectedDate && (
             <>
               <div>
@@ -423,50 +431,83 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
         />
       </div>
 
-      {canApprove || canReject ? (
-        <div style={{ 
-          padding: '20px', 
-          backgroundColor: '#fff3cd', 
-          borderRadius: '8px',
-          marginBottom: '20px'
-        }}>
-          <h3 style={{ marginTop: 0 }}>Approval Actions</h3>
+        {canApprove || canReject ? (
+          <div style={{ 
+            padding: '20px', 
+            backgroundColor: '#fff', 
+            borderRadius: '8px',
+            border: '2px solid #3B82F6',
+            marginBottom: '20px'
+          }}>
+          <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Approval Actions</h3>
           
-          {canReject && (
+          {canApprove && (
             <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                Rejection Reason (required for rejection):
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
+                Approval Comment (optional):
+                <HelpTooltip content="Add an optional comment when approving this submission. This comment will be visible to the submitter and included in the submission history.">
+                  <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+                </HelpTooltip>
               </label>
               <textarea
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={3}
-                placeholder="Enter reason for rejection..."
+                value={approvalComment}
+                onChange={(e) => setApprovalComment(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '8px',
                   borderRadius: '4px',
                   border: '1px solid #ddd',
                   fontSize: '14px',
+                  minHeight: '80px',
                   fontFamily: 'inherit'
                 }}
+                placeholder="Enter optional approval comment..."
               />
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '15px' }}>
+          {canReject && (
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
+                Rejection Reason (required):
+                <HelpTooltip content="A rejection reason is required when rejecting a submission. This helps the submitter understand why the submission was rejected and what needs to be corrected.">
+                  <span style={{ color: '#6B7280', cursor: 'help', fontSize: '16px' }}>ℹ️</span>
+                </HelpTooltip>
+              </label>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: rejectionReason.trim() ? '1px solid #ddd' : '2px solid #EF4444',
+                  fontSize: '14px',
+                  minHeight: '80px',
+                  fontFamily: 'inherit'
+                }}
+                placeholder="Enter reason for rejection (required)..."
+                required
+              />
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             {canApprove && (
               <button
                 onClick={handleApprove}
                 style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#28a745',
+                  padding: '10px 20px',
+                  backgroundColor: '#10B981',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   cursor: 'pointer',
                   fontSize: '16px',
-                  fontWeight: 'bold'
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}
               >
                 ✓ Approve Submission
@@ -477,14 +518,17 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
                 onClick={handleReject}
                 disabled={!rejectionReason.trim()}
                 style={{
-                  padding: '12px 24px',
-                  backgroundColor: rejectionReason.trim() ? '#dc3545' : '#ccc',
+                  padding: '10px 20px',
+                  backgroundColor: rejectionReason.trim() ? '#EF4444' : '#CBD5E1',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   cursor: rejectionReason.trim() ? 'pointer' : 'not-allowed',
                   fontSize: '16px',
-                  fontWeight: 'bold'
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
                 }}
               >
                 ✗ Reject Submission
@@ -492,7 +536,7 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
             )}
           </div>
         </div>
-      ) : null}
+        ) : null}
       </div>
     </div>
   );
