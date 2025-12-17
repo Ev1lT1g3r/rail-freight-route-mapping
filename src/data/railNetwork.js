@@ -34,6 +34,7 @@ export const stations = {
   'NOR': { name: 'Norfolk', lat: 36.8468, lng: -76.2852, state: 'VA', operator: 'NS' },
   'RIC': { name: 'Richmond', lat: 37.5407, lng: -77.4360, state: 'VA', operator: 'CSX' },
   'CHA': { name: 'Charleston', lat: 38.3498, lng: -81.6326, state: 'WV', operator: 'CSX' },
+  'CHW': { name: 'Charleston', lat: 38.3498, lng: -81.6326, state: 'WV', operator: 'CSX' },
   
   // Major US Hubs - Southeast
   'ATL': { name: 'Atlanta', lat: 33.7490, lng: -84.3880, state: 'GA', operator: 'CSX' },
