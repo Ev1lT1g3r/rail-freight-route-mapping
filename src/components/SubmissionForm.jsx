@@ -340,6 +340,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
       tags,
       notes,
       status: WORKFLOW_STATUS.SUBMITTED,
+      approvals: [], // Initialize approvals array for multi-level approval
       createdDate: existingSubmission?.createdDate || new Date().toISOString(),
       submittedDate: new Date().toISOString(),
       updatedDate: new Date().toISOString(),

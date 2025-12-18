@@ -5,6 +5,7 @@ import { fullTextSearch, applyFilters, getFilterOptions } from '../utils/searchU
 import { getSavedSearches, saveSearch, deleteSavedSearch, getSearchHistory, addToSearchHistory, clearSearchHistory } from '../utils/searchStorage';
 import StatusBadge from './StatusBadge';
 import EmptyState from './EmptyState';
+import ApprovalConfig from './ApprovalConfig';
 import HelpTooltip from './HelpTooltip';
 import { useToast } from '../contexts/ToastContext';
 
@@ -369,6 +370,24 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
               </button>
             )}
             <button
+              onClick={() => setShowApprovalConfig(true)}
+              style={{
+                padding: '10px 20px',
+                fontSize: '16px',
+                fontWeight: '600',
+                backgroundColor: '#8B5CF6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              ⚙️ Configure Approval Workflow
+            </button>
+            <button
               onClick={onCreateNew}
               className="sigma-btn-primary"
               style={{
@@ -381,6 +400,10 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
             </button>
           </div>
         </div>
+        
+        {showApprovalConfig && (
+          <ApprovalConfig onClose={() => setShowApprovalConfig(false)} />
+        )}
 
         {isBulkMode && sortedSubmissions.length > 0 && (
           <div style={{

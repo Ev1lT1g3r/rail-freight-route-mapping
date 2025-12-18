@@ -3,8 +3,11 @@ import { estimateRouteCost, formatCostEstimate } from '../utils/costEstimator';
 import { estimateTransitTime, formatTransitTime, getCurrentSeason } from '../utils/transitTimeEstimator';
 import { getSubmissionById, saveSubmission, WORKFLOW_STATUS, duplicateSubmission } from '../utils/submissionStorage';
 import { exportSubmissionToJSON, exportSubmissionToCSV, exportSubmissionToText } from '../utils/exportUtils';
+import { addApproval, addRejection } from '../utils/approvalWorkflow';
+import { getApprovalConfig, canUserApprove } from '../utils/approvalConfig';
 import MapComponent from './MapComponent';
 import StatusBadge from './StatusBadge';
+import ApprovalStatus from './ApprovalStatus';
 import HelpTooltip from './HelpTooltip';
 import { useToast } from '../contexts/ToastContext';
 import { stations } from '../data/railNetwork';
@@ -29,6 +32,7 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
   const submission = getSubmissionById(submissionId);
   const [rejectionReason, setRejectionReason] = useState('');
   const [approvalComment, setApprovalComment] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
   const [notes, setNotes] = useState(submission?.notes || '');
   const { success, error } = useToast();
 
@@ -50,27 +54,47 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
     }
   };
 
+  // Get approval configuration and check if user can approve
+  const approvalConfig = getApprovalConfig();
+  const approvalCapability = canUserApprove(submission, currentUser, approvalConfig);
+
   const handleApprove = () => {
-    if (!window.confirm('Are you sure you want to approve this submission?')) {
+    if (!approvalConfig || !approvalCapability) {
+      error('Approval configuration not available');
       return;
     }
 
-    const updated = {
-      ...submission,
-      status: WORKFLOW_STATUS.APPROVED,
-      approvedDate: new Date().toISOString(),
-      approvedBy: currentUser,
-      approvalComment: approvalComment.trim() || null,
-      updatedDate: new Date().toISOString(),
-      updatedBy: currentUser,
-      notes
-    };
+    if (!selectedRole && approvalCapability.roles && approvalCapability.roles.length > 1) {
+      error('Please select a role to approve for');
+      return;
+    }
 
-    if (saveSubmission(updated)) {
-      success('Submission approved successfully!');
-      setTimeout(() => onBack(), 1000);
-    } else {
-      error('Error approving submission');
+    const roleToApprove = selectedRole || (approvalCapability.roles?.[0]);
+    if (!roleToApprove) {
+      error('No role available for approval');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to approve this submission as ${approvalConfig.roles.find(r => r.id === roleToApprove)?.name || roleToApprove}?`)) {
+      return;
+    }
+
+    try {
+      const updated = addApproval(submission, currentUser, roleToApprove, approvalComment);
+      updated.notes = notes;
+      updated.updatedBy = currentUser;
+
+      if (saveSubmission(updated)) {
+        success('Approval added successfully!');
+        setTimeout(() => {
+          // Reload to see updated status
+          window.location.reload();
+        }, 1000);
+      } else {
+        error('Error saving approval');
+      }
+    } catch (e) {
+      error(e.message || 'Error adding approval');
     }
   };
 
@@ -80,36 +104,44 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
       return;
     }
 
-    if (!window.confirm('Are you sure you want to reject this submission?')) {
+    if (!approvalConfig || !approvalCapability) {
+      error('Approval configuration not available');
       return;
     }
 
-    const updated = {
-      ...submission,
-      status: WORKFLOW_STATUS.REJECTED,
-      rejectedDate: new Date().toISOString(),
-      rejectedBy: currentUser,
-      rejectionReason: rejectionReason.trim(),
-      updatedDate: new Date().toISOString(),
-      updatedBy: currentUser,
-      notes
-    };
+    if (!selectedRole && approvalCapability.roles && approvalCapability.roles.length > 1) {
+      error('Please select a role to reject for');
+      return;
+    }
 
-    if (saveSubmission(updated)) {
-      success('Submission rejected');
-      setTimeout(() => onBack(), 1000);
-    } else {
-      error('Error rejecting submission');
+    const roleToReject = selectedRole || (approvalCapability.roles?.[0]);
+    if (!roleToReject) {
+      error('No role available for rejection');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to reject this submission as ${approvalConfig.roles.find(r => r.id === roleToReject)?.name || roleToReject}?`)) {
+      return;
+    }
+
+    try {
+      const updated = addRejection(submission, currentUser, roleToReject, rejectionReason);
+      updated.notes = notes;
+      updated.updatedBy = currentUser;
+
+      if (saveSubmission(updated)) {
+        success('Submission rejected');
+        setTimeout(() => onBack(), 1000);
+      } else {
+        error('Error saving rejection');
+      }
+    } catch (e) {
+      error(e.message || 'Error adding rejection');
     }
   };
 
-  const canApprove = isApprover && 
-    (submission.status === WORKFLOW_STATUS.SUBMITTED || 
-     submission.status === WORKFLOW_STATUS.PENDING_APPROVAL);
-
-  const canReject = isApprover && 
-    (submission.status === WORKFLOW_STATUS.SUBMITTED || 
-     submission.status === WORKFLOW_STATUS.PENDING_APPROVAL);
+  const canApprove = approvalCapability?.canApprove || false;
+  const canReject = approvalCapability?.canApprove || false;
 
   return (
     <div>
@@ -251,6 +283,14 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
           )}
         </div>
       </div>
+
+      {/* Approval Status */}
+      {(submission.status === WORKFLOW_STATUS.SUBMITTED || 
+        submission.status === WORKFLOW_STATUS.PENDING_APPROVAL ||
+        submission.status === WORKFLOW_STATUS.APPROVED ||
+        submission.status === WORKFLOW_STATUS.REJECTED) && (
+        <ApprovalStatus submission={submission} />
+      )}
 
       {/* Large Route Map with Statistics */}
       <div style={{ marginBottom: '20px' }}>
@@ -483,6 +523,36 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
           }}>
           <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Approval Actions</h3>
           
+          {canApprove && approvalCapability && approvalCapability.roles && approvalCapability.roles.length > 1 && (
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Approve As Role: *
+              </label>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  fontSize: '14px'
+                }}
+                required
+              >
+                <option value="">Select a role...</option>
+                {approvalCapability.roles.map(roleId => {
+                  const role = approvalConfig && approvalConfig.roles ? approvalConfig.roles.find(r => r.id === roleId) : null;
+                  return (
+                    <option key={roleId} value={roleId}>
+                      {role?.name || roleId}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+          
           {canApprove && (
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
@@ -508,6 +578,36 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
             </div>
           )}
 
+          {canReject && approvalCapability && approvalCapability.roles && approvalCapability.roles.length > 1 && (
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                Reject As Role: *
+              </label>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  fontSize: '14px'
+                }}
+                required
+              >
+                <option value="">Select a role...</option>
+                {approvalCapability.roles.map(roleId => {
+                  const role = approvalConfig && approvalConfig.roles ? approvalConfig.roles.find(r => r.id === roleId) : null;
+                  return (
+                    <option key={roleId} value={roleId}>
+                      {role?.name || roleId}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+          
           {canReject && (
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontWeight: 'bold' }}>
