@@ -581,25 +581,6 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                       )}
                       
                       <button
-                        onClick={handleSaveAsTemplate}
-                        style={{
-                          padding: '12px 24px',
-                          fontSize: '16px',
-                          fontWeight: '600',
-                          backgroundColor: '#F59E0B',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px'
-                        }}
-                      >
-                        💾 Save as Template
-                      </button>
-                      
-                      <button
                         onClick={() => setShowSavedRoutes(!showSavedRoutes)}
                         style={{
                           padding: '12px 24px',
