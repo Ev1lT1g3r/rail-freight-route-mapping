@@ -36,6 +36,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
   const [savedSearches, setSavedSearches] = useState([]);
   const [searchHistory, setSearchHistory] = useState([]);
   const [showSavedSearches, setShowSavedSearches] = useState(false);
+  const [showApprovalConfig, setShowApprovalConfig] = useState(false);
   
   const { success, error: showError } = useToast();
 
