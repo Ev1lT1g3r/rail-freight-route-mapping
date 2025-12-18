@@ -339,7 +339,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
       freight,
       tags,
       notes,
-      status: WORKFLOW_STATUS.SUBMITTED,
+      status: WORKFLOW_STATUS.PENDING_APPROVAL, // Mark as pending approval when submitted
       approvals: [], // Initialize approvals array for multi-level approval
       createdDate: existingSubmission?.createdDate || new Date().toISOString(),
       submittedDate: new Date().toISOString(),

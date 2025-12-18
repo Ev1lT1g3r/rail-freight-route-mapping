@@ -443,7 +443,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
               {!showArchived && (
                 <>
                   <button
-                    onClick={() => handleBulkStatusChange(WORKFLOW_STATUS.SUBMITTED)}
+                    onClick={() => handleBulkStatusChange(WORKFLOW_STATUS.PENDING_APPROVAL)}
                     disabled={selectedSubmissions.size === 0}
                     style={{
                       padding: '8px 16px',
@@ -456,21 +456,31 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
                       fontWeight: '600'
                     }}
                   >
-                    Mark as Submitted
+                    Mark as Pending Approval
                   </button>
                   <button
                     onClick={handleBulkArchive}
-                    disabled={selectedSubmissions.size === 0}
+                    disabled={selectedSubmissions.size === 0 || !selectedSubmissions.size || Array.from(selectedSubmissions).some(id => {
+                      const sub = submissions.find(s => s.id === id);
+                      return sub && sub.status !== WORKFLOW_STATUS.APPROVED && sub.status !== WORKFLOW_STATUS.REJECTED;
+                    })}
                     style={{
                       padding: '8px 16px',
                       fontSize: '14px',
-                      backgroundColor: selectedSubmissions.size > 0 ? '#8B5CF6' : '#C4B5FD',
+                      backgroundColor: selectedSubmissions.size > 0 && !Array.from(selectedSubmissions).some(id => {
+                        const sub = submissions.find(s => s.id === id);
+                        return sub && sub.status !== WORKFLOW_STATUS.APPROVED && sub.status !== WORKFLOW_STATUS.REJECTED;
+                      }) ? '#8B5CF6' : '#C4B5FD',
                       color: 'white',
                       border: 'none',
                       borderRadius: '6px',
-                      cursor: selectedSubmissions.size > 0 ? 'pointer' : 'not-allowed',
+                      cursor: selectedSubmissions.size > 0 && !Array.from(selectedSubmissions).some(id => {
+                        const sub = submissions.find(s => s.id === id);
+                        return sub && sub.status !== WORKFLOW_STATUS.APPROVED && sub.status !== WORKFLOW_STATUS.REJECTED;
+                      }) ? 'pointer' : 'not-allowed',
                       fontWeight: '600'
                     }}
+                    title="Only approved or rejected submissions can be archived"
                   >
                     Archive Selected
                   </button>
@@ -629,6 +639,21 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
             border: '1px solid #E5E7EB'
           }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Status</label>
+                <select
+                  value={filters.status || 'all'}
+                  onChange={(e) => setFilters({ ...filters, status: e.target.value === 'all' ? undefined : e.target.value })}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                  <option value="all">All Statuses</option>
+                  {Object.values(WORKFLOW_STATUS)
+                    .filter(status => status !== WORKFLOW_STATUS.ARCHIVED)
+                    .map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                </select>
+              </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '12px' }}>Date From</label>
                 <input
@@ -1101,7 +1126,8 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
                       Edit
                     </button>
                   )}
-                  {!showArchived && submission.status !== WORKFLOW_STATUS.ARCHIVED && (
+                  {!showArchived && submission.status !== WORKFLOW_STATUS.ARCHIVED && 
+                   (submission.status === WORKFLOW_STATUS.APPROVED || submission.status === WORKFLOW_STATUS.REJECTED) && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -1120,6 +1146,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
                         fontSize: '12px',
                         fontWeight: '500'
                       }}
+                      title="Only approved or rejected submissions can be archived"
                     >
                       Archive
                     </button>
