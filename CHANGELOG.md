@@ -23,6 +23,27 @@ All notable changes to this project will be documented in this file.
   - Toggle between side-by-side and table views
   - Modal overlay interface
   - Help tooltips for guidance
+- **F-014: Freight Library/Catalog** - Maintain a library of common freight items
+  - Save freight items to library with name, category, description, tags
+  - Search and filter freight items by name, description, category, tags
+  - Load freight items from library to pre-fill form
+  - Edit/delete library items
+  - Quick add from library to submission
+  - Freight categories/tags organization
+  - Save current freight to library
+  - Modal interface for library management
+  - Empty state for library
+  - Usage tracking (usageCount field)
+  - Compare up to 3 routes simultaneously
+  - Side-by-side comparison view with detailed metrics
+  - Table comparison view with best route highlighting
+  - Route selection interface with visual indicators
+  - Comparison metrics (distance, operators, transfers, curves, states)
+  - Summary panel showing best routes for each metric
+  - Select route directly from comparison tool
+  - Toggle between side-by-side and table views
+  - Modal overlay interface
+  - Help tooltips for guidance
   - Save current submission as template with custom name
   - Template library accessible from submission creation flow
   - Load templates to pre-fill submission form (origin, destination, preferences, freight, tags, notes)
