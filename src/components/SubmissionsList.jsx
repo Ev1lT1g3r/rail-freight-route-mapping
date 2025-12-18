@@ -199,7 +199,7 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
             status: newStatus,
             updatedDate: new Date().toISOString()
           };
-          if (newStatus === WORKFLOW_STATUS.SUBMITTED && !submission.submittedDate) {
+          if (newStatus === WORKFLOW_STATUS.PENDING_APPROVAL && !submission.submittedDate) {
             updated.submittedDate = new Date().toISOString();
             updated.submittedBy = submission.createdBy || 'System';
           }
