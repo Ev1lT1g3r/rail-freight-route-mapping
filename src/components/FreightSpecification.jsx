@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import HelpTooltip from './HelpTooltip';
+import FreightLibrary from './FreightLibrary';
 import { FREIGHT_PRESETS, getPresetsByCategory } from '../data/freightPresets';
 import { 
   UNIT_SYSTEMS, 
