@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { estimateRouteCost, formatCostEstimate } from '../utils/costEstimator';
 import { getSubmissionById, saveSubmission, WORKFLOW_STATUS, duplicateSubmission } from '../utils/submissionStorage';
 import { exportSubmissionToJSON, exportSubmissionToCSV, exportSubmissionToText } from '../utils/exportUtils';
 import MapComponent from './MapComponent';
@@ -326,6 +327,45 @@ function SubmissionDetail({ submissionId, onBack, onEdit, currentUser = 'Current
                 <strong>Route Cost Score:</strong> {submission.selectedRoute.totalCost.toFixed(2)}
               </div>
             )}
+            {submission.freight && submission.freight.weight > 0 && (() => {
+              const costEst = estimateRouteCost(submission.selectedRoute, submission.freight.weight);
+              const formatted = formatCostEstimate(costEst);
+              return (
+                <div style={{ gridColumn: '1 / -1', padding: '15px', backgroundColor: '#F0FDF4', borderRadius: '6px', border: '1px solid #10B981', marginTop: '10px' }}>
+                  <h4 style={{ margin: '0 0 10px 0', color: '#065F46' }}>Cost Estimate</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+                    <div>
+                      <strong>Total Cost:</strong> <span style={{ color: '#10B981', fontWeight: '700', fontSize: '18px' }}>{formatted.total}</span>
+                    </div>
+                    <div>
+                      <strong>Base Cost:</strong> {formatted.base}
+                    </div>
+                    <div>
+                      <strong>Transfer Cost:</strong> {formatted.transfer}
+                    </div>
+                    <div>
+                      <strong>Curve Penalty:</strong> {formatted.curve}
+                    </div>
+                    {costEst.discount > 0 && (
+                      <div>
+                        <strong>Distance Discount:</strong> {formatted.discount}
+                      </div>
+                    )}
+                    {costEst.surcharge > 0 && (
+                      <div>
+                        <strong>Operator Surcharge:</strong> {formatted.surcharge}
+                      </div>
+                    )}
+                    <div>
+                      <strong>Cost per Mile:</strong> {formatted.perMile}
+                    </div>
+                    <div>
+                      <strong>Cost per Ton:</strong> {formatted.perTon}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
           
           {submission.selectedRoute.segments && submission.selectedRoute.segments.length > 0 && (

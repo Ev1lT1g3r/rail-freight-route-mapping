@@ -1,7 +1,8 @@
 import './RouteTable.css';
 import HelpTooltip from './HelpTooltip';
+import { estimateRouteCost, formatCostEstimate } from '../utils/costEstimator';
 
-function RouteTable({ routes, selectedRouteIndex, onRouteSelect }) {
+function RouteTable({ routes, selectedRouteIndex, onRouteSelect, freightWeight = 0 }) {
   if (!routes || routes.length === 0) {
     return null;
   }
@@ -39,6 +40,7 @@ function RouteTable({ routes, selectedRouteIndex, onRouteSelect }) {
               <th>Transfers</th>
               <th>States/Provinces</th>
               <th>Total Curves</th>
+              {freightWeight > 0 && <th>Est. Cost</th>}
               <th>Path</th>
             </tr>
           </thead>
@@ -46,6 +48,8 @@ function RouteTable({ routes, selectedRouteIndex, onRouteSelect }) {
             {routes.map((route, index) => {
               const isSelected = selectedRouteIndex === index;
               const operatorColors = getOperatorColors(route.operators || []);
+              const costEstimate = freightWeight > 0 ? estimateRouteCost(route, freightWeight) : null;
+              const formattedCost = costEstimate ? formatCostEstimate(costEstimate) : null;
               
               return (
                 <tr
@@ -92,6 +96,11 @@ function RouteTable({ routes, selectedRouteIndex, onRouteSelect }) {
                   <td className="route-curves">
                     {route.totalCurves?.toFixed(1) || 'N/A'}
                   </td>
+                  {freightWeight > 0 && (
+                    <td className="route-cost" style={{ fontWeight: '600', color: '#10B981' }}>
+                      {formattedCost ? formattedCost.total : 'N/A'}
+                    </td>
+                  )}
                   <td className="route-path">
                     <div className="route-path-text" title={route.path.map(s => s.name).join(' → ')}>
                       {route.path.map(s => s.name).join(' → ')}

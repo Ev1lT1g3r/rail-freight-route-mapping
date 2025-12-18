@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useToast } from '../contexts/ToastContext';
 import HelpTooltip from './HelpTooltip';
+import { estimateRouteCost, formatCostEstimate } from '../utils/costEstimator';
 
 function RouteComparison({ routes, origin, destination, onClose, onSelectRoute }) {
   const { success } = useToast();
@@ -275,6 +276,21 @@ function RouteComparison({ routes, origin, destination, onClose, onSelectRoute }
                               {stats.totalDistance} miles
                             </div>
                           </div>
+                          {freightWeight > 0 && (() => {
+                            const costEst = estimateRouteCost(routes[routeIdx], freightWeight);
+                            const formatted = formatCostEstimate(costEst);
+                            return (
+                              <div style={{ padding: '12px', backgroundColor: '#F0FDF4', borderRadius: '6px', border: '1px solid #10B981' }}>
+                                <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Est. Cost</div>
+                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#10B981' }}>
+                                  {formatted.total}
+                                </div>
+                                <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>
+                                  {formatted.perMile}/mile • {formatted.perTon}/ton
+                                </div>
+                              </div>
+                            );
+                          })()}
                           <div style={{ padding: '12px', backgroundColor: 'white', borderRadius: '6px' }}>
                             <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Operators</div>
                             <div style={{ fontSize: '16px', fontWeight: '600', color: '#0F172A' }}>

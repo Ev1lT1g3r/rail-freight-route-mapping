@@ -886,6 +886,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                       setSelectedRouteIndex(idx);
                       setValidationErrors(prev => ({ ...prev, routeSelection: null }));
                     }}
+                    freightWeight={freight?.weight || 0}
                   />
                   
                   {validationErrors.routeSelection && (
@@ -915,6 +916,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                     setSelectedRouteIndex(routeIndex);
                     setShowRouteComparison(false);
                   }}
+                  freightWeight={freight?.weight || 0}
                 />
               )}
             </>
