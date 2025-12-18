@@ -298,22 +298,23 @@ Support multiple freight items in a single submission with individual specificat
 
 ---
 
-#### F-014: Freight Library/Catalog
+#### F-014: Freight Library/Catalog ✅ COMPLETED
 **Priority**: High  
 **Category**: Freight Management  
 **Complexity**: Medium  
-**Estimated Effort**: 2 weeks
+**Estimated Effort**: 2 weeks  
+**Status**: ✅ COMPLETED
 
 **Description**:  
 Maintain a library of common freight items with pre-configured specifications.
 
 **Acceptance Criteria**:
-- Freight catalog/library
-- Search and filter freight items
-- Add freight to library
-- Edit/delete library items
-- Quick add from library to submission
-- Freight categories/tags
+- ✅ Freight catalog/library
+- ✅ Search and filter freight items
+- ✅ Add freight to library
+- ✅ Edit/delete library items
+- ✅ Quick add from library to submission
+- ✅ Freight categories/tags
 
 **Dependencies**: None
 
