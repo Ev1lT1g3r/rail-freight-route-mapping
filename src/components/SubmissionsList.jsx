@@ -210,6 +210,32 @@ function SubmissionsList({ onViewSubmission, onCreateNew, onEditSubmission, onBa
     }
   };
 
+  const handleBulkArchive = () => {
+    if (selectedSubmissions.size === 0) return;
+    if (window.confirm(`Archive ${selectedSubmissions.size} submission(s)?`)) {
+      selectedSubmissions.forEach(id => {
+        archiveSubmission(id, currentUser);
+      });
+      loadSubmissions();
+      setSelectedSubmissions(new Set());
+      setIsBulkMode(false);
+      success(`Archived ${selectedSubmissions.size} submission(s)`);
+    }
+  };
+
+  const handleBulkUnarchive = () => {
+    if (selectedSubmissions.size === 0) return;
+    if (window.confirm(`Unarchive ${selectedSubmissions.size} submission(s)?`)) {
+      selectedSubmissions.forEach(id => {
+        unarchiveSubmission(id, currentUser);
+      });
+      loadSubmissions();
+      setSelectedSubmissions(new Set());
+      setIsBulkMode(false);
+      success(`Unarchived ${selectedSubmissions.size} submission(s)`);
+    }
+  };
+
   const handleSelectSubmission = (id, e) => {
     e?.stopPropagation();
     const newSelected = new Set(selectedSubmissions);
