@@ -102,6 +102,19 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
   };
 
   const presetsByCategory = getPresetsByCategory();
+  const [showFreightLibrary, setShowFreightLibrary] = useState(false);
+
+  const handleLoadFromLibrary = (libraryFreight) => {
+    const converted = {
+      ...libraryFreight,
+      unitSystem: unitSystem
+    };
+    setLocalFreight(converted);
+    if (onFreightChange) {
+      onFreightChange(converted);
+    }
+    setShowFreightLibrary(false);
+  };
 
   return (
     <div style={{ 
@@ -113,6 +126,24 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3 style={{ margin: 0, color: '#0F172A' }}>Freight Specifications</h3>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowFreightLibrary(true)}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              fontWeight: '600',
+              backgroundColor: '#8B5CF6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            📚 Freight Library
+          </button>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '14px' }}>
             Unit System:
             <HelpTooltip content="Switch between Imperial (feet, pounds) and Metric (meters, kilograms) units. Values will be automatically converted when you switch.">
