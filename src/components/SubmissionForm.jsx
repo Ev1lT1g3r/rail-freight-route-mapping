@@ -887,6 +887,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
                       setValidationErrors(prev => ({ ...prev, routeSelection: null }));
                     }}
                     freightWeight={freight?.weight || 0}
+                    showTransitTime={true}
                   />
                   
                   {validationErrors.routeSelection && (

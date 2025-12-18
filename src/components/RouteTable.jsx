@@ -1,8 +1,9 @@
 import './RouteTable.css';
 import HelpTooltip from './HelpTooltip';
 import { estimateRouteCost, formatCostEstimate } from '../utils/costEstimator';
+import { estimateTransitTime, formatTransitTime, getCurrentSeason } from '../utils/transitTimeEstimator';
 
-function RouteTable({ routes, selectedRouteIndex, onRouteSelect, freightWeight = 0 }) {
+function RouteTable({ routes, selectedRouteIndex, onRouteSelect, freightWeight = 0, showTransitTime = false }) {
   if (!routes || routes.length === 0) {
     return null;
   }
@@ -50,6 +51,8 @@ function RouteTable({ routes, selectedRouteIndex, onRouteSelect, freightWeight =
               const operatorColors = getOperatorColors(route.operators || []);
               const costEstimate = freightWeight > 0 ? estimateRouteCost(route, freightWeight) : null;
               const formattedCost = costEstimate ? formatCostEstimate(costEstimate) : null;
+              const transitTime = showTransitTime ? estimateTransitTime(route, { season: getCurrentSeason() }) : null;
+              const formattedTime = transitTime ? formatTransitTime(transitTime) : null;
               
               return (
                 <tr
@@ -99,6 +102,11 @@ function RouteTable({ routes, selectedRouteIndex, onRouteSelect, freightWeight =
                   {freightWeight > 0 && (
                     <td className="route-cost" style={{ fontWeight: '600', color: '#10B981' }}>
                       {formattedCost ? formattedCost.total : 'N/A'}
+                    </td>
+                  )}
+                  {showTransitTime && (
+                    <td className="route-transit-time" style={{ fontWeight: '600', color: '#3B82F6' }}>
+                      {formattedTime ? formattedTime.days : 'N/A'}
                     </td>
                   )}
                   <td className="route-path">

@@ -321,6 +321,21 @@ function RouteComparison({ routes, origin, destination, onClose, onSelectRoute }
                               {stats.segmentCount}
                             </div>
                           </div>
+                          {(() => {
+                            const transitTime = estimateTransitTime(routes[routeIdx], { season: getCurrentSeason() });
+                            const formatted = formatTransitTime(transitTime);
+                            return (
+                              <div style={{ padding: '12px', backgroundColor: '#EFF6FF', borderRadius: '6px', border: '1px solid #3B82F6' }}>
+                                <div style={{ fontSize: '12px', color: '#6B7280', marginBottom: '4px' }}>Est. Transit Time</div>
+                                <div style={{ fontSize: '20px', fontWeight: '700', color: '#3B82F6' }}>
+                                  {formatted.days}
+                                </div>
+                                <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>
+                                  {formatted.hours} • Arrives: {formatted.arrival}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
