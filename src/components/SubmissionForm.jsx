@@ -44,6 +44,7 @@ function SubmissionForm({ submissionId, onSave, onCancel, currentUser = 'Current
   const [showSavedRoutes, setShowSavedRoutes] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showRouteComparison, setShowRouteComparison] = useState(false);
 
   // Determine initial step based on existing submission state
   const getInitialStep = () => {
