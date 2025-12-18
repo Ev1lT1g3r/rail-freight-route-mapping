@@ -387,6 +387,15 @@ function FreightSpecification({ freight, onFreightChange, validationErrors = {} 
           )}
         </div>
       )}
+
+      {/* Freight Library Modal */}
+      {showFreightLibrary && (
+        <FreightLibrary
+          freight={localFreight}
+          onSelectFreight={handleLoadFromLibrary}
+          onClose={() => setShowFreightLibrary(false)}
+        />
+      )}
     </div>
   );
 }
